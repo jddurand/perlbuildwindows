@@ -1,0 +1,13 @@
+--- Mkfiles/msvc.mak.orig	2022-10-03 03:48:44.880005900 +0200
++++ Mkfiles/msvc.mak	2022-10-03 03:51:20.490075400 +0200
+@@ -228,10 +228,6 @@
+ 
+ warnings:
+ 	$(RM_F) $(WARNFILES)
+-	$(MAKE) asm\warnings.time
+-
+-asm\warnings.time: $(ALLOBJ:.@OBJEXT@=.c)
+-	: > asm\warnings.time
+ 	$(MAKE) $(WARNFILES)
+ 
+ asm\warnings.c: asm\warnings.pl asm\warnings.time
