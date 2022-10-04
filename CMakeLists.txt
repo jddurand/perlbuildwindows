@@ -27,6 +27,16 @@ option(PERL_NET_SSLEAY_VERSION "Perl Net::SSLeay version")
 if (NOT MSVC)
   message(FATAL_ERROR "Compiler must be MSVC")
 endif()
+if (NOT CMAKE_GENERATOR STREQUAL "NMake Makefiles")
+  message(FATAL_ERROR "Generator must be \"NMake Makefiles\", i.e. -G \"NMake Makefiles\"")
+endif ()
+#
+# Some nervous policies
+#
+if (POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif ()
+
 if (MSVC12)
   set(CCTYPE "MSVC120")
 elseif (MSVC_VERSION LESS 1910)
@@ -67,6 +77,20 @@ include(ExternalProject)
 # Download and build perl
 #
 set(PERL_SOURCE_DIR "perl-${PERL_VERSION}")
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+  message(STATUS "64bits compiler detected")
+  set (PERL_WIN64 "#WIN64")
+else ()
+  message(STATUS "32bits compiler detected")
+  if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
+    message(STATUS "64bits host detected")
+    set (PERL_WIN64 "WIN64")
+  else()
+    message(STATUS "32bits host detected")
+    set (PERL_WIN64 "#WIN64")
+  endif ()
+endif ()
+
 ExternalProject_Add(perl
 					PREFIX perl
 					URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
@@ -76,7 +100,7 @@ ExternalProject_Add(perl
 					# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
 					# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
 					#
-					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PROJECT_SOURCE_DIR}/perlpatch.bat" "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/${PERL_SOURCE_DIR}" "${CCTYPE}"
+					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PROJECT_SOURCE_DIR}/perlpatch.bat" "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/${PERL_SOURCE_DIR}" "${CCTYPE}" "${PERL_WIN64}"
 					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32/Makefile"
 					BUILD_COMMAND     nmake
 					#
@@ -84,37 +108,54 @@ ExternalProject_Add(perl
 					#
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE TRUE)
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set (PERL_EXE "C:/perl/${PERL_VERSION}/bin/MSWin32-x64-multi-thread/perl.exe")
-  set (PERL_PATH "C:/perl/${PERL_VERSION}/bin/MSWin32-x64-multi-thread")
-else ()
-  set (PERL_EXE "C:/perl/${PERL_VERSION}/bin/MSWin32-x86-multi-thread/perl.exe")
-  set (PERL_PATH "C:/perl/${PERL_VERSION}/bin/MSWin32-x86-multi-thread")
-endif ()
-message(STATUS "Perl executable is: ${PERL_EXE}")
 
-set (PERL_CPAN "C:/perl/${PERL_VERSION}/bin/cpan.bat")
 #
 # Perl dependencies to build nasm - we know where perl was installed: C:\perl\${
 #
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%\\perl.exe\" -MCPAN -e \"CPAN::Shell->install(shift)\" %1"
+)
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+popd
+\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%\\perl.exe\" %*"
+)
+
 add_custom_target(PerlFontTTF
                   COMMENT "Perl module Font::TTF"
-				  COMMAND ${PERL_EXE} -MCPAN -e \"CPAN::Shell->install('Font::TTF')\")
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" "Font::TTF")
 add_custom_target(PerlSortVersions
                   COMMENT "Perl module Sort::Versions"
-                  COMMAND ${PERL_EXE} -MCPAN -e \"CPAN::Shell->install('Sort::Versions')\")
+                  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" "Sort::Versions")
 add_custom_target(PerlTextPatch
                   COMMENT "Perl module Text::Patch"
-                  COMMAND ${PERL_EXE} -MCPAN -e \"CPAN::Shell->install('Text::Patch')\")
+                  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" "Text::Patch")
 
 #
 # Download and build nasm
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 nmake -f Mkfiles\\msvc_patched.mak")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 nmake -f Mkfiles\\msvc_patched.mak install")
 set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
 ExternalProject_Add(nasm
@@ -125,7 +166,7 @@ ExternalProject_Add(nasm
 					#
 					# C.f. https://forum.nasm.us/index.php?topic=2746.msg12335#msg12335
 					#
-					PATCH_COMMAND     ${PERL_EXE} "${PROJECT_SOURCE_DIR}/patch.pl" "${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}/Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}/Mkfiles/msvc_patched.mak"
+					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}/Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}/Mkfiles/msvc_patched.mak"
 					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using Mkfiles/msvc_patched.mak"
 					BUILD_COMMAND     ${CMAKE_COMMAND} -E echo "Custom build step"
 					COMMAND           ${CMAKE_COMMAND} -E rm -f asm/warnings.time
@@ -142,23 +183,42 @@ ExternalProject_Add(nasm
 # Download and build openssl. We want to install it in perl's "$Config{installbin}"
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 set CC=cl
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
 SET /p perlinstallbin= < tmpFile
 DEL tmpFile
 perl Configure --prefix=\"%perlinstallbin%/openssl\" --openssldir=\"%perlinstallbin%/openssl/SSL\"")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake install")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake test")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
@@ -181,14 +241,23 @@ ExternalProject_Add(openssl
 # Install perl modules that need a patch - the others will be installed with normal cpan shell
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
 SET /p opensslinstallbin= < tmpFile
 DEL tmpFile
 SET OPENSSL_PREFIX=%opensslinstallbin%
 echo | perl Makefile.PL")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-  "set PATH=\"${PERL_PATH}\";%PATH%
+  "pushd \"${PERL_SOURCE_DIR}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
 perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
 SET /p opensslinstallbin= < tmpFile
 DEL tmpFile
@@ -200,13 +269,14 @@ SET PERL_INSTALLBIN=%perlinstallbin%
 nmake install
 copy /Y %OPENSSL_PREFIX%\\bin\\libcrypto-3* %PERL_INSTALLBIN%
 copy /Y %OPENSSL_PREFIX%\\bin\\libssl-3* %PERL_INSTALLBIN%")
+
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
 ExternalProject_Add(perl-net-ssleay
 					PREFIX perl-net-ssleay
 					DEPENDS perl
 					URL "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
 					SOURCE_DIR ${PERL_NET_SSLEAY_SOURCE_DIR}
-					PATCH_COMMAND     ${PERL_EXE} "${PROJECT_SOURCE_DIR}/patch.pl" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs"
+					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs"
 					CONFIGURE_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 					BUILD_COMMAND     nmake
 					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
