@@ -113,7 +113,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 perl -MCPAN -e \"CPAN::Shell->install(shift)\" %1"
 )
 
@@ -123,7 +124,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%\";%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 perl %*"
 )
 
@@ -162,7 +163,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%\";%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak"
 )
 
@@ -195,7 +196,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 set CC=cl
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
@@ -208,7 +210,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake")
 
@@ -217,7 +220,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake install")
 
@@ -226,7 +230,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 nmake test")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
@@ -253,7 +258,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
 SET /p opensslinstallbin= < tmpFile
 DEL tmpFile
@@ -265,7 +271,8 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
-set PATH=\"C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname\";%PATH%
+popd
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
 SET /p opensslinstallbin= < tmpFile
 DEL tmpFile
