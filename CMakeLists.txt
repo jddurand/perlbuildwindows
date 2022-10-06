@@ -19,16 +19,19 @@ project(perlbuildwindows LANGUAGES C CXX)
 cmake_minimum_required(VERSION 3.14)
 
 set (PERL_VERSION_DEFAULT            5.36.0)
+set (PERL_TEST                       FALSE)
 set (OPENSSL_VERSION_DEFAULT         3.0.5)
 set (NASM_VERSION_DEFAULT            2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT 1.93_01)
 
 set (PERL_VERSION            ${PERL_VERSION_DEFAULT}            CACHE STRING "Perl version")
+set (PERL_TEST               OFF                                CACHE STRING "Perl test")
 set (OPENSSL_VERSION         ${OPENSSL_VERSION_DEFAULT}         CACHE STRING "Openssl version")
 set (NASM_VERSION            ${NASM_VERSION_DEFAULT}            CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION ${PERL_NET_SSLEAY_VERSION_DEFAULT} CACHE STRING "Perl's Net::SSLeay version")
 
 set_property (CACHE PERL_VERSION PROPERTY STRINGS            ${PERL_VERSION_DEFAULT} ON OFF)
+set_property (CACHE PERL_TEST PROPERTY STRINGS               ON OFF)
 set_property (CACHE OPENSSL_VERSION PROPERTY STRINGS         ${OPENSSL_VERSION_DEFAULT} ON OFF)
 set_property (CACHE NASM_VERSION PROPERTY STRINGS            ${NASM_VERSION_DEFAULT} ON OFF)
 set_property (CACHE PERL_NET_SSLEAY_VERSION PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT} ON OFF)
@@ -155,8 +158,8 @@ ExternalProject_Add(perl
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
-					# TEST_EXCLUDE_FROM_MAIN TRUE
-					TEST_BEFORE_INSTALL	TRUE
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					# TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE TRUE)
 
 #
