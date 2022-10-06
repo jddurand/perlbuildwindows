@@ -126,8 +126,19 @@ SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-echo %* | perl -MCPAN -e shell"
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+cpan %*"
+)
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+popd
+IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+cpanm %*"
 )
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
@@ -136,7 +147,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 echo | perl %*"
 )
 
@@ -167,9 +178,9 @@ ExternalProject_Add(perl
 # Download and build nasm
 #
 set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
-add_custom_target(PerlFontTTF COMMENT "Perl module Font::TTF"           COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install Font::TTF)
-add_custom_target(PerlSortVersions COMMENT "Perl module Sort::Versions" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install Sort::Versions)
-add_custom_target(PerlTextPatch COMMENT "Perl module Text::Patch"       COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install Text::Patch)
+add_custom_target(PerlFontTTF COMMENT "Perl module Font::TTF"           COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF)
+add_custom_target(PerlSortVersions COMMENT "Perl module Sort::Versions" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Sort::Versions)
+add_custom_target(PerlTextPatch COMMENT "Perl module Text::Patch"       COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
   "pushd \"${PERL_SOURCE_DIR_DOS}\"
@@ -177,7 +188,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak"
 )
 
@@ -211,7 +222,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 echo | perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
 SET /p perlinstallbin= < tmpFile
@@ -226,7 +237,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 \"${CMAKE_MAKE_PROGRAM_DOS}\"")
 
@@ -236,7 +247,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 \"${CMAKE_MAKE_PROGRAM_DOS}\" install")
 
@@ -246,7 +257,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 \"${CMAKE_MAKE_PROGRAM_DOS}\" test")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
@@ -276,7 +287,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 echo | perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
 SET /p opensslprefix= < tmpFile
 DEL tmpFile
@@ -301,7 +312,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
 echo | perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
 SET /p perlinstallbin= < tmpFile
 DEL tmpFile
@@ -334,34 +345,90 @@ ExternalProject_Add(perl-net-ssleay
 #
 # Install cpanm assap
 #
-# TO DO
+add_custom_target(PerlAppcpanminus ALL DEPENDS perl-net-ssleay COMMENT "Perl module App::cpanminus" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" App::cpanminus)
+
+#
+# Declare we are ready to install everything
+#
+add_custom_target(Ok ALL DEPENDS PerlAppcpanminus)
 
 #
 # Packages in trouble but force is ok
 #
-# Test suite is buggy, but this is ok. https://rt.cpan.org/Ticket/Display.html?id=127007
-add_custom_target(PerlUnicodeUTF8 ALL DEPENDS perl-net-ssleay COMMENT "Perl module Unicode::UTF8" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" force install Unicode::UTF8)
 
-#
-# Do quite like strawberry perl
-#
-foreach(_package
-        Capture::Tiny
-		Path::Tiny
-		TAP::Harness::Restricted
-		# IPC-Run - Total failure with cl...
-		IPC::System::Simple
-		IPC::Run3
-		Mozilla::CA
-		IO::Socket::SSL
-		LWP
-		LWP::Protocol::https
-		App::cpanminus
-		)
-  set (_targetName ${_package})
-  string (REGEX REPLACE "::" "" _targetName ${_targetName})
-  add_custom_target(${_targetName} ALL DEPENDS perl-net-ssleay COMMENT "Perl module ${_package}" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install ${_package})
-endforeach ()
+# Unicode::UTF8 : Test suite is buggy, but this is ok. https://rt.cpan.org/Ticket/Display.html?id=127007
+add_custom_target(PerlUnicodeUTF8 ALL DEPENDS Ok COMMENT "Perl module Unicode::UTF8" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest Unicode::UTF8)
+
+# Capture::Tiny : must be ok
+add_custom_target(PerlCaptureTiny ALL DEPENDS Ok COMMENT "Perl module Capture::Tiny" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" Capture::Tiny)
+
+# Path::Tiny : must be ok
+add_custom_target(PerlPathTiny ALL DEPENDS Ok COMMENT "Perl module Path::Tiny" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" Path::Tiny)
+
+# TAP::Harness::Restricted : must be ok
+add_custom_target(PerlTAPHarnessRestricted ALL DEPENDS Ok COMMENT "Perl module TAP::Harness::Restricted" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" TAP::Harness::Restricted)
+
+# IPC-Run - Total failure with cl...
+
+# IPC::System::Simple : must be ok
+add_custom_target(PerlIPCSystemSimple ALL DEPENDS Ok COMMENT "Perl module IPC::System::Simple" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" IPC::System::Simple)
+
+# IPC::Run3 : must be ok
+add_custom_target(PerlIPCRun3 ALL DEPENDS Ok COMMENT "Perl module IPC::Run3" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" IPC::Run3)
+
+# Mozilla::CA : must be ok
+add_custom_target(PerlMozillaCA ALL DEPENDS Ok COMMENT "Perl module Mozilla::CA" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" Mozilla::CA)
+
+# IO::Socket::SSL : Supposed to be ok - test suite is known to fail on Windows
+add_custom_target(PerlIOSocketSSL ALL DEPENDS Ok COMMENT "Perl module IO::Socket::SSL" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL)
+
+# LWP : must be ok
+add_custom_target(PerlLWP ALL DEPENDS Ok COMMENT "Perl module LWP" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" LWP)
+
+# LWP::Protocol::https : must be ok
+add_custom_target(PerlLWPProtocolhttps ALL DEPENDS Ok COMMENT "Perl module LWP::Protocol::https" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" LWP::Protocol::https)
+
+# BerkeleyDB : must be ok
+# TO DO
+# add_custom_target(PerlBerkeleyDB ALL DEPENDS Ok COMMENT "Perl module BerkeleyDB" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" BerkeleyDB)
+
+# DB_File : must be ok
+# TO DO
+# add_custom_target(PerlDB_File ALL DEPENDS Ok COMMENT "Perl module DB_File" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" DB_File)
+
+# DBM::Deep : must be ok
+# TO DO
+# add_custom_target(PerlDBMDeep ALL DEPENDS Ok COMMENT "Perl module DBM::Deep" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" DBM::Deep)
+
+# Module::Build : must be ok
+add_custom_target(PerlModuleBuild ALL DEPENDS Ok COMMENT "Perl module Module::Build" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" Module::Build)
+
+# JSON : must be ok
+add_custom_target(PerlJSON ALL DEPENDS Ok COMMENT "Perl module JSON" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" JSON)
+
+# Cpanel::JSON::XS : must be ok
+add_custom_target(PerlCpanelJSONXS ALL DEPENDS Ok COMMENT "Perl module Cpanel::JSON::XS" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" Cpanel::JSON::XS)
+
+# JSON::XS : must be ok
+add_custom_target(PerlJSONXS ALL DEPENDS Ok COMMENT "Perl module JSON::XS" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" JSON::XS)
+
+# JSON::MaybeXS : must be ok
+add_custom_target(PerlJSONMaybeXS ALL DEPENDS Ok COMMENT "Perl module JSON::MaybeXS" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" JSON::MaybeXS)
+
+# JSON::Any : must be ok
+add_custom_target(PerlJSONAny ALL DEPENDS Ok COMMENT "Perl module JSON::Any" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" JSON::Any)
+
+# YAML : must be ok
+add_custom_target(PerlYAML ALL DEPENDS Ok COMMENT "Perl module YAML" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" YAML)
+
+# YAML::Tiny : must be ok
+add_custom_target(PerlYAMLTiny ALL DEPENDS Ok COMMENT "Perl module YAML::Tiny" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" YAML::Tiny)
+
+# YAML::XS : must be ok
+add_custom_target(PerlYAMLXS ALL DEPENDS Ok COMMENT "Perl module YAML::XS" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" YAML::XS)
+
+# YAML::Any : must be ok
+add_custom_target(PerlYAMLAny ALL DEPENDS Ok COMMENT "Perl module YAML::Any" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" YAML::Any)
 
 #
 # Install everything else that makes it a good distribution
@@ -369,5 +436,5 @@ endforeach ()
 # Some "monster but portable and definitely must have" packages.
 # A lot of very good stuff will be installed as dependencies.
 # 
-add_custom_target(PerlCPANDistnameInfo ALL DEPENDS perl-net-ssleay COMMENT "Perl module CPAN::DistnameInfo" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install CPAN::DistnameInfo)
-add_custom_target(PerlDistZilla ALL DEPENDS perl-net-ssleay COMMENT "Perl module Dist::Zilla" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" install Dist::Zilla)
+# add_custom_target(PerlCPANDistnameInfo ALL DEPENDS perl-net-ssleay COMMENT "Perl module CPAN::DistnameInfo" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo)
+# add_custom_target(PerlDistZilla ALL DEPENDS perl-net-ssleay COMMENT "Perl module Dist::Zilla" COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Dist::Zilla)
