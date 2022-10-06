@@ -79,12 +79,20 @@ message (STATUS "PERL_CCTYPE              : ${PERL_CCTYPE}")
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   set (PERL_WIN64 "#WIN64")
+  set (OPENSSL_VC "VC-WIN64A")
+  set (OPENSSL_LDFLAGS "/debug")
 else ()
   if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
     set (PERL_WIN64 "WIN64")
+	#
+	# perl Configure VC-WIN32 on a x64-to-x86 environment fails at linking
+	#
+    set (OPENSSL_LDFLAGS "/debug /machine:X86")
   else()
     set (PERL_WIN64 "#WIN64")
+    set (OPENSSL_LDFLAGS "/debug")
   endif ()
+  set (OPENSSL_VC "VC-WIN32")
 endif ()
 message (STATUS "WIN64 in perl's Makefile : ${PERL_WIN64}")
 
@@ -142,11 +150,13 @@ ExternalProject_Add(perl
 					#
 					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}"
 					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
-					BUILD_COMMAND     ${CMAKE_MAKE_COMMAND}
+					# BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
+					# TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
 					#
-					# We want to run make test only if explicitly required on the command-line
+					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
+					# TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE TRUE)
 
 #
@@ -175,7 +185,7 @@ ExternalProject_Add(nasm
 					#
 					# C.f. https://forum.nasm.us/index.php?topic=2746.msg12335#msg12335
 					#
-					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "${NASM_SOURCE_DIR}/Mkfiles/msvc_patched.mak"
+					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "Mkfiles/msvc_patched.mak"
 					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using Mkfiles/msvc_patched.mak"
 					BUILD_COMMAND     ${CMAKE_COMMAND} -E echo "Custom build step"
 					COMMAND           ${CMAKE_COMMAND} -E rm -f asm/warnings.time
@@ -183,122 +193,132 @@ ExternalProject_Add(nasm
 					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 					INSTALL_COMMAND   ${CMAKE_COMMAND} -E echo "Installation step skipped: leaving nasm.exe in its source tree"
 					#
-					# We want to run make test only if explicitly required on the command-line
+					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
+					# TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE TRUE)
 
 #
 # Download and build openssl. We want to install it in perl's "$Config{installbin}"
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-set CC=cl
-set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
 SET /p perlinstallbin= < tmpFile
 DEL tmpFile
-perl Configure --prefix=\"%perlinstallbin%/openssl\" --openssldir=\"%perlinstallbin%/openssl/SSL\"")
+rmdir /S /Q \"%perlinstallbin%\\openssl\"
+SET LDFLAGS=${OPENSSL_LDFLAGS}
+perl Configure --prefix=\"%perlinstallbin%\\openssl\" --openssldir=\"%perlinstallbin%\\openssl\\SSL\" %1")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-nmake")
+set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+\"${CMAKE_MAKE_PROGRAM_DOS}\"")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-nmake install")
+set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+\"${CMAKE_MAKE_PROGRAM_DOS}\" install")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-set PATH=\"${PROJECT_SOURCE_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-nmake test")
+set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+\"${CMAKE_MAKE_PROGRAM_DOS}\" test")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
-					PREFIX openssl
-					DEPENDS perl nasm
-					URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
-					SOURCE_DIR ${OPENSSL_SOURCE_DIR}
-					CONFIGURE_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-					BUILD_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-					TEST_COMMAND      "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
+					PREFIX              openssl
+					DEPENDS             perl nasm
+					URL                 "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
+					SOURCE_DIR          ${OPENSSL_SOURCE_DIR}
+					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
+					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
+					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
+					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 					#
-					# We want to run make test only if explicitly required on the command-line
+					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					BUILD_IN_SOURCE TRUE)
+					# TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL	TRUE
+					BUILD_IN_SOURCE     TRUE)
 
 #
 # Install perl modules that need a patch - the others will be installed with normal cpan shell
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
 perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
-SET /p opensslinstallbin= < tmpFile
+SET /p opensslprefix= < tmpFile
 DEL tmpFile
-SET OPENSSL_PREFIX=%opensslinstallbin%
+SET OPENSSL_PREFIX=%opensslprefix%
+echo | perl Makefile.PL")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
+.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
+SET /p perlarchname= < tmpFile
+DEL tmpFile
+popd
+perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
+SET /p opensslprefix= < tmpFile
+DEL tmpFile
+set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%opensslprefix%\\bin;%PATH%
 echo | perl Makefile.PL")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-  "pushd \"${PERL_SOURCE_DIR}\"
+  "pushd \"${PERL_SOURCE_DIR_DOS}\"
 .\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
 SET /p perlarchname= < tmpFile
 DEL tmpFile
 popd
 set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%PATH%
-perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
-SET /p opensslinstallbin= < tmpFile
-DEL tmpFile
 perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
 SET /p perlinstallbin= < tmpFile
 DEL tmpFile
-SET OPENSSL_PREFIX=%opensslinstallbin%
-SET PERL_INSTALLBIN=%perlinstallbin%
-nmake install
-copy /Y %OPENSSL_PREFIX%\\bin\\libcrypto-3* %PERL_INSTALLBIN%
-copy /Y %OPENSSL_PREFIX%\\bin\\libssl-3* %PERL_INSTALLBIN%")
+\"${CMAKE_MAKE_PROGRAM_DOS}\" install
+copy /Y %OPENSSL_PREFIX%\\bin\\libcrypto-3* %perlinstallbin%
+copy /Y %OPENSSL_PREFIX%\\bin\\libssl-3* %perlinstallbin%")
 
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
 ExternalProject_Add(perl-net-ssleay
-					PREFIX perl-net-ssleay
-					DEPENDS perl
-					URL "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
-					SOURCE_DIR ${PERL_NET_SSLEAY_SOURCE_DIR}
-					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "${PROJECT_SOURCE_DIR}/${PERL_NET_SSLEAY_SOURCE_DIR}/SSLeay.xs"
-					CONFIGURE_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-					BUILD_COMMAND     nmake
-					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-					TEST_COMMAND      nmake test
+					PREFIX              perl-net-ssleay
+					DEPENDS             perl
+					URL                 "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
+					SOURCE_DIR          ${PERL_NET_SSLEAY_SOURCE_DIR}
+					PATCH_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "SSLeay.xs"
+					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
+					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
+					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
+					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
 					#
-					# We want to run make test only if explicitly required on the command-line
+					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
+					# TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE TRUE)
 

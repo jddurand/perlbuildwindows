@@ -1,5 +1,5 @@
 --- SSLeay.xs.orig	2022-03-20 18:25:48.000000000 +0100
-+++ SSLeay.xs.new	2022-10-04 06:40:50.070546100 +0200
++++ SSLeay.xs.new	2022-10-06 06:13:32.903648100 +0200
 @@ -4221,14 +4221,17 @@
  	    ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
  	    if (OBJ_obj2nid(ad->method) == NID_ad_OCSP
@@ -20,3 +20,63 @@
  		if (GIMME == G_SCALAR) break; /* get only first */
  	    }
  	}
+@@ -4885,16 +4888,17 @@
+         PKCS12 *p12;
+         EVP_PKEY *private_key;
+         X509 *certificate;
+-        FILE *fp;
++        BIO *bio;
+     CODE:
+         RETVAL = 0;
+-        if ((fp = fopen (file, "rb"))) {
++        bio = BIO_new_file(file, "rb");
++        if (bio) {
+ #if OPENSSL_VERSION_NUMBER >= 0x0090700fL
+             OPENSSL_add_all_algorithms_noconf();
+ #else
+             OpenSSL_add_all_algorithms();
+ #endif
+-            if ((p12 = d2i_PKCS12_fp(fp, NULL))) {
++            if ((p12 = d2i_PKCS12_bio(bio, NULL))) {
+                 if (PKCS12_parse(p12, password, &private_key, &certificate, NULL)) {
+                     if (private_key) {
+                         if (SSL_CTX_use_PrivateKey(ctx, private_key)) RETVAL = 1;
+@@ -4908,7 +4912,7 @@
+                 PKCS12_free(p12);
+             }
+             if (!RETVAL) ERR_print_errors_fp(stderr);
+-            fclose(fp);
++            BIO_free(bio);
+         }
+     OUTPUT:
+         RETVAL
+@@ -4924,16 +4928,17 @@
+         X509 *certificate = NULL;
+         STACK_OF(X509) *cachain = NULL;
+         X509 *x;
+-        FILE *fp;
++        BIO *bio;
+         int i, result;
+     PPCODE:
+-        if ((fp = fopen (file, "rb"))) {
++        bio = BIO_new_file(file, "rb");
++        if (bio) {
+ #if OPENSSL_VERSION_NUMBER >= 0x0090700fL
+             OPENSSL_add_all_algorithms_noconf();
+ #else
+             OpenSSL_add_all_algorithms();
+ #endif
+-            if ((p12 = d2i_PKCS12_fp(fp, NULL))) {
++            if ((p12 = d2i_PKCS12_bio(bio, NULL))) {
+                 if(load_chain)
+                     result= PKCS12_parse(p12, password, &private_key, &certificate, &cachain);
+                 else
+@@ -4957,7 +4962,7 @@
+                 }
+                 PKCS12_free(p12);
+             }
+-            fclose(fp);
++            BIO_free(bio);
+         }
+ 
+ #ifndef OPENSSL_NO_MD2
