@@ -173,13 +173,13 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
 "IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
 set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-cpan %*
+echo | cpan %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
 "IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
 set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-cpanm %*
+echo | cpanm %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
@@ -229,7 +229,7 @@ add_custom_target(PerlTextPatch
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat"
@@ -302,19 +302,19 @@ echo | perl Configure --prefix=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\" --ope
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\"
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\"
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" install
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" test
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
@@ -347,7 +347,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=%opensslprefix%\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-echo | perl Makefile.PL
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 
 #
@@ -356,8 +356,9 @@ echo | perl Makefile.PL
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-copy /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin\"
-copy /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin\"
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
+copy /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
+copy /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
 ")
 
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
