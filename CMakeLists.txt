@@ -18,23 +18,69 @@ project(perlbuildwindows LANGUAGES C CXX)
 #
 cmake_minimum_required(VERSION 3.14)
 
-set (PERL_VERSION_DEFAULT            5.36.0)
+#
+# Get list of logical drives
+#
+execute_process(COMMAND wmic logicaldisk get name
+                TIMEOUT 10
+				RESULT_VARIABLE  wmic_logicaldisk_get_name_result
+				OUTPUT_VARIABLE  wmic_logicaldisk_get_name_output
+				ERROR_VARIABLE   wmic_logicaldisk_get_name_error
+				)
+string(TOUPPER ${wmic_logicaldisk_get_name_output} wmic_logicaldisk_get_name_output)
+string(REGEX REPLACE "[\t\r\n]+" " " wmic_logicaldisk_get_name_output ${wmic_logicaldisk_get_name_output})
+string(REGEX MATCHALL "[a-zA-Z]:" drives ${wmic_logicaldisk_get_name_output})
+
+list(LENGTH drives drives_length)
+if (drives_length GREATER 0)
+  if ("C:" IN_LIST drives)
+    set (PERL_INST_DRV_DEFAULT C:)
+  else ()
+    set (PERL_INST_DRV_DEFAULT OFF)
+  endif ()
+else ()
+  set (PERL_INST_DRV_DEFAULT OFF)
+endif ()
+
+#
+# Get list of stable perl versions
+#
+file(DOWNLOAD https://raw.githubusercontent.com/skaji/perl-releases/main/perl-releases.v1.csv
+     TIMEOUT  30
+	 "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv")
+file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_stable_relases REGEX ",stable,")
+set(PERL_VERSIONS)
+foreach(perl_stable_relase ${perl_stable_relases})
+  string(REPLACE "," ";" perl_stable_relase ${perl_stable_relase})
+  list(GET perl_stable_relase 2 perl_stable_release_version)
+  list(APPEND PERL_VERSIONS ${perl_stable_release_version})
+endforeach()
+
+list(LENGTH PERL_VERSIONS PERL_VERSIONS_length)
+if (PERL_VERSIONS_length GREATER 0)
+  list(GET PERL_VERSIONS 0 PERL_VERSION_DEFAULT)
+else ()
+  set (PERL_VERSION_DEFAULT OFF)
+endif ()
+
 set (PERL_TEST                       FALSE)
 set (OPENSSL_VERSION_DEFAULT         3.0.5)
 set (NASM_VERSION_DEFAULT            2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT 1.93_01)
 
+set (PERL_INST_DRV           ${PERL_INST_DRV_DEFAULT}           CACHE STRING "Perl installation drive")
 set (PERL_VERSION            ${PERL_VERSION_DEFAULT}            CACHE STRING "Perl version")
 set (PERL_TEST               OFF                                CACHE STRING "Perl test")
 set (OPENSSL_VERSION         ${OPENSSL_VERSION_DEFAULT}         CACHE STRING "Openssl version")
 set (NASM_VERSION            ${NASM_VERSION_DEFAULT}            CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION ${PERL_NET_SSLEAY_VERSION_DEFAULT} CACHE STRING "Perl's Net::SSLeay version")
 
-set_property (CACHE PERL_VERSION PROPERTY STRINGS            ${PERL_VERSION_DEFAULT} ON OFF)
+set_property (CACHE PERL_INST_DRV PROPERTY STRINGS           ${drives} )
+set_property (CACHE PERL_VERSION PROPERTY STRINGS            ${PERL_VERSIONS})
 set_property (CACHE PERL_TEST PROPERTY STRINGS               ON OFF)
-set_property (CACHE OPENSSL_VERSION PROPERTY STRINGS         ${OPENSSL_VERSION_DEFAULT} ON OFF)
-set_property (CACHE NASM_VERSION PROPERTY STRINGS            ${NASM_VERSION_DEFAULT} ON OFF)
-set_property (CACHE PERL_NET_SSLEAY_VERSION PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT} ON OFF)
+set_property (CACHE OPENSSL_VERSION PROPERTY STRINGS         ${OPENSSL_VERSION_DEFAULT})
+set_property (CACHE NASM_VERSION PROPERTY STRINGS            ${NASM_VERSION_DEFAULT})
+set_property (CACHE PERL_NET_SSLEAY_VERSION PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 
 message (STATUS "Perl version             : ${PERL_VERSION}")
 message (STATUS "Openssl version          : ${OPENSSL_VERSION}")
@@ -81,10 +127,12 @@ endif()
 message (STATUS "PERL_CCTYPE              : ${PERL_CCTYPE}")
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set (PERL_INSTSUBDIR "cl-perl-${PERL_VERSION}-64bit")
   set (PERL_WIN64 "#WIN64")
   set (OPENSSL_VC "VC-WIN64A")
   set (OPENSSL_LDFLAGS "/debug")
 else ()
+  set (PERL_INSTSUBDIR "cl-perl-${PERL_VERSION}-32bit")
   if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
     set (PERL_WIN64 "WIN64")
 	#
@@ -116,40 +164,28 @@ string (REGEX REPLACE "/" "\\\\" PERL_SOURCE_DIR_DOS ${PERL_SOURCE_DIR_DOS})
 set (CMAKE_MAKE_PROGRAM_DOS "${CMAKE_MAKE_PROGRAM}")
 string (REGEX REPLACE "/" "\\\\" CMAKE_MAKE_PROGRAM_DOS ${CMAKE_MAKE_PROGRAM_DOS})
 
+set (CMAKE_COMMAND_DOS "${CMAKE_COMMAND}")
+string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
+
 #
 # Perl specific bat files
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-cpan %*"
-)
+"IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
+set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+cpan %*
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-cpanm %*"
-)
+"IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
+set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+cpanm %*
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-echo | perl %*"
-)
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+echo | perl %*
+")
 
 #
 # Download and build perl
@@ -163,7 +199,7 @@ ExternalProject_Add(perl
 					# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
 					# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
 					#
-					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}"
+					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
 					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
 					# BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
 					# TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
@@ -178,6 +214,9 @@ ExternalProject_Add(perl
 # Download and build nasm
 #
 set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
+set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
+string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
+
 add_custom_target(PerlFontTTF
                   COMMENT "Perl module Font::TTF"
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF)
@@ -189,14 +228,44 @@ add_custom_target(PerlTextPatch
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak"
-)
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+\"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
+")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat"
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\ldrdf.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"nasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"ndisasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdf2bin.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdf2com.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdf2ihx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdf2ith.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdf2srec.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdfdump.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdflib.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+copy /Y \"rdoff\\rdx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
+copy /Y \"LICENSE\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\ldrdf.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"nasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"ndisasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdf2bin.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdf2com.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdf2ihx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdf2ith.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdf2srec.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdfdump.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdflib.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+copy /Y \"rdoff\\rdx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+copy /Y \"rdoff\\librdoff.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+copy /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+")
 
 ExternalProject_Add(nasm
 					PREFIX nasm
@@ -212,7 +281,8 @@ ExternalProject_Add(nasm
 					COMMAND           ${CMAKE_COMMAND} -E rm -f asm/warnings.time
 					COMMAND           ${CMAKE_COMMAND} -E touch asm/warnings.time
 					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-					INSTALL_COMMAND   ${CMAKE_COMMAND} -E echo "Installation step skipped: leaving nasm.exe in its source tree"
+					INSTALL_COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat" "${NASM_SOURCE_DIR}"
+					# INSTALL_COMMAND   ${CMAKE_COMMAND} -E echo "Installation step skipped: leaving nasm.exe in its source tree"
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
@@ -223,49 +293,29 @@ ExternalProject_Add(nasm
 # Download and build openssl. We want to install it in perl's "$Config{installbin}"
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-echo | perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
-SET /p perlinstallbin= < tmpFile
-DEL tmpFile
-rmdir /S /Q \"%perlinstallbin%\\openssl\"
 SET LDFLAGS=${OPENSSL_LDFLAGS}
-echo | perl Configure --prefix=\"%perlinstallbin%\\openssl\" --openssldir=\"%perlinstallbin%\\openssl\\SSL\" enable-fips enable-weak-ssl-ciphers %1")
+echo | perl Configure --prefix=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\" --openssldir=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\"")
+\"${CMAKE_MAKE_PROGRAM_DOS}\"
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" install")
+\"${CMAKE_MAKE_PROGRAM_DOS}\" install
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-\"${CMAKE_MAKE_PROGRAM_DOS}\" test")
+\"${CMAKE_MAKE_PROGRAM_DOS}\" test
+")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
 					PREFIX              openssl
@@ -288,47 +338,27 @@ ExternalProject_Add(openssl
 # Install perl modules that need a patch - the others will be installed with normal cpan shell
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-echo | perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
-SET /p opensslprefix= < tmpFile
-DEL tmpFile
-SET OPENSSL_PREFIX=%opensslprefix%
-echo | perl Makefile.PL")
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+echo | perl Makefile.PL
+")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;%opensslprefix%\\bin;%PATH%
-perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
-SET /p opensslprefix= < tmpFile
-DEL tmpFile
-echo | perl Makefile.PL")
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+set PATH=%opensslprefix%\\bin;%PATH%
+SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+echo | perl Makefile.PL
+")
 
+#
+# TO DO: Instead copy the openssl libs in C:\cl-perl-5.36.0-32bit\site\lib\auto\Net\SSLeay ?
+#
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-  "pushd \"${PERL_SOURCE_DIR_DOS}\"
-.\\miniperl.exe -I lib -MConfig -e \"print \$Config{archname}\" > tmpFile
-SET /p perlarchname= < tmpFile
-DEL tmpFile
-popd
-set PATH=C:\\perl\\${PERL_VERSION}\\bin\\%perlarchname%;C:\\perl\\${PERL_VERSION}\\bin;%PATH%
-echo | perl -MConfig -e \"print \$Config{installbin}\" > tmpFile
-SET /p perlinstallbin= < tmpFile
-DEL tmpFile
-\"${CMAKE_MAKE_PROGRAM_DOS}\" install
-echo | perl -MConfig -e \"print \$Config{installbin} . '\\openssl'\" > tmpFile
-SET /p opensslprefix= < tmpFile
-DEL tmpFile
-SET OPENSSL_PREFIX=%opensslprefix%
-copy /Y %OPENSSL_PREFIX%\\bin\\libcrypto-3* %perlinstallbin%
-copy /Y %OPENSSL_PREFIX%\\bin\\libssl-3* %perlinstallbin%")
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+copy /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin\"
+copy /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin\"
+")
 
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
 ExternalProject_Add(perl-net-ssleay
