@@ -217,15 +217,9 @@ set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
 set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
 string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
 
-add_custom_target(PerlFontTTF
-                  COMMENT "Perl module Font::TTF"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF)
-add_custom_target(PerlSortVersions
-                  COMMENT "Perl module Sort::Versions"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Sort::Versions)
-add_custom_target(PerlTextPatch
-                  COMMENT "Perl module Text::Patch"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch)
+add_custom_target(PerlNasmModules
+                  COMMENT "Perl modules Font::TTF Sort::Versions Text::Patch"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions Text::Patch)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
@@ -269,7 +263,7 @@ copy /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
 
 ExternalProject_Add(nasm
 					PREFIX nasm
-					DEPENDS PerlFontTTF PerlSortVersions PerlTextPatch
+					DEPENDS PerlNasmModules
 					URL "https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.gz"
 					SOURCE_DIR ${NASM_SOURCE_DIR}
 					#
@@ -309,6 +303,9 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
+if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
+copy /Y \"LICENSE.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
@@ -335,7 +332,7 @@ ExternalProject_Add(openssl
 					BUILD_IN_SOURCE     TRUE)
 
 #
-# Install perl modules that need a patch - the others will be installed with normal cpan shell
+# Install perl modules that need a patch - the others will be installed with normal cpanm shell
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
@@ -351,7 +348,7 @@ echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 
 #
-# TO DO: Instead copy the openssl libs in C:\cl-perl-5.36.0-32bit\site\lib\auto\Net\SSLeay ?
+# We copy openssl libs near Net::SSLeay dll - Windows will automatically see them
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
@@ -389,25 +386,31 @@ add_custom_target(PerlAppcpanminus
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" App::cpanminus)
 
 #
-# Install distributions that are ok but where tests are buggy
+# Install distributions
 #
-add_custom_target(Forced
-                  ALL
-				  DEPENDS PerlAppcpanminus
-				  COMMENT "Perl module using cpanm --notest"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-				  --notest
-				  Unicode::UTF8 # https://rt.cpan.org/Dist/Display.html?Name=Unicode-UTF8
-				  Test::File # https://github.com/briandfoy/test-file/issues/36
-				  )
-
-#
-# Install distributions that must be completely ok
-#
-add_custom_target(Ok
-                  ALL
-				  DEPENDS Forced
-				  COMMENT "Perl module using cpanm"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-				  MarpaX::ESLIF
-				  )
+set(PERL_MODULES_TXT "${PROJECT_SOURCE_DIR}/perl_modules.txt")
+file(STRINGS ${PERL_MODULES_TXT} perl_modules)
+foreach(line ${perl_modules})
+    string(REGEX REPLACE "[ \t]*#.*" "" line ${line})
+    string(REGEX REPLACE "^[ \t]+" "" line ${line})
+    string(REGEX REPLACE "[ \t]+" " " line ${line})
+    string(REGEX MATCH "^[a-zA-Z0-9_: -]+" perl_module_cpanm_all_arguments ${line})
+	string(LENGTH "${perl_module_cpanm_all_arguments}" perl_module_cpanm_all_arguments_length)
+	if (perl_module_cpanm_all_arguments_length GREATER 0)
+        string(REGEX MATCH "[a-zA-Z0-9_:]+$" perl_module_name ${perl_module_cpanm_all_arguments})
+		string(LENGTH "${perl_module_name}" perl_module_name_length)
+		if (perl_module_name_length GREATER 0)
+			set(perl_module_target ${perl_module_name})
+			string(REGEX REPLACE ":" "_" perl_module_target ${perl_module_target})
+			string(REGEX MATCHALL "[^ \t]+" perl_module_cpanm_arguments ${perl_module_cpanm_all_arguments})
+			message(STATUS "TARGET ${perl_module_target} COMMAND cpanm ${perl_module_cpanm_all_arguments}")
+			add_custom_target(${perl_module_target}
+							  ALL
+							  DEPENDS PerlAppcpanminus
+							  COMMENT "Perl module ${perl_module_name} using cpanm ${perl_module_cpanm_all_arguments}"
+							  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
+							  ${perl_module_cpanm_arguments}
+							  )
+		endif ()
+	endif ()
+endforeach()
