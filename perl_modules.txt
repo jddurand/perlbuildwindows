@@ -4,6 +4,8 @@ Log::Log4perl
 Sys::Syslog # Missing dependency of Log::Any::Adapter
 Log::Any::Adapter::Log4perl
 HTTP::Tiny
+--notest IPC::Run # Test fails on Windows though module is ok
+--notest File::Copy::Recursive # Test fails on Windows though module is ok
 --notest IO::Socket::SSL # Cross fingers, usually tetsts are failing for me
 --notest Unicode::UTF8 # https://rt.cpan.org/Dist/Display.html?Name=Unicode-UTF8
 --notest Test::File # https://github.com/briandfoy/test-file/issues/36

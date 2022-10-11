@@ -410,7 +410,7 @@ foreach(line ${perl_modules})
 			set(perl_module_target ${perl_module_name})
 			string(REGEX REPLACE ":" "_" perl_module_target ${perl_module_target})
 			string(REGEX MATCHALL "[^ \t]+" perl_module_cpanm_arguments ${perl_module_cpanm_all_arguments})
-			message(STATUS "TARGET ${perl_module_target} COMMAND cpanm ${perl_module_cpanm_all_arguments}")
+			message(STATUS "To be executed: cpanm ${perl_module_cpanm_all_arguments}")
 			add_custom_target(${perl_module_target}
 							  ALL
 							  DEPENDS PerlAppcpanminus
