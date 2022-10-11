@@ -211,6 +211,13 @@ ExternalProject_Add(perl
 					BUILD_IN_SOURCE TRUE)
 
 #
+# We want to install PerlCPANDistnameInfo as soon as possible
+#
+add_custom_target(PerlCPANDistnameInfo
+                  COMMENT "Perl module CPAN::DistnameInfo"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo)
+
+#
 # Download and build nasm
 #
 set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
@@ -342,8 +349,8 @@ echo | perl Makefile.PL
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=%opensslprefix%\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+set PATH=%OPENSSL_PREFIX%\\bin;%PATH%
 echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 
