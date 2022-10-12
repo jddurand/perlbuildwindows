@@ -3,13 +3,6 @@
 #
 # List of essential files:
 #
-# CMakeLists.txt
-# nasm_msvc_mak.diff
-# patch.pl
-# perlpatch.bat
-# replace.vbs
-# SSLeay.xs.diff
-#
 project(perlbuildwindows LANGUAGES C CXX)
 #
 # We require version 3.14 to have:
@@ -63,29 +56,35 @@ else ()
   set (PERL_VERSION_DEFAULT OFF)
 endif ()
 
-set (PERL_TEST                       FALSE)
-set (OPENSSL_VERSION_DEFAULT         3.0.5)
-set (NASM_VERSION_DEFAULT            2.15.05)
-set (PERL_NET_SSLEAY_VERSION_DEFAULT 1.93_01)
+set (PERL_TEST                             FALSE)
+set (OPENSSL_VERSION_DEFAULT               3.0.5)
+set (NASM_VERSION_DEFAULT                  2.15.05)
+set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
+set (PERL_MODULE_PLUGGABLE_VERSION_DEFAULT 5.2)
 
-set (PERL_INST_DRV           ${PERL_INST_DRV_DEFAULT}           CACHE STRING "Perl installation drive")
-set (PERL_VERSION            ${PERL_VERSION_DEFAULT}            CACHE STRING "Perl version")
-set (PERL_TEST               OFF                                CACHE STRING "Perl test")
-set (OPENSSL_VERSION         ${OPENSSL_VERSION_DEFAULT}         CACHE STRING "Openssl version")
-set (NASM_VERSION            ${NASM_VERSION_DEFAULT}            CACHE STRING "Nasm version")
-set (PERL_NET_SSLEAY_VERSION ${PERL_NET_SSLEAY_VERSION_DEFAULT} CACHE STRING "Perl's Net::SSLeay version")
+set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}           CACHE STRING "Perl installation drive")
+set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}            CACHE STRING "Perl version")
+set (PERL_TEST                     OFF                                CACHE STRING "Perl test")
+set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}         CACHE STRING "Openssl version")
+set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}            CACHE STRING "Nasm version")
+set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT} CACHE STRING "Perl's Net::SSLeay version (patch is applied)")
+set (PERL_MODULE_PLUGGABLE_VERSION ${PERL_MODULE_PLUGGABLE_VERSION_DEFAULT} CACHE STRING "Perl's Module::Pluggable version (patch is applied)")
 
-set_property (CACHE PERL_INST_DRV PROPERTY STRINGS           ${drives} )
-set_property (CACHE PERL_VERSION PROPERTY STRINGS            ${PERL_VERSIONS})
-set_property (CACHE PERL_TEST PROPERTY STRINGS               ON OFF)
-set_property (CACHE OPENSSL_VERSION PROPERTY STRINGS         ${OPENSSL_VERSION_DEFAULT})
-set_property (CACHE NASM_VERSION PROPERTY STRINGS            ${NASM_VERSION_DEFAULT})
-set_property (CACHE PERL_NET_SSLEAY_VERSION PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
+set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
+set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
+set_property (CACHE PERL_TEST                     PROPERTY STRINGS ON OFF)
+set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VERSION_DEFAULT})
+set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
+set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
+set_property (CACHE PERL_MODULE_PLUGGABLE_VERSION PROPERTY STRINGS ${PERL_MODULE_PLUGGABLE_VERSION})
 
-message (STATUS "Perl version             : ${PERL_VERSION}")
-message (STATUS "Openssl version          : ${OPENSSL_VERSION}")
-message (STATUS "Nasm version             : ${NASM_VERSION}")
-message (STATUS "Perl Net::SSLeay version : ${PERL_NET_SSLEAY_VERSION}")
+message (STATUS "===================================")
+message (STATUS "Version of Perl                   : ${PERL_VERSION}")
+message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
+message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
+message (STATUS "Version of Perl Net::SSLeay       : ${PERL_NET_SSLEAY_VERSION}")
+message (STATUS "Version of Perl Module::Pluggable : ${PERL_MODULE_PLUGGABLE_VERSION}")
+message (STATUS "===================================")
 #
 # Set some nervous policies
 #
@@ -215,7 +214,24 @@ ExternalProject_Add(perl
 #
 add_custom_target(PerlCPANDistnameInfo
                   COMMENT "Perl module CPAN::DistnameInfo"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo)
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
+				  DEPENDS perl)
+
+#
+# We want to install PerlHTTPTiny as soon as possible
+#
+add_custom_target(PerlHTTPTiny
+                  COMMENT "Perl module HTTP::Tiny"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" HTTP::Tiny
+				  DEPENDS perl)
+
+#
+# Text::Path sometimes fail when Text::Patch::Rred does not
+#
+add_custom_target(PerlTextPatchRred
+                  COMMENT "Perl module Text::Patch::Rred"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch::Rred
+				  DEPENDS perl)
 
 #
 # Download and build nasm
@@ -226,7 +242,8 @@ string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
 
 add_custom_target(PerlNasmModules
                   COMMENT "Perl modules Font::TTF Sort::Versions Text::Patch"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions Text::Patch)
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions Text::Patch
+				  DEPENDS perl)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
@@ -341,6 +358,10 @@ ExternalProject_Add(openssl
 #
 # Install perl modules that need a patch - the others will be installed with normal cpanm shell
 #
+
+#
+# Net::SSLeay needs a patch
+#
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
@@ -384,11 +405,55 @@ ExternalProject_Add(perl-net-ssleay
 					BUILD_IN_SOURCE TRUE)
 
 #
+# Module::Pluggable needs a patch and and neither Text::Patch nor Text::Path::Rred handles it correctly
+#
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-patch.bat"
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+echo | perl "${PROJECT_SOURCE_DIR}/download.pl" %1 > %2
+")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-configure.bat"
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+echo | perl Makefile.PL
+")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-test.bat"
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+set PATH=%OPENSSL_PREFIX%\\bin;%PATH%
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
+")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-install.bat"
+"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
+")
+
+set(PERL_MODULE_PLUGGABLE_SOURCE_DIR "perl-module-pluggable-${PERL_MODULE_PLUGGABLE_VERSION}")
+ExternalProject_Add(perl-module-pluggable
+					PREFIX              perl-module-pluggable
+					DEPENDS             perl
+					URL                 "https://cpan.metacpan.org/authors/id/S/SI/SIMONW/Module-Pluggable-${PERL_MODULE_PLUGGABLE_VERSION}.tar.gz"
+					SOURCE_DIR          ${PERL_MODULE_PLUGGABLE_SOURCE_DIR}
+					PATCH_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-patch.bat" "http://raw.githubusercontent.com/jddurand/Module-Pluggable/d788b93919b43a80934ae85a3db91438279e02fa/lib/Module/Pluggable/Object.pm" "lib/Module/Pluggable/Object.pm"
+					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-configure.bat"
+					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
+					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-test.bat"
+					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-install.bat"
+					#
+					# Uncomment if you want to run make test only if explicitly required on the command-line
+					#
+					# TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL	TRUE
+					BUILD_IN_SOURCE TRUE)
+
+
+#
 # Install cpanm assap
+# We ask to depend on the perl modules that we locally patch
 #
 add_custom_target(PerlAppcpanminus
                   ALL
-				  DEPENDS perl-net-ssleay
+				  DEPENDS perl-net-ssleay perl-module-pluggable
 				  COMMENT "Perl module App::cpanminus"
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" App::cpanminus)
 
