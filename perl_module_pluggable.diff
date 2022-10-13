@@ -1,0 +1,3 @@
+73a
+    $self->{'follow_symlinks'} = 0 if ($^O eq 'MSWin32' && !exists $self->{'follow_symlinks'});
+.

@@ -1,7 +1,9 @@
 #
 # Example: cmake -G "NMake Makefiles" .
 #
-# List of essential files:
+# Note that perl had real problems with symlink on MSWin32 between 5.34 and
+# 5.36 - this is fixed since 5.37.4, therefore building a 5.37.4 version at
+# least is recommended.
 #
 project(perlbuildwindows LANGUAGES C CXX)
 #
@@ -41,17 +43,19 @@ endif ()
 file(DOWNLOAD https://raw.githubusercontent.com/skaji/perl-releases/main/perl-releases.v1.csv
      TIMEOUT  30
 	 "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv")
-file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_stable_relases REGEX ",stable,")
+# file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_relases REGEX ",stable,")
+file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_relases)
 set(PERL_VERSIONS)
-foreach(perl_stable_relase ${perl_stable_relases})
-  string(REPLACE "," ";" perl_stable_relase ${perl_stable_relase})
-  list(GET perl_stable_relase 2 perl_stable_release_version)
-  list(APPEND PERL_VERSIONS ${perl_stable_release_version})
+foreach(perl_release ${perl_relases})
+  string(REPLACE "," ";" perl_release ${perl_release})
+  list(GET perl_release 2 perl_release_version)
+  list(APPEND PERL_VERSIONS ${perl_release_version})
 endforeach()
 
 list(LENGTH PERL_VERSIONS PERL_VERSIONS_length)
 if (PERL_VERSIONS_length GREATER 0)
   list(GET PERL_VERSIONS 0 PERL_VERSION_DEFAULT)
+  message(STATUS "=====> ${PERL_VERSION_DEFAULT}")
 else ()
   set (PERL_VERSION_DEFAULT OFF)
 endif ()
@@ -409,7 +413,7 @@ ExternalProject_Add(perl-net-ssleay
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-patch.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | perl "${PROJECT_SOURCE_DIR}/download.pl" %1 > %2
+echo | perl \"${PROJECT_SOURCE_DIR}/download.pl\" %1 > %2
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-configure.bat"
