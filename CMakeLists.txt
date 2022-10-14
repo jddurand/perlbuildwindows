@@ -190,9 +190,9 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
 echo | perl %*
 ")
 
-#
+# ===========================================================
 # Download and build perl
-#
+# ===========================================================
 if (PERL_TEST)
 	ExternalProject_Add(perl
 						PREFIX perl
@@ -237,33 +237,9 @@ else ()
 						BUILD_IN_SOURCE TRUE)
 endif ()
 
-#
-# We want to install PerlCPANDistnameInfo as soon as possible
-#
-add_custom_target(PerlCPANDistnameInfo
-                  COMMENT "Perl module CPAN::DistnameInfo"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
-				  DEPENDS perl)
-
-#
-# We want to install PerlHTTPTiny as soon as possible
-#
-add_custom_target(PerlHTTPTiny
-                  COMMENT "Perl module HTTP::Tiny"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" HTTP::Tiny
-				  DEPENDS perl)
-
-#
-# Text::Path sometimes fail when Text::Patch::Rred does not
-#
-add_custom_target(PerlTextPatchRred
-                  COMMENT "Perl module Text::Patch::Rred"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch::Rred
-				  DEPENDS perl)
-
-#
+# ===========================================================
 # Download and build nasm
-#
+# ===========================================================
 set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
 set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
 string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
@@ -335,9 +311,9 @@ ExternalProject_Add(nasm
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE TRUE)
 
-#
+# ===========================================================
 # Download and build openssl. We want to install it in perl's "$Config{installbin}"
-#
+# ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
@@ -383,13 +359,9 @@ ExternalProject_Add(openssl
 					# TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE     TRUE)
 
-#
-# Install perl modules that need a patch - the others will be installed with normal cpanm shell
-#
-
-#
+# ===========================================================
 # Net::SSLeay needs a patch
-#
+# ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
@@ -432,62 +404,33 @@ ExternalProject_Add(perl-net-ssleay
 					TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE TRUE)
 
-#
-# Module::Pluggable needs a patch and and neither Text::Patch nor Text::Path::Rred handles it correctly
-#
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-patch.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | perl \"${PROJECT_SOURCE_DIR}/download.pl\" %1 > %2
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-configure.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | perl Makefile.PL
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-test.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=%OPENSSL_PREFIX%\\bin;%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-install.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
-")
-
-set(PERL_MODULE_PLUGGABLE_SOURCE_DIR "perl-module-pluggable-${PERL_MODULE_PLUGGABLE_VERSION}")
-ExternalProject_Add(perl-module-pluggable
-					PREFIX              perl-module-pluggable
-					DEPENDS             perl
-					URL                 "https://cpan.metacpan.org/authors/id/S/SI/SIMONW/Module-Pluggable-${PERL_MODULE_PLUGGABLE_VERSION}.tar.gz"
-					SOURCE_DIR          ${PERL_MODULE_PLUGGABLE_SOURCE_DIR}
-					PATCH_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-patch.bat" "http://raw.githubusercontent.com/jddurand/Module-Pluggable/d788b93919b43a80934ae85a3db91438279e02fa/lib/Module/Pluggable/Object.pm" "lib/Module/Pluggable/Object.pm"
-					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-configure.bat"
-					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
-					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-test.bat"
-					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-module-pluggable-install.bat"
-					#
-					# Uncomment if you want to run make test only if explicitly required on the command-line
-					#
-					# TEST_EXCLUDE_FROM_MAIN TRUE
-					TEST_BEFORE_INSTALL	TRUE
-					BUILD_IN_SOURCE TRUE)
-
-
-#
+# ===========================================================
 # Install cpanm assap
-# We ask to depend on the perl modules that we locally patch
-#
+# We ask to depend on the perl modules that we patched.
+# Namely only Net::SSLeay at this stage.
+# ===========================================================
+
+# cpanm strongly suggests CPAN::DistnameInfo
+add_custom_target(PerlCPANDistnameInfo
+                  COMMENT "Perl module CPAN::DistnameInfo"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
+				  DEPENDS perl)
+
+# HTTP::Tiny is better suited for download
+add_custom_target(PerlHTTPTiny
+                  COMMENT "Perl module HTTP::Tiny"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" HTTP::Tiny
+				  DEPENDS perl)
+
 add_custom_target(PerlAppcpanminus
                   ALL
-				  DEPENDS perl-net-ssleay perl-module-pluggable
+				  DEPENDS perl-net-ssleay PerlCPANDistnameInfo PerlHTTPTiny
 				  COMMENT "Perl module App::cpanminus"
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" App::cpanminus)
 
-#
-# Install distributions
-#
+# ===========================================================
+# Install other perl modules
+# ===========================================================
 set(PERL_MODULES_TXT "${PROJECT_SOURCE_DIR}/perl_modules.txt")
 file(STRINGS ${PERL_MODULES_TXT} perl_modules)
 foreach(line ${perl_modules})
