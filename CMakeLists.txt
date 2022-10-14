@@ -38,7 +38,7 @@ else ()
 endif ()
 
 #
-# Get list of stable perl versions
+# Get list of perl versions
 #
 file(DOWNLOAD https://raw.githubusercontent.com/skaji/perl-releases/main/perl-releases.v1.csv
      TIMEOUT  30
@@ -59,18 +59,18 @@ else ()
   set (PERL_VERSION_DEFAULT OFF)
 endif ()
 
-set (PERL_TEST                             FALSE)
+set (PERL_TEST_DEFAULT                     ON)
 set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_MODULE_PLUGGABLE_VERSION_DEFAULT 5.2)
 
-set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}           CACHE STRING "Perl installation drive")
-set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}            CACHE STRING "Perl version")
-set (PERL_TEST                     OFF                                CACHE STRING "Perl test")
-set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}         CACHE STRING "Openssl version")
-set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}            CACHE STRING "Nasm version")
-set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT} CACHE STRING "Perl's Net::SSLeay version (patch is applied)")
+set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
+set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
+set (PERL_TEST                     ${PERL_TEST_DEFAULT}                     CACHE STRING "Perl test")
+set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACHE STRING "Openssl version")
+set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
+set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Perl's Net::SSLeay version (patch is applied)")
 set (PERL_MODULE_PLUGGABLE_VERSION ${PERL_MODULE_PLUGGABLE_VERSION_DEFAULT} CACHE STRING "Perl's Module::Pluggable version (patch is applied)")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
@@ -83,6 +83,7 @@ set_property (CACHE PERL_MODULE_PLUGGABLE_VERSION PROPERTY STRINGS ${PERL_MODULE
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
+message (STATUS "Test of Perl                      : ${PERL_TEST}")
 message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
 message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Perl Net::SSLeay       : ${PERL_NET_SSLEAY_VERSION}")
@@ -192,25 +193,49 @@ echo | perl %*
 #
 # Download and build perl
 #
-ExternalProject_Add(perl
-					PREFIX perl
-					URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
-					SOURCE_DIR perl-${PERL_VERSION}
-					SOURCE_SUBDIR win32
-					#
-					# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
-					# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
-					#
-					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
-					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
-					# BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
-					# TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
-					#
-					# Uncomment if you want to run make test only if explicitly required on the command-line
-					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					# TEST_BEFORE_INSTALL	TRUE
-					BUILD_IN_SOURCE TRUE)
+if (PERL_TEST)
+	ExternalProject_Add(perl
+						PREFIX perl
+						URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
+						SOURCE_DIR perl-${PERL_VERSION}
+						SOURCE_SUBDIR win32
+						#
+						# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
+						# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
+						#
+						PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
+						CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
+						BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
+						TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
+						INSTALL_COMMAND   ${CMAKE_MAKE_PROGRAM_DOS} install
+						#
+						# Uncomment if you want to run make test only if explicitly required on the command-line
+						#
+						# TEST_EXCLUDE_FROM_MAIN TRUE
+						TEST_BEFORE_INSTALL	TRUE
+						BUILD_IN_SOURCE TRUE)
+else ()
+	ExternalProject_Add(perl
+						PREFIX perl
+						URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
+						SOURCE_DIR perl-${PERL_VERSION}
+						SOURCE_SUBDIR win32
+						#
+						# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
+						# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
+						#
+						PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
+						CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
+						BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
+						# TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
+						# INSTALL_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS} install
+						#
+						# Uncomment if you want to run make test only if explicitly required on the command-line
+						#
+						TEST_EXCLUDE_FROM_MAIN TRUE
+						# TEST_BEFORE_INSTALL	TRUE
+						BUILD_IN_SOURCE TRUE)
+endif ()
 
 #
 # We want to install PerlCPANDistnameInfo as soon as possible
