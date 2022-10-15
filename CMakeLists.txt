@@ -404,6 +404,7 @@ ExternalProject_Add(perl-net-ssleay
 # From now on we move to a pure perl process
 #
 add_custom_target(PerlModules
+				  ALL
                   COMMENT "Perl modules"
 				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/modules.pl"
 				  DEPENDS perl-net-ssleay)
