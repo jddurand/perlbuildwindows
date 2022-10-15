@@ -240,11 +240,6 @@ set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
 set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
 string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
 
-add_custom_target(PerlNasmModules
-                  COMMENT "Perl modules Font::TTF Sort::Versions Text::Patch"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions Text::Patch
-				  DEPENDS perl)
-
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
@@ -287,20 +282,25 @@ copy /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
 
 ExternalProject_Add(nasm
 					PREFIX nasm
-					DEPENDS PerlNasmModules
+					DEPENDS perl
 					URL "https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.gz"
 					SOURCE_DIR ${NASM_SOURCE_DIR}
 					#
 					# C.f. https://forum.nasm.us/index.php?topic=2746.msg12335#msg12335
 					#
-					PATCH_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "Mkfiles/msvc_patched.mak"
-					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using Mkfiles/msvc_patched.mak"
-					BUILD_COMMAND     ${CMAKE_COMMAND} -E echo "Custom build step"
-					COMMAND           ${CMAKE_COMMAND} -E rm -f asm/warnings.time
+					#
+					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
+					#
+					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
+					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "Mkfiles/msvc_patched.mak"
+					#
+					# It needs Font::TTF Sort::Versions perl modules as per the doc
+					#
+					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions
+					BUILD_COMMAND     ${CMAKE_COMMAND} -E rm -f asm/warnings.time
 					COMMAND           ${CMAKE_COMMAND} -E touch asm/warnings.time
 					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-					INSTALL_COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat" "${NASM_SOURCE_DIR}"
-					# INSTALL_COMMAND   ${CMAKE_COMMAND} -E echo "Installation step skipped: leaving nasm.exe in its source tree"
+					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat" "${NASM_SOURCE_DIR}"
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
@@ -308,7 +308,7 @@ ExternalProject_Add(nasm
 					BUILD_IN_SOURCE TRUE)
 
 # ===========================================================
-# Download and build openssl. We want to install it in perl's "$Config{installbin}"
+# Download and build openssl.
 # ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
 "set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
@@ -340,7 +340,7 @@ echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
 					PREFIX              openssl
-					DEPENDS             perl nasm
+					DEPENDS             nasm
 					URL                 "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
 					SOURCE_DIR          ${OPENSSL_SOURCE_DIR}
 					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
@@ -385,7 +385,7 @@ copy /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBD
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
 ExternalProject_Add(perl-net-ssleay
 					PREFIX              perl-net-ssleay
-					DEPENDS             perl openssl
+					DEPENDS             openssl
 					URL                 "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
 					SOURCE_DIR          ${PERL_NET_SSLEAY_SOURCE_DIR}
 					PATCH_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "SSLeay.xs"
@@ -400,6 +400,15 @@ ExternalProject_Add(perl-net-ssleay
 					TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE TRUE)
 
+#
+# From now on we move to a pure perl process
+#
+add_custom_target(PerlModules
+                  COMMENT "Perl modules"
+				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/modules.pl"
+				  DEPENDS perl-net-ssleay)
+
+if (FALSE)
 # ===========================================================
 # Install cpanm assap
 # We ask to depend on the perl modules that we patched.
@@ -453,3 +462,4 @@ foreach(line ${perl_modules})
 		endif ()
 	endif ()
 endforeach()
+endif()
