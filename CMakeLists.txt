@@ -179,8 +179,10 @@ IF NOT \"%USERPROFILE%\"==\"\" (
   goto perlhomefound
 )
 IF NOT \"%HOMEDRIVE%\"==\"\" (
-  SET PERL_HOME=%HOMEDRIVE%%HOMEPATH%
-  goto perlhomefound
+  IF NOT \"%HOMEPATH%\"==\"\" (
+    SET PERL_HOME=%HOMEDRIVE%%HOMEPATH%
+    goto perlhomefound
+  )
 )
 :perlhomefound
 IF NOT EXIST \"%PERL_HOME%\\.cpan\" MKDIR \"%PERL_HOME%\\.cpan\"
