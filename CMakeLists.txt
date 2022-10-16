@@ -465,7 +465,7 @@ add_custom_target(PerlModules
 				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
 				  # Log::Log4perl is ok, sometimes its test suite is not.
 				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL Log::Log4perl
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
 				  DEPENDS PerlBoostrapCpan)
 
