@@ -1,0 +1,46 @@
+From e11dd2728f6ff63c0db9818849ac7851d8030918 Mon Sep 17 00:00:00 2001
+From: Tony Cook <tony@develop-help.com>
+Date: Thu, 22 Sep 2022 11:33:49 +1000
+Subject: [PATCH] readline() now sets eof at end of file, clear it
+
+80c1f1e in perl 5.37.3 fixed a bug where readline() could clear the
+stream eof flag right after reading up to end of file.
+
+The log4perl tests depended on this bug, to continue to work, clear
+the eof flag before trying to continue reading from the redirected
+stdout/stderr files.
+---
+ t/020Easy.t               | 2 +-
+ t/051Extra.t              | 2 +-
+ t/071ScreenStdoutStderr.t | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/t/020Easy.t b/t/020Easy.t
+index f7167ca..a6fea29 100644
+--- a/t/020Easy.t
++++ b/t/020Easy.t
+@@ -43,7 +43,7 @@ unlink $TMP_FILE;
+ open STDERR, ">$TMP_FILE";
+ select STDERR; $| = 1; #needed on win32
+ open IN, "<$TMP_FILE" or die "Cannot open $TMP_FILE";
+-sub readstderr { return join("", <IN>); }
++sub readstderr { IN->clearerr(); return join("", <IN>); }
+ 
+ ############################################################
+ # Typical easy setup
+diff --git a/t/051Extra.t b/t/051Extra.t
+index baeacd1..96d1200 100644
+--- a/t/051Extra.t
++++ b/t/051Extra.t
+@@ -48,7 +48,7 @@ my $TMP_FILE = File::Spec->catfile($WORK_DIR, qw(easy));
+ open STDERR, ">$TMP_FILE";
+ select STDERR; $| = 1; #needed on win32
+ open IN, "<$TMP_FILE" or die "Cannot open $TMP_FILE"; binmode IN, ":utf8";
+-sub readstderr { return join("", <IN>); }
++sub readstderr { IN->clearerr(); return join("", <IN>); }
+ 
+ END   { unlink $TMP_FILE;
+         close IN;
+-- 
+2.11.0
+

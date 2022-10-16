@@ -1,0 +1,44 @@
+diff --git a/lib/Devel/Caller.pm b/lib/Devel/Caller.pm
+index 64ce950..cee2824 100644
+--- a/lib/Devel/Caller.pm
++++ b/lib/Devel/Caller.pm
+@@ -83,10 +83,28 @@ sub called_with {
+             $op = $op->sibling;
+         }
+ 
+-        if ($op->name =~ "pad(sv|av|hv)") {
++        if ($op->name =~ /padsv_store/) {
++            # A padsv_store is a 5.37 optimization that combines a padsv and
++            # an sassign into a single op. The new op steals the targ slot
++            # of the original padsv.
++            #
++            # https://github.com/Perl/perl5/commit/9fdd7fc
++            print "Copying from pad\n" if $DEBUG;
++            if ($want_names) {
++                push @return, $padn->ARRAYelt( $op->targ )->PVX;
++            }
++            else {
++                push @return, $padv->ARRAYelt( $op->targ )->object_2svref;
++            }
++            next;
++        }
++        elsif ($op->name =~ "pad(sv|av|hv)") {
+             if ($op->next->next->name eq "sassign") {
+                 print "sassign in two ops, this is the target skipping\n" if $DEBUG;
+                 next;
++            } elsif ($op->next->name eq "padsv_store") {
++                print "padsv_store in one op, this is the target, skipping\n" if $DEBUG;
++                next;
+             }
+ 
+             print "Copying from pad\n" if $DEBUG;
+@@ -145,6 +163,9 @@ sub called_with {
+             if ($op->next->next->name eq "sassign") {
+                 print "sassign in two ops, this is the target, skipping\n" if $DEBUG;
+                 next;
++            } elsif ($op->next->name eq "padsv_store") {
++                print "padsv_store in one op, this is the target, skipping\n" if $DEBUG;
++                next;
+             }
+ 
+             push @return, $want_names ? undef : $op->sv;

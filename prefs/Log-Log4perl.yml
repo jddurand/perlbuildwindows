@@ -11,7 +11,7 @@ match:
   perlconfig:
     version: '^5\.37\.4$'
 patches:
-  - SREZIC/patches/Log-Log4perl-1.56-PR119-TONYC-2.patch
+  - Log-Log4perl-1.56-PR119-TONYC-2.patch
 # https://github.com/mschilli/log4perl/pull/119
 # https://github.com/Perl/perl5/issues/20208
 # https://github.com/Perl/perl5/issues/20207

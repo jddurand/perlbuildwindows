@@ -175,6 +175,7 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
 "@ECHO OFF
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 REM
 REM If you look closely to CPAN::HandleConfig.pm you will see that:
 REM - If File::HomeDir is usable it gives precedence do
@@ -193,15 +194,32 @@ SET HOME=.
 REM
 REM The very first time we initialize .cpan/CPAN/MyConfig and cpan will overwrite it
 REM
-IF NOT EXIST \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\" (
-  IF NOT EXIST \"%HOME%\\.cpan\" MKDIR \"%HOME%\\.cpan\"
-  IF NOT EXIST \"%HOME%\\.cpan\\CPAN\" MKDIR \"%HOME%\\.cpan\\CPAN\"
-  IF NOT EXIST \"%HOME%\\.cpan\\prefs\" MKDIR \"%HOME%\\.cpan\\prefs\"
+IF NOT EXIST \"%HOME%\\.cpan\" MKDIR \"%HOME%\\.cpan\"
+IF NOT EXIST \"%HOME%\\.cpan\\CPAN\" MKDIR \"%HOME%\\.cpan\\CPAN\"
+IF NOT EXIST \"%HOME%\\.cpan\\prefs\" (
+  MKDIR \"%HOME%\\.cpan\\prefs\" 
   COPY /Y \"${PROJECT_SOURCE_DIR}\\prefs\\*\" \"%HOME%\\.cpan\\prefs\"
+)
+IF NOT EXIST \"%HOME%\\.cpan\\patches\" (
+  MKDIR \"%HOME%\\.cpan\\patches\"
+  COPY /Y \"${PROJECT_SOURCE_DIR}\\patches\\*\" \"%HOME%\\.cpan\\patches\"
+)
+IF NOT EXIST \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\" (
   ECHO $CPAN::Config{cpan_home} = '${CMAKE_CURRENT_BINARY_DIR}'; > \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\"
   ECHO 1; >> \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\"
+  REM
+  REM First instance that will ask questions
+  REM
+  ECHO | cpan
+  REM
+  REM patches_dir can be set only via o conf !?
+  REM
+  DEL .\\tmpFile
+  ECHO o conf patches_dir \"${CMAKE_CURRENT_BINARY_DIR}/.cpan/patches\" > .\\tmpFile
+  ECHO o conf commit >> .\\tmpFile
+  TYPE .\\tmpFile | cpan
+  DEL .\\tmpFile
 )
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 ECHO | cpan %*
 ")
 
@@ -463,9 +481,9 @@ add_custom_target(PerlModules
                   COMMENT "Perl modules"
 				  #
 				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
-				  # Log::Log4perl is ok, sometimes its test suite is not.
+				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs
 				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL IPC::Run
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
 				  DEPENDS PerlBoostrapCpan)
 
