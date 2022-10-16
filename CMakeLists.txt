@@ -169,44 +169,39 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 #
 # Perl specific bat files
 #
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-setup.bat"
 "IF NOT \"%HOME%\"==\"\" (
-  IF EXIST \"%HOME%\\.cpan\\.lock\" DEL /Q /F \"%HOME%\\.cpan\\.lock\"
+  SET PERL_HOME=%HOME%
   goto perlhomefound
 )
 IF NOT \"%USERPROFILE%\"==\"\" (
-  IF EXIST \"%USERPROFILE%\\.cpan\\.lock\" DEL /Q /F \"%USERPROFILE%\\.cpan\\.lock\"
+  SET PERL_HOME=%USERPROFILE%
   goto perlhomefound
 )
 IF NOT \"%HOMEDRIVE%\"==\"\" (
-  IF NOT \"%HOMEPATH%\"==\"\" IF EXIST \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\" DEL /Q /F \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\"
+  SET PERL_HOME=%HOMEDRIVE%%HOMEPATH%
   goto perlhomefound
 )
 :perlhomefound
+IF NOT EXIST \"%PERL_HOME%\\.cpan\" MKDIR \"%PERL_HOME%\\.cpan\"
+IF NOT EXIST \"%PERL_HOME%\\.cpan\\prefs\" MKDIR \"%PERL_HOME%\\.cpan\\prefs\"
+IF EXIST \"%PERL_HOME%\\.cpan\\.lock\" DEL /Q /F \"%PERL_HOME%\\.cpan\\.lock\"
 set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 echo | cpan %*
 ")
 
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
+".\\perl-setup.bat
+echo | cpan %*
+")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-"IF NOT \"%HOME%\"==\"\" (
-  IF EXIST \"%HOME%\\.cpan\\.lock\" DEL /Q /F \"%HOME%\\.cpan\\.lock\"
-  goto perlhomefound
-)
-IF NOT \"%USERPROFILE%\"==\"\" (
-  IF EXIST \"%USERPROFILE%\\.cpan\\.lock\" DEL /Q /F \"%USERPROFILE%\\.cpan\\.lock\"
-  goto perlhomefound
-)
-IF NOT \"%HOMEDRIVE%\"==\"\" (
-  IF NOT \"%HOMEPATH%\"==\"\" IF EXIST \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\" DEL /Q /F \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\"
-  goto perlhomefound
-)
-:perlhomefound
-set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+".\\perl-setup.bat
 echo | cpanm %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+".\\perl-setup.bat
 echo | perl %*
 ")
 
@@ -412,7 +407,11 @@ ExternalProject_Add(perl-net-ssleay
 					DEPENDS             openssl
 					URL                 "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
 					SOURCE_DIR          ${PERL_NET_SSLEAY_SOURCE_DIR}
-					PATCH_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "SSLeay.xs"
+					#
+					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
+					#
+					PATCH_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
+					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "SSLeay.xs"
 					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
 					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
@@ -425,12 +424,18 @@ ExternalProject_Add(perl-net-ssleay
 					BUILD_IN_SOURCE TRUE)
 
 #
-# From now on we move to a pure perl process
+# From now on we move to general perl modules installation.
 #
+# Every module that needs a patch
 add_custom_target(PerlModules
 				  ALL
                   COMMENT "Perl modules"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/modules.pl"
+				  #
+				  # CPAN yells quite early on CPAN::DistnameInfo, so we install it first
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
+				  #
+				  # CPAN is faster with SQLite
 				  DEPENDS perl-net-ssleay)
 
 if (FALSE)
