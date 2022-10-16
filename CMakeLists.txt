@@ -5,6 +5,10 @@
 # 5.36 - this is fixed since 5.37.4, therefore building a 5.37.4 version at
 # least is recommended.
 #
+# We use distproprefs that will require patch.exe .
+# The easiest way to get it is to install "Git For Windows" (https://gitforwindows.org/) and
+# add C:\Program Files\Git\usr\bin to the PATH.
+#
 project(perlbuildwindows LANGUAGES C CXX)
 #
 # We require version 3.14 to have:
@@ -169,42 +173,53 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 #
 # Perl specific bat files
 #
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-setup.bat"
-"IF NOT \"%HOME%\"==\"\" (
-  SET PERL_HOME=%HOME%
-  goto perlhomefound
-)
-IF NOT \"%USERPROFILE%\"==\"\" (
-  SET PERL_HOME=%USERPROFILE%
-  goto perlhomefound
-)
-IF NOT \"%HOMEDRIVE%\"==\"\" (
-  IF NOT \"%HOMEPATH%\"==\"\" (
-    SET PERL_HOME=%HOMEDRIVE%%HOMEPATH%
-    goto perlhomefound
-  )
-)
-:perlhomefound
-IF NOT EXIST \"%PERL_HOME%\\.cpan\" MKDIR \"%PERL_HOME%\\.cpan\"
-IF NOT EXIST \"%PERL_HOME%\\.cpan\\prefs\" MKDIR \"%PERL_HOME%\\.cpan\\prefs\"
-IF EXIST \"%PERL_HOME%\\.cpan\\.lock\" DEL /Q /F \"%PERL_HOME%\\.cpan\\.lock\"
-set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | cpan %*
-")
-
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
-".\\perl-setup.bat
-echo | cpan %*
+"@ECHO OFF
+REM
+REM If you look closely to CPAN::HandleConfig.pm you will see that:
+REM - If File::HomeDir is usable it gives precedence do
+REM   File::HomeDir->my_data that will give  %LOCALAPPDATA%\\.cpan
+REM   File::HomeDir->my_home that will give  %HOME%\\.cpan or %USERPROFILE%\\.cpan or %HOMEDRIVE%%HOMEPATH%\\.cpan
+REM - In any case:
+REM   %HOME%\\.cpan if it exist
+REM   %HOMEDRIVE%%HOMEPATH%\\.cpan if it exist
+REM   %USERPROFILE\\.cpan if it exist
+REM This mean that removing %APPDATA%\\.cpan and setting HOME to current directory will give a predictable .cpan
+REM This can sound dangerous, but this is ok because the /first/ time CPAN is instanciated, by definition File::HomeDir
+REM is not present, so cpan will default to one of the three cases that are always applied, and %APPDATA% is not one of them
+REM
+IF EXIST %LOCALAPPDATA%\\.cpan RMDIR /Q /S %LOCALAPPDATA%\\.cpan
+SET HOME=.
+REM
+REM The very first time we initialize .cpan/CPAN/MyConfig and cpan will overwrite it
+REM
+IF NOT EXIST \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\" (
+  IF NOT EXIST \"%HOME%\\.cpan\" MKDIR \"%HOME%\\.cpan\"
+  IF NOT EXIST \"%HOME%\\.cpan\\CPAN\" MKDIR \"%HOME%\\.cpan\\CPAN\"
+  IF NOT EXIST \"%HOME%\\.cpan\\prefs\" MKDIR \"%HOME%\\.cpan\\prefs\"
+  COPY /Y \"${PROJECT_SOURCE_DIR}\\prefs\\*\" \"%HOME%\\.cpan\\prefs\"
+  ECHO $CPAN::Config{cpan_home} = '${CMAKE_CURRENT_BINARY_DIR}'; > \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\"
+  ECHO 1; >> \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\"
+)
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+ECHO | cpan %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-".\\perl-setup.bat
-echo | cpanm %*
+"@ECHO OFF
+REM
+REM cpanm give definitely priority to HOME environment variable, but it seems
+REM it has to be a full path to work
+REM
+SET HOME=${CMAKE_CURRENT_BINARY_DIR}
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+ECHO | cpanm %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
-".\\perl-setup.bat
-echo | perl %*
+"@ECHO OFF
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+ECHO | perl %*
 ")
 
 # ===========================================================
@@ -262,43 +277,45 @@ set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
 string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
+"@ECHO OFF
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\ldrdf.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"nasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"ndisasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdf2bin.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdf2com.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdf2ihx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdf2ith.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdf2srec.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdfdump.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdflib.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-copy /Y \"rdoff\\rdx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
-copy /Y \"LICENSE\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\ldrdf.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"nasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"ndisasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdf2bin.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdf2com.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdf2ihx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdf2ith.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdf2srec.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdfdump.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdflib.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-copy /Y \"rdoff\\rdx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-copy /Y \"rdoff\\librdoff.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-copy /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+"@ECHO OFF
+SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\ldrdf.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"nasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"ndisasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdf2bin.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdf2com.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdf2ihx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdf2ith.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdf2srec.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdfdump.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdflib.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"rdoff\\rdx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
+COPY /Y \"LICENSE\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\ldrdf.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"nasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"ndisasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdf2bin.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdf2com.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdf2ihx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdf2ith.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdf2srec.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdfdump.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdflib.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+COPY /Y \"rdoff\\rdx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+COPY /Y \"rdoff\\librdoff.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+COPY /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
 ")
 
 ExternalProject_Add(nasm
@@ -332,31 +349,31 @@ ExternalProject_Add(nasm
 # Download and build openssl.
 # ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 SET LDFLAGS=${OPENSSL_LDFLAGS}
-echo | perl Configure --prefix=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\" --openssldir=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
+ECHO | perl Configure --prefix=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\" --openssldir=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\"
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\"
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
-if not exist \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\" mkdir \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
-copy /Y \"LICENSE.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
+COPY /Y \"LICENSE.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-set PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
@@ -380,27 +397,27 @@ ExternalProject_Add(openssl
 # Net::SSLeay needs a patch
 # ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-echo | perl Makefile.PL
+ECHO | perl Makefile.PL
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-set PATH=%OPENSSL_PREFIX%\\bin;%PATH%
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
+SET PATH=%OPENSSL_PREFIX%\\bin;%PATH%
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
 ")
 
 #
 # We copy openssl libs near Net::SSLeay dll - Windows will automatically see them
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-"set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-echo | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
-copy /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
-copy /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
+ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
+COPY /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
+COPY /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
 ")
 
 set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
@@ -428,17 +445,29 @@ ExternalProject_Add(perl-net-ssleay
 #
 # From now on we move to general perl modules installation.
 #
+add_custom_target(PerlBoostrapCpan
+                  COMMENT "Perl CPAN bootstrap"
+				  #
+				  # "Bootstrap" modules - their installation must not fail
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E rm -rf .cpan .cpanm
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           CPAN::DistnameInfo App::cpanminus HTTP::Tiny YAML
+				  #
+				  # CPAN is faster with SQLite
+				  DEPENDS perl-net-ssleay)
+
+
 # Every module that needs a patch
 add_custom_target(PerlModules
 				  ALL
                   COMMENT "Perl modules"
 				  #
-				  # CPAN yells quite early on CPAN::DistnameInfo, so we install it first
+				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
+				  # Log::Log4perl is ok, sometimes its test suite is not.
 				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
-				  #
-				  # CPAN is faster with SQLite
-				  DEPENDS perl-net-ssleay)
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL Log::Log4perl
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
+				  DEPENDS PerlBoostrapCpan)
 
 if (FALSE)
 # ===========================================================
