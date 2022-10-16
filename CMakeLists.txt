@@ -170,13 +170,37 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 # Perl specific bat files
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
-"IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
+"IF NOT \"%HOME%\"==\"\" (
+  IF EXIST \"%HOME%\\.cpan\\.lock\" DEL /Q /F \"%HOME%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+IF NOT \"%USERPROFILE%\"==\"\" (
+  IF EXIST \"%USERPROFILE%\\.cpan\\.lock\" DEL /Q /F \"%USERPROFILE%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+IF NOT \"%HOMEDRIVE%\"==\"\" (
+  IF NOT \"%HOMEPATH%\"==\"\" IF EXIST \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\" DEL /Q /F \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+:perlhomefound
 set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 echo | cpan %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-"IF EXIST %USERPROFILE%\\.cpan\\.lock DEL /Q /F %USERPROFILE%\\.cpan\\.lock
+"IF NOT \"%HOME%\"==\"\" (
+  IF EXIST \"%HOME%\\.cpan\\.lock\" DEL /Q /F \"%HOME%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+IF NOT \"%USERPROFILE%\"==\"\" (
+  IF EXIST \"%USERPROFILE%\\.cpan\\.lock\" DEL /Q /F \"%USERPROFILE%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+IF NOT \"%HOMEDRIVE%\"==\"\" (
+  IF NOT \"%HOMEPATH%\"==\"\" IF EXIST \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\" DEL /Q /F \"%HOMEDRIVE%%HOMEPATH%\\.cpan\\.lock\"
+  goto perlhomefound
+)
+:perlhomefound
 set PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 echo | cpanm %*
 ")
