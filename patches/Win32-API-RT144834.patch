@@ -1,8 +1,8 @@
 diff --git a/t/00_API.t b/t/00_API.t
-index e474872..c223735 100644
+index e474872..61cafd0 100644
 --- a/t/00_API.t
 +++ b/t/00_API.t
-@@ -302,12 +302,15 @@ SKIP: {
+@@ -302,16 +302,17 @@ SKIP: {
          skip("ESP checking not implemented on x64", 2);
      }
  
@@ -12,7 +12,10 @@ index e474872..c223735 100644
 -    };
 -    like($@, "/\QWin32::API a function was called with the wrong prototype\E/",
 -       'Take41Params() with __stdcall/__cdecl swap dies after calling it');
-+    SKIP: {
+     SKIP: {
+-        if(Win32::API::IsGCC()) {
+-            skip("wrong param count detection not implemented in Win32::API for GCC", 1);
+-        }
 +        skip("wrong prototype detection skipped", 1);
 +		$function = new Win32::API($test_dll, 'Take41Params', 'N' x 41, 'N', '__cdecl');
 +		eval {
@@ -21,6 +24,8 @@ index e474872..c223735 100644
 +		like($@, "/\QWin32::API a function was called with the wrong prototype\E/",
 +		   'Take41Params() with __stdcall/__cdecl swap dies after calling it');
 +    }
-     SKIP: {
-         if(Win32::API::IsGCC()) {
-             skip("wrong param count detection not implemented in Win32::API for GCC", 1);
++    SKIP: {
++        skip("wrong param count detection skipped", 1);
+         $function = new Win32::API($test_dll, 'Take41Params', 'N', 'N', '__cdecl');
+         eval {
+             $function->Call(0); #will die

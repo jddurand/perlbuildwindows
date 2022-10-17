@@ -485,6 +485,10 @@ add_custom_target(PerlModules
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL IPC::Run
 				  #
+				  # Most of WIN32:: thingies
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::WQL Win32::ADO Win32::API Win32::ASP Win32::CLR Win32::Env Win32::HTA Win32::IPC Win32::Job Win32::File Win32::ODBC
+				  #
 				  # We choose first "big" packages, that install a lot of stuff, though we avoid Acme
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla

@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QConfig-AutoConf-0.320.tar.gz\E'
+patches:
+  - Config-AutoConf-0.320.patch

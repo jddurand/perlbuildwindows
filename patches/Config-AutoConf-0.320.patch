@@ -1,0 +1,22 @@
+diff --git a/t/03.link.t b/t/03.link.t
+index 6c9a74c..6eca111 100644
+--- a/t/03.link.t
++++ b/t/03.link.t
+@@ -21,7 +21,7 @@ my $ac_1;
+ ok($ac_1 = Config::AutoConf->new(logfile => "config3.log"), "Instantiating Config::AutoConf for check_lib() tests");
+ ok($ac_1->check_header("stdio.h")) or plan skip_all => "No working compile environment";
+ 
+-ok($ac_1->check_func("printf"), "Every system should have a printf");
++ok($ac_1->check_func("gets"), "Every system should have a gets");
+ my $set_me;
+ $ac_1->check_func(
+     "scanf",
+@@ -31,7 +31,7 @@ $ac_1->check_func(
+     }
+ );
+ ok(defined $set_me,                          "Having scanf or not, but now we know");
+-ok($ac_1->check_funcs([qw(sprintf sscanf)]), "Every system should have sprintf and sscanf");
++ok($ac_1->check_funcs([qw(getc getchar)]), "Every system should have getc and getchar");
+ 
+ TODO:
+ {

@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-ODBC-0.036.tar.gz\E'
+patches:
+  - Win32-ODBC-VS2015-and-later.patch
