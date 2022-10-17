@@ -15,7 +15,7 @@ index 4fd586a..469c5be 100644
  $KeepMode = 1;
  $CPRFComp = 0;
 -$CopyLink = eval { local $SIG{'__DIE__'}; symlink '', ''; 1 } || 0;
-+$CopyLink = eval { Test::File::has_symlinks() } || eval { local $SIG{'__DIE__'}; symlink '', ''; 1 } || 0;
++$CopyLink = eval { Test::File::has_symlinks() } // eval { local $SIG{'__DIE__'}; symlink '', ''; 1 } || 0;
  $PFSCheck = 1;
  $RemvBase = 0;
  $NoFtlPth = 0;
