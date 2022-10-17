@@ -491,7 +491,7 @@ add_custom_target(PerlModules
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Job Win32::File Win32::ODBC Win32::Pipe Win32::SDDL Win32::Sound Win32::Vcpkg Config::Win32
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Daemon Win32::FileOp Win32::JobAdd Win32::Locale Win32::PEFile Win32::Uptime
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::AbsPath Win32::Console Win32::MinXSLT Win32::Printer Win32::Process Win32::Service
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Symlink Win32::Tracert Win32::Guidgen Win32::Wingraph Win32::Autoglob Win32::Detached
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Symlink Win32::Tracert Win32::Wingraph Win32::Autoglob Win32::Detached
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::EventLog Win32::Hardlink Win32::IPConfig Win32::IPHelper Win32::Internet Win32::Registry
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Shortcut Win32::ShutDown Win32::Symlinks Win32::VBScript Win32::ADRecurse
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Clipboard Win32::CryptData Win32::DriveInfo Win32::EmailSend Win32::ErrorMode
