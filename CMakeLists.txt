@@ -487,11 +487,23 @@ add_custom_target(PerlModules
 				  #
 				  # Most of WIN32:: thingies
 				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::WQL Win32::ADO Win32::API Win32::ASP Win32::CLR Win32::Env Win32::HTA Win32::IPC Win32::Job Win32::File Win32::ODBC
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::WQL Win32::ADO Win32::API Win32::ASP Win32::CLR Win32::Env Win32::HTA Win32::IPC
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Job Win32::File Win32::ODBC Win32::Pipe Win32::SDDL Win32::Sound Win32::Vcpkg Config::Win32
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Daemon Win32::FileOp Win32::JobAdd Win32::Locale Win32::PEFile Win32::Uptime
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::AbsPath Win32::Console Win32::MinXSLT Win32::Printer Win32::Process Win32::Service
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Symlink Win32::Tracert Win32::Guidgen Win32::Wingraph Win32::Autoglob Win32::Detached
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::EventLog Win32::Hardlink Win32::IPConfig Win32::IPHelper Win32::Internet Win32::Registry
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Shortcut Win32::ShutDown Win32::Symlinks Win32::VBScript Win32::ADRecurse
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Clipboard Win32::CryptData Win32::DriveInfo Win32::EmailSend Win32::ErrorMode
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Filenames Win32::FileNotify Win32::Unicode::Shortcut Win32::Unicode::InternetShortcut
 				  #
 				  # We choose first "big" packages, that install a lot of stuff, though we avoid Acme
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
+				  #
+				  # Others
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           MarpaX::ESLIF
 				  DEPENDS PerlBoostrapCpan)
 
 if (FALSE)
