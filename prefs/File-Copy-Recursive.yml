@@ -1,5 +1,5 @@
 ---
 match:
-  distribution: '/\QTest-File-Recursive\E'
+  distribution: '/\QFile-Copy-Recursive'
 patches:
-  - Test-File-Recursive.patch
+  - File-Copy-Recursive.patch
