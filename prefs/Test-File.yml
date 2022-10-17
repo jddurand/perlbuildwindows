@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QTest-File-1.992.tar.gz\E'
+patches:
+  - Test-File-1.992-windows-symlinks.patch
