@@ -1,0 +1,21 @@
+diff --git a/lib/File/Copy/Recursive.pm b/lib/File/Copy/Recursive.pm
+index 4fd586a..469c5be 100644
+--- a/lib/File/Copy/Recursive.pm
++++ b/lib/File/Copy/Recursive.pm
+@@ -12,6 +12,7 @@ use Carp;
+ use File::Copy;
+ use File::Spec;    #not really needed because File::Copy already gets it, but for good measure :)
+ use Cwd ();
++use Test::File;
+ 
+ use vars qw(
+   @ISA      @EXPORT_OK $VERSION  $MaxDepth $KeepMode $CPRFComp $CopyLink
+@@ -28,7 +29,7 @@ $VERSION = '0.45';
+ $MaxDepth = 0;
+ $KeepMode = 1;
+ $CPRFComp = 0;
+-$CopyLink = eval { local $SIG{'__DIE__'}; symlink '', ''; 1 } || 0;
++$CopyLink = eval { Test::File::has_symlinks() } || eval { local $SIG{'__DIE__'}; symlink '', ''; 1 } || 0;
+ $PFSCheck = 1;
+ $RemvBase = 0;
+ $NoFtlPth = 0;

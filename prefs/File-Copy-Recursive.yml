@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QTest-File-Recursive\E'
+patches:
+  - Test-File-Recursive.patch
