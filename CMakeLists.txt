@@ -484,8 +484,10 @@ add_custom_target(PerlModules
 				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL IPC::Run
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Devel::Caller Log::Log4perl
-				  # COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
+				  #
+				  # We choose first "big" packages, that install a lot of stuff, though we avoid Acme
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
 				  DEPENDS PerlBoostrapCpan)
 
 if (FALSE)

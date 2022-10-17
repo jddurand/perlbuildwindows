@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-API-0.84.tar.gz\E'
+patches:
+  - Win32-API-RT144834.patch
