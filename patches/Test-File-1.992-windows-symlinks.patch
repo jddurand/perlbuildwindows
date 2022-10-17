@@ -228,7 +228,7 @@ index fe7d3cc..fbfb88d 100644
  sub arguments { \%WriteMakefile }
  
 diff --git a/lib/Test/File.pm b/lib/Test/File.pm
-index 12c383f..ae0ab57 100644
+index 12c383f..236c4ba 100644
 --- a/lib/Test/File.pm
 +++ b/lib/Test/File.pm
 @@ -103,7 +103,48 @@ sub _win32 {
@@ -281,8 +281,26 @@ index 12c383f..ae0ab57 100644
  
  # owner_is and owner_isn't should skip on OS where the question makes no
  # sense.  I really don't know a good way to test for that, so I'm going
+@@ -126,6 +167,17 @@ sub _obviously_non_multi_user {
+ 
+ =over 4
+ 
++=item has_symlinks
++
++Returns true is this module thinks that the current system supports
++symlinks.
++This is not a test function. It's something that tests can use to
++determine what it should expect or skip.
++
++=cut
++
++sub has_symlinks { ! _no_symlinks_here() }
++
+ =item file_exists_ok( FILENAME [, NAME ] )
+ 
+ Ok if the file exists, and not ok otherwise.
 diff --git a/t/links.t b/t/links.t
-index 5673cfe..57a7e84 100644
+index 5673cfe..3c5f8b2 100644
 --- a/t/links.t
 +++ b/t/links.t
 @@ -4,7 +4,7 @@ use Test::Builder::Tester;
@@ -290,7 +308,7 @@ index 5673cfe..57a7e84 100644
  use Test::File;
  
 -my $can_symlink = eval { symlink("",""); 1 };
-+my $can_symlink = !Test::File::_no_symlinks_here();
++my $can_symlink = Test::File::has_symlinks();
  
  plan skip_all => "This system does't do symlinks" unless $can_symlink;
  
