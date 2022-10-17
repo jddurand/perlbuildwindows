@@ -448,7 +448,7 @@ ExternalProject_Add(perl-net-ssleay
 					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
 					#
 					PATCH_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
-					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/patches/SSLeay.xs.diff" "SSLeay.xs"
+					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/patches/SSLeay.xs.patch" "SSLeay.xs"
 					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
 					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"

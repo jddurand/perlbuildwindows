@@ -1,0 +1,45 @@
+diff --git a/lib/Unicode/UTF8.pod b/lib/Unicode/UTF8.pod
+index f8f7af3..f9d1696 100644
+--- a/lib/Unicode/UTF8.pod
++++ b/lib/Unicode/UTF8.pod
+@@ -22,7 +22,7 @@ specified by Unicode and ISO/IEC 10646:2011.
+     $string = decode_utf8($octets);
+     $string = decode_utf8($octets, $fallback);
+ 
+-Returns an decoded representation of C<$octets> in UTF-8 encoding as a character
++Returns a decoded representation of C<$octets> in UTF-8 encoding as a character
+ string.
+ 
+ C<$fallback> is an optional C<CODE> reference which provides a error-handling 
+diff --git a/t/080_super.t b/t/080_super.t
+index 69de09b..a0d2316 100755
+--- a/t/080_super.t
++++ b/t/080_super.t
+@@ -1,10 +1,11 @@
+ #!perl
+ 
++use Config;
+ use strict;
+ use warnings;
+ use lib 't';
+ 
+-use Test::More tests => 1537;
++use Test::More tests => $Config{ivsize} > 4 ? 1537 : 1025;
+ use Util       qw[throws_ok];
+ 
+ BEGIN {
+@@ -16,8 +17,12 @@ my @SUPER = ();
+     for (my $i = 0x0011_0000; $i < 0x7FFF_FFFF; $i += 0x200000) {
+         push @SUPER, $i;
+     }
+-    for (my $i = 0x8000_0000; $i < 0xFFFF_FFFF; $i += 0x400000) {
+-        push @SUPER, $i;
++
++    # Doesn't work on 32 bit.
++    if ($Config{ivsize} > 4) {
++        for (my $i = 0x8000_0000; $i < 0xFFFF_FFFF; $i += 0x400000) {
++            push @SUPER, $i;
++        }
+     }
+ }
+ 

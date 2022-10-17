@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QUnicode-UTF8-0.62.tar.gz\E'
+patches:
+  - Unicode-UTF8-0.62.patch
