@@ -228,10 +228,26 @@ index fe7d3cc..fbfb88d 100644
  sub arguments { \%WriteMakefile }
  
 diff --git a/lib/Test/File.pm b/lib/Test/File.pm
-index 12c383f..236c4ba 100644
+index 12c383f..f4a21dc 100644
 --- a/lib/Test/File.pm
 +++ b/lib/Test/File.pm
-@@ -103,7 +103,48 @@ sub _win32 {
+@@ -7,6 +7,7 @@ use Carp            qw(carp);
+ use Exporter        qw(import);
+ use File::Spec;
+ use Test::Builder;
++use XSLoader;
+ 
+ @EXPORT = qw(
+ 	file_exists_ok file_not_exists_ok
+@@ -31,6 +32,7 @@ use Test::Builder;
+ 	);
+ 
+ $VERSION = '1.992';
++XSLoader::load(__PACKAGE__, $VERSION) if $^O eq 'MSWin32';
+ 
+ my $Test = Test::Builder->new();
+ 
+@@ -103,7 +105,48 @@ sub _win32 {
  	}
  
  # returns true if symlinks can't exist
@@ -281,7 +297,7 @@ index 12c383f..236c4ba 100644
  
  # owner_is and owner_isn't should skip on OS where the question makes no
  # sense.  I really don't know a good way to test for that, so I'm going
-@@ -126,6 +167,17 @@ sub _obviously_non_multi_user {
+@@ -126,6 +169,17 @@ sub _obviously_non_multi_user {
  
  =over 4
  
