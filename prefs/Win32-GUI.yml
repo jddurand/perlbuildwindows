@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-GUI-1.14.tar.gz\E'
+patches:
+  - Win32-GUI-1.14-PERLUD_DECLARE.patch

@@ -1,0 +1,22 @@
+diff -Naur Win32-GUI-1.14.orig/GUI.h Win32-GUI-1.14.new/GUI.h
+--- Win32-GUI-1.14.orig/GUI.h	2022-10-17 21:09:21.034712400 +0200
++++ Win32-GUI-1.14.new/GUI.h	2022-10-17 21:08:06.439858800 +0200
+@@ -115,7 +115,7 @@
+ /*#       pragma message( "\n*** Using an implicit Perl context.\n" )*/
+ #       define NOTXSPROC
+ #       define NOTXSCALL
+-#       define PERLUD_DECLARE
++#       undef  PERLUD_DECLARE
+ #       define PERLUD_STORE
+ #       define PERLUD_FETCH
+ #   endif
+@@ -286,7 +286,9 @@
+  */
+ typedef struct tagPERLWIN32GUI_USERDATA {
+     DWORD       dwSize;                                                 // struct size (our signature)
++#ifdef PERLUD_DECLARE
+     PERLUD_DECLARE;                                                     // a pointer to the Perl Object
++#endif
+     SV*         svSelf;                                                 // a pointer to ourself
+     char        szWindowName[MAX_WINDOW_NAME];                          // our -name
+     int         iClass;                                                 // our (Perl) class
