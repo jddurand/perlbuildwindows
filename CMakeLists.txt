@@ -448,7 +448,7 @@ ExternalProject_Add(perl-net-ssleay
 					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
 					#
 					PATCH_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
-					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/SSLeay.xs.diff" "SSLeay.xs"
+					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/patches/SSLeay.xs.diff" "SSLeay.xs"
 					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
 					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
 					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
@@ -484,7 +484,8 @@ add_custom_target(PerlModules
 				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL IPC::Run
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Devel::Caller Log::Log4perl
+				  # COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
 				  DEPENDS PerlBoostrapCpan)
 
 if (FALSE)
