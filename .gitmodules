@@ -1,0 +1,3 @@
+[submodule "3rdparty/FreeImage-Adv"]
+	path = 3rdparty/FreeImage-Adv
+	url = git@github.com:mnaydenov/FreeImage-Adv.git
