@@ -5,9 +5,12 @@
 # 5.36 - this is fixed since 5.37.4, therefore building a 5.37.4 version at
 # least is recommended.
 #
-# We use distproprefs that will require patch.exe .
-# The easiest way to get it is to install "Git For Windows" (https://gitforwindows.org/) and
-# add C:\Program Files\Git\usr\bin to the PATH.
+# We use distproprefs that will require patch.exe and git.
+# The easiest way to get it is to install "Git For Windows" (https://gitforwindows.org/) and do:
+#
+# SET PATH=%PATH%;C:\Program Files\Git\bin;C:\Program Files\Git\usr\bin
+#
+# before running cmake.
 #
 project(perlbuildwindows LANGUAGES C CXX)
 #
@@ -412,6 +415,30 @@ ExternalProject_Add(openssl
 					BUILD_IN_SOURCE     TRUE)
 
 # ===========================================================
+# Build freeimage
+# ===========================================================
+set(FREEIMAGE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-Adv")
+set (FREEIMAGE_SOURCE_DIR_DOS "${FREEIMAGE_SOURCE_DIR}")
+string (REGEX REPLACE "/" "\\\\" FREEIMAGE_SOURCE_DIR_DOS ${FREEIMAGE_SOURCE_DIR_DOS})
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
+"IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
+IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
+COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\license*.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
+COPY /Y \"*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+COPY /Y \"*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include\"
+")
+
+ExternalProject_Add(freeimage
+					SOURCE_DIR             ${FREEIMAGE_SOURCE_DIR}
+					SOURCE_SUBDIR 		   Source
+					DOWNLOAD_COMMAND       ""
+					INSTALL_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
+					TEST_EXCLUDE_FROM_MAIN TRUE)
+
+# ===========================================================
 # Net::SSLeay needs a patch
 # ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
@@ -472,7 +499,7 @@ add_custom_target(PerlBoostrapCpan
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           CPAN::DistnameInfo App::cpanminus HTTP::Tiny YAML
 				  #
 				  # CPAN is faster with SQLite
-				  DEPENDS perl-net-ssleay)
+				  DEPENDS perl-net-ssleay freeimage)
 
 
 # Every module that needs a patch
