@@ -417,24 +417,31 @@ ExternalProject_Add(openssl
 # ===========================================================
 # Build freeimage
 # ===========================================================
-set(FREEIMAGE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-Adv")
+set(FREEIMAGE_PREFIX "freeimage")
+
+set(FREEIMAGE_SOURCE_DIR "${CMAKE_BINARY_DIR}/freeimage-copy")
 set (FREEIMAGE_SOURCE_DIR_DOS "${FREEIMAGE_SOURCE_DIR}")
 string (REGEX REPLACE "/" "\\\\" FREEIMAGE_SOURCE_DIR_DOS ${FREEIMAGE_SOURCE_DIR_DOS})
+
+set(FREEIMAGE_ORIG_DIR "${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-Adv")
+set (FREEIMAGE_ORIG_DIR_DOS "${FREEIMAGE_ORIG_DIR}")
+string (REGEX REPLACE "/" "\\\\" FREEIMAGE_ORIG_DIR ${FREEIMAGE_ORIG_DIR})
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
 "IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
 IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
-COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\license*.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
-COPY /Y \"*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-COPY /Y \"*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include\"
+COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\license*.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
+COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include\"
 ")
 
 ExternalProject_Add(freeimage
+					PREFIX                 ${FREEIMAGE_PREFIX}
 					SOURCE_DIR             ${FREEIMAGE_SOURCE_DIR}
 					SOURCE_SUBDIR 		   Source
-					DOWNLOAD_COMMAND       ""
+					DOWNLOAD_COMMAND       "${CMAKE_COMMAND}" -E copy_directory "${FREEIMAGE_ORIG_DIR_DOS}" "${FREEIMAGE_SOURCE_DIR_DOS}"
 					INSTALL_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
 					TEST_EXCLUDE_FROM_MAIN TRUE)
 
