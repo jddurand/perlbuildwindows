@@ -1,0 +1,13 @@
+diff --git a/Win32-GUI_AxWindow/Makefile.PL b/Win32-GUI_AxWindow/Makefile.PL
+index 3871b69..421d015 100644
+--- a/Win32-GUI_AxWindow/Makefile.PL
++++ b/Win32-GUI_AxWindow/Makefile.PL
+@@ -24,7 +24,7 @@ my %config = (
+     PL_FILES      => {'AxWindowRC.PL' => '$(BASEEXT).rc', },
+     XS            => {'AxWindow.xs' => 'AxWindow.cpp' },
+     OBJECT        =>  '$(BASEEXT)$(OBJ_EXT) $(BASEEXT).res',
+-    LIBS          => ['-latl'],
++    LIBS          => [$Config{cc} =~ /cl/i ? '-latls' : '-latl'],
+     macro         => {RC => 'rc.exe',
+                       RCFLAGS => '',
+                       INST_DEMODIR => '$(INST_LIB)/Win32/GUI/demos/$(BASEEXT)',
