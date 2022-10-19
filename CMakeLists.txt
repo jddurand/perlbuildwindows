@@ -431,9 +431,9 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
 "IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
 IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
 COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\license*.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
-COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"${FREEIMAGE_SOURCE_DIR_DOS}\\*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
+COPY /Y \"*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
+COPY /Y \"*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
 COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include\"
 ")
 
