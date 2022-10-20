@@ -1,0 +1,13 @@
+diff --git a/Makefile.PL b/Makefile.PL
+index c4b234b..a3d3c34 100644
+--- a/Makefile.PL
++++ b/Makefile.PL
+@@ -285,7 +285,7 @@ my %MakefileArgs = (
+   )),
+     BINARY_LOCATION => 'Win32-GUI.tar.gz',
+     macro           => {
+-                         BUILD_TOOLS  => './build_tools',
++                         BUILD_TOOLS  => 'build_tools',
+                          PPMDISTVNAME => '$(DISTVNAME)-PPM-' . $dist_ver,
+                          INST_DEMODIR => '$(INST_LIBDIR)/GUI/demos',
+                          DEMOS        => "@demos",

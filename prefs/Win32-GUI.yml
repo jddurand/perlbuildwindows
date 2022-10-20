@@ -9,4 +9,5 @@ patches:
   - Win32-GUI-1.14-freeimage-3.19.0.patch
   - Win32-GUI-1.14-GridCtrl.patch
   - Win32-GUI-1.14-Grid-Detect-MFC-Version.patch
+  - Win32-GUI-1.14-Fix-build_tools-dependency.patch
 
