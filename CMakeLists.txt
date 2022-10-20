@@ -173,12 +173,29 @@ string (REGEX REPLACE "/" "\\\\" CMAKE_MAKE_PROGRAM_DOS ${CMAKE_MAKE_PROGRAM_DOS
 set (CMAKE_COMMAND_DOS "${CMAKE_COMMAND}")
 string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 
+set (CMAKE_CURRENT_BINARY_DIR_DOS "${CMAKE_CURRENT_BINARY_DIR}")
+string (REGEX REPLACE "/" "\\\\" CMAKE_CURRENT_BINARY_DIR_DOS ${CMAKE_CURRENT_BINARY_DIR_DOS})
+
 #
 # Perl specific bat files
 #
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
 "@ECHO OFF
 SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+REM
+REM For Net::SSLeay...
+REM
+SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+REM
+REM For Win32::GUI...
+REM
+SET WIN32_GUI_USE_FREEIMAGE_DLL=1
+SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\\freeimage.lib
+SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include
+REM
+REM For runtime of the above packages
+REM
+SET PATH=%PATH%;${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin
 REM
 REM If you look closely to CPAN::HandleConfig.pm you will see that:
 REM - If File::HomeDir is usable it gives precedence do
@@ -193,7 +210,7 @@ REM This can sound dangerous, but this is ok because the /first/ time CPAN is in
 REM is not present, so cpan will default to one of the three cases that are always applied, and %APPDATA% is not one of them
 REM
 IF EXIST %LOCALAPPDATA%\\.cpan RMDIR /Q /S %LOCALAPPDATA%\\.cpan
-SET HOME=.
+SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
 REM
 REM The very first time we initialize .cpan/CPAN/MyConfig and cpan will overwrite it
 REM
@@ -232,13 +249,30 @@ REM
 REM cpanm give definitely priority to HOME environment variable, but it seems
 REM it has to be a full path to work
 REM
-SET HOME=${CMAKE_CURRENT_BINARY_DIR}
+SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
 SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 ECHO | cpanm %*
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
 "@ECHO OFF
+REM
+REM For Net::SSLeay...
+REM
+SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+REM
+REM For Win32::GUI...
+REM
+SET WIN32_GUI_USE_FREEIMAGE_DLL=1
+SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\\freeimage.lib
+SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include
+REM
+REM For runtime of the above packages
+REM
+SET PATH=%PATH%;${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin
+REM
+REM Put perl at the top of the path
+REM
 SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 ECHO | perl %*
 ")
@@ -289,6 +323,18 @@ else ()
 						# TEST_BEFORE_INSTALL	TRUE
 						BUILD_IN_SOURCE TRUE)
 endif ()
+
+#
+# We use a local cpan thing - this target initializes it
+#
+add_custom_target(PerlBoostrapCpan
+                  COMMENT "Perl CPAN bootstrap"
+				  #
+				  # "Bootstrap" modules - their installation must not fail
+				  #
+				  COMMAND ${CMAKE_COMMAND} -E rm -rf .cpan .cpanm
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           CPAN::DistnameInfo App::cpanminus HTTP::Tiny YAML
+				  )
 
 # ===========================================================
 # Download and build nasm
@@ -445,74 +491,28 @@ ExternalProject_Add(freeimage
 					INSTALL_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
 					TEST_EXCLUDE_FROM_MAIN TRUE)
 
-# ===========================================================
-# Net::SSLeay needs a patch
-# ===========================================================
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-ECHO | perl Makefile.PL
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-SET PATH=%OPENSSL_PREFIX%\\bin;%PATH%
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
-")
-
-#
-# We copy openssl libs near Net::SSLeay dll - Windows will automatically see them
-#
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
-COPY /Y \"%OPENSSL_PREFIX%\\bin\\libcrypto-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
-COPY /Y \"%OPENSSL_PREFIX%\\bin\\libssl-3*\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay\"
-")
-
-set(PERL_NET_SSLEAY_SOURCE_DIR "perl-net-ssleay-${PERL_NET_SSLEAY_VERSION}")
+# ====================================================================================================================================
+# Net::SSLeay: we require a specific version that matches our patch, and we do post-installation of openssl libraries near Net::SSLeay
+# ====================================================================================================================================
 ExternalProject_Add(perl-net-ssleay
-					PREFIX              perl-net-ssleay
-					DEPENDS             openssl
+					DEPENDS             openssl PerlBoostrapCpan
 					URL                 "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
-					SOURCE_DIR          ${PERL_NET_SSLEAY_SOURCE_DIR}
+					CONFIGURE_COMMAND   "" # cpan will take of configure
+				    BUILD_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
 					#
-					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
+					# Post-install: copy openssl libraries near Net::SSLeay
 					#
-					PATCH_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
-					COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "SSLeay.xs" "${PROJECT_SOURCE_DIR}/patches/SSLeay.xs.patch" "SSLeay.xs"
-					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-configure.bat"
-					BUILD_COMMAND       "${CMAKE_MAKE_PROGRAM_DOS}"
-					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-test.bat"
-					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/perl-net-ssleay-install.bat"
-					#
-					# Uncomment if you want to run make test only if explicitly required on the command-line
-					#
-					# TEST_EXCLUDE_FROM_MAIN TRUE
-					TEST_BEFORE_INSTALL	TRUE
+					COMMAND             COPY /Y "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\\libcrypto-3*" "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay"
+					COMMAND             COPY /Y "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\\libssl-3*" "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay"
+					INSTALL_COMMAND     "" # cpan will take of configure
+					TEST_EXCLUDE_FROM_MAIN TRUE # cpan will take care of test
 					BUILD_IN_SOURCE TRUE)
-
-#
-# From now on we move to general perl modules installation.
-#
-add_custom_target(PerlBoostrapCpan
-                  COMMENT "Perl CPAN bootstrap"
-				  #
-				  # "Bootstrap" modules - their installation must not fail
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E rm -rf .cpan .cpanm
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           CPAN::DistnameInfo App::cpanminus HTTP::Tiny YAML
-				  #
-				  # CPAN is faster with SQLite
-				  DEPENDS perl-net-ssleay freeimage)
-
 
 # Every module that needs a patch
 add_custom_target(PerlModules
 				  ALL
                   COMMENT "Perl modules"
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::GUI
 				  #
 				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
 				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs

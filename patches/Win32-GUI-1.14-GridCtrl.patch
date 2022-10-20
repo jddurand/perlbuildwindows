@@ -1,0 +1,79 @@
+diff --git a/Win32-GUI_Grid/MFCGrid/GridCtrl.cpp b/Win32-GUI_Grid/MFCGrid/GridCtrl.cpp
+index d6c7916..16d20f1 100644
+--- a/Win32-GUI_Grid/MFCGrid/GridCtrl.cpp
++++ b/Win32-GUI_Grid/MFCGrid/GridCtrl.cpp
+@@ -2883,13 +2883,14 @@ CCellRange CGridCtrl::GetVisibleNonFixedCellRange(LPRECT pRect /*=NULL*/,
+                                                   BOOL bForceRecalculation /*=FALSE*/)
+ {
+     CRect rect;
++	int i;
+     GetClientRect(rect);
+ 
+     CCellID idTopLeft = GetTopleftNonFixedCell(bForceRecalculation);
+ 
+     // calc bottom
+     int bottom = GetFixedRowHeight();
+-    for (int i = idTopLeft.row; i < GetRowCount(); i++)
++    for (i = idTopLeft.row; i < GetRowCount(); i++)
+     {
+         bottom += GetRowHeight(i);
+         if (bottom >= rect.bottom)
+@@ -2926,13 +2927,14 @@ CCellRange CGridCtrl::GetVisibleNonFixedCellRange(LPRECT pRect /*=NULL*/,
+ CCellRange CGridCtrl::GetUnobstructedNonFixedCellRange(BOOL bForceRecalculation /*=FALSE*/)
+ {
+     CRect rect;
++	int i;
+     GetClientRect(rect);
+ 
+     CCellID idTopLeft = GetTopleftNonFixedCell(bForceRecalculation);
+ 
+     // calc bottom
+     int bottom = GetFixedRowHeight();
+-    for (int i = idTopLeft.row; i < GetRowCount(); i++)
++    for (i = idTopLeft.row; i < GetRowCount(); i++)
+     {
+         bottom += GetRowHeight(i);
+         if (bottom >= rect.bottom)
+@@ -3614,7 +3616,7 @@ BOOL CGridCtrl::SetColumnCount(int nCols)
+             if (!GetVirtualMode())
+             {
+                 for (int row = 0; row < m_nRows; row++)
+-                    for (col = startCol; col < nCols; col++)
++                    for (int col = startCol; col < nCols; col++)
+                     {
+                         GRID_ROW* pRow = m_RowData[row];
+                         if (pRow)
+@@ -4892,6 +4894,7 @@ void CGridCtrl::AutoSize(UINT nAutoSizeStyle /*=GVS_DEFAULT*/)
+ // columns will not be affected
+ void CGridCtrl::ExpandColumnsToFit(BOOL bExpandFixed /*=TRUE*/)
+ {
++	int col;
+     if (bExpandFixed)
+         {
+                 if (GetColumnCount() <= 0) return;
+@@ -4909,7 +4912,7 @@ void CGridCtrl::ExpandColumnsToFit(BOOL bExpandFixed /*=TRUE*/)
+     int nFirstColumn = (bExpandFixed)? 0 : GetFixedColumnCount();
+ 
+     int nNumColumnsAffected = 0;
+-    for (int col = nFirstColumn; col < GetColumnCount(); col++)
++    for (col = nFirstColumn; col < GetColumnCount(); col++)
+     {
+         if (m_arColWidths[col] > 0)
+             nNumColumnsAffected++;
+@@ -4991,6 +4994,7 @@ void CGridCtrl::ExpandLastColumn()
+ // rows will not be affected
+ void CGridCtrl::ExpandRowsToFit(BOOL bExpandFixed /*=TRUE*/)
+ {
++	int row;
+     if (bExpandFixed)
+         {
+                 if (GetRowCount() <= 0) return;
+@@ -5008,7 +5012,7 @@ void CGridCtrl::ExpandRowsToFit(BOOL bExpandFixed /*=TRUE*/)
+     int nFirstRow = (bExpandFixed)? 0 : GetFixedRowCount();
+ 
+     int nNumRowsAffected = 0;
+-    for (int row = nFirstRow; row < GetRowCount(); row++)
++    for (row = nFirstRow; row < GetRowCount(); row++)
+     {
+         if (m_arRowHeights[row] > 0)
+             nNumRowsAffected++;

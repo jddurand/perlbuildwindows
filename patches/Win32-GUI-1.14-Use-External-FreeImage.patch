@@ -1,0 +1,73 @@
+diff --git a/Win32-GUI_DIBitmap/DIBitmap.xs b/Win32-GUI_DIBitmap/DIBitmap.xs
+index 952bfdc..63811e5 100644
+--- a/Win32-GUI_DIBitmap/DIBitmap.xs
++++ b/Win32-GUI_DIBitmap/DIBitmap.xs
+@@ -8,8 +8,14 @@
+ #include "perl.h"
+ #include "XSUB.h"
+ 
++#ifndef USE_FREEIMAGE_DLL
+ #define FREEIMAGE_LIB
++#endif
++#ifndef HAVE_FREEIMAGE_INCDIR
+ #include ".\extlib\FreeImage.h"
++#else
++#include <FreeImage.h>
++#endif
+ 
+ /*--------------------------------------------------------------------*/
+ 
+diff --git a/Win32-GUI_DIBitmap/Makefile.PL b/Win32-GUI_DIBitmap/Makefile.PL
+index a6bd750..c6f368e 100644
+--- a/Win32-GUI_DIBitmap/Makefile.PL
++++ b/Win32-GUI_DIBitmap/Makefile.PL
+@@ -24,7 +24,6 @@ my %config = (
+     PL_FILES      => {'DIBitmapRC.PL' => '$(BASEEXT).rc', },
+     OBJECT        =>  '$(BASEEXT)$(OBJ_EXT) $(BASEEXT).res',
+     LIBS          => ['-lmsvcprt'],
+-    MYEXTLIB      => 'extlib/FreeImage.lib',
+     macro         => {RC => 'rc.exe',
+                       RCFLAGS => '',
+                       INST_DEMODIR => '$(INST_LIB)/Win32/GUI/demos/$(BASEEXT)',
+@@ -32,6 +31,8 @@ my %config = (
+     clean         => {FILES => '*.rc *.res', },
+ );
+ 
++my $CCFLAGS = $Config{ccflags} || '';
++
+ # if building using gcc (MinGW or cygwin) use windres
+ # as the resource compiler
+ # and the MinGW C++ standard library
+@@ -43,7 +44,31 @@ if($Config{cc} =~ /gcc/i) {
+     if( $^O =~ /cygwin/i ) {
+         $config{MYEXTLIB}     = 'extlib/libFreeImage-cygwin.a';
+     }
+-    $config{CCFLAGS} = "$Config{ccflags} -Wno-write-strings";
++    $CCFLAGS = $config{CCFLAGS} = "$CCFLAGS -Wno-write-strings";
++}
++
++#
++# Use DLL instead of static linking ?
++#
++if ($ENV{WIN32_GUI_USE_FREEIMAGE_DLL}) {
++    $CCFLAGS = $config{CCFLAGS} = "$CCFLAGS -DUSE_FREEIMAGE_DLL";
++}
++
++#
++# External location of freeimage lib ? Note that user SHOULD then the PATH environment
++# to point where is the DLL runtime
++#
++if ($ENV{WIN32_GUI_FREEIMAGE_EXTLIB}) {
++	$config{MYEXTLIB} = $ENV{WIN32_GUI_FREEIMAGE_EXTLIB};
++} else {
++	$config{MYEXTLIB} = 'extlib/FreeImage.lib';
++}
++
++#
++# External location of freeimage.h ?
++#
++if ($ENV{WIN32_GUI_FREEIMAGE_INCDIR}) {
++    $CCFLAGS = $config{CCFLAGS} = "$CCFLAGS -I$ENV{WIN32_GUI_FREEIMAGE_INCDIR} -DHAVE_FREEIMAGE_INCDIR";
+ }
+ 
+ # Can't build with gcc (yet).

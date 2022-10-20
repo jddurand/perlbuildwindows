@@ -4,3 +4,9 @@ match:
 patches:
   - Win32-GUI-1.14-PERLUD_DECLARE.patch
   - Win32-GUI-1.14-atl-link.patch
+  - Win32-GUI-1.14-DLL_CALLCONV-prototype.patch
+  - Win32-GUI-1.14-Use-External-FreeImage.patch
+  - Win32-GUI-1.14-freeimage-3.19.0.patch
+  - Win32-GUI-1.14-GridCtrl.patch
+  - Win32-GUI-1.14-Grid-Detect-MFC-Version.patch
+

@@ -1,0 +1,40 @@
+diff --git a/Win32-GUI_DIBitmap/DIBitmap.xs b/Win32-GUI_DIBitmap/DIBitmap.xs
+index 2f6e465..952bfdc 100644
+--- a/Win32-GUI_DIBitmap/DIBitmap.xs
++++ b/Win32-GUI_DIBitmap/DIBitmap.xs
+@@ -137,7 +137,7 @@ typedef gdImagePtr GD__Image;
+ /*  FreeImage Memory handler functions                                */
+ /*====================================================================*/
+ 
+-unsigned Memory_ReadProc (void *buffer, unsigned size, unsigned count,
++unsigned DLL_CALLCONV Memory_ReadProc (void *buffer, unsigned size, unsigned count,
+                           fi_handle handle)
+ {
+     Memory_IO_Handle * ioh = (Memory_IO_Handle *) handle;
+@@ -161,7 +161,7 @@ unsigned Memory_ReadProc (void *buffer, unsigned size, unsigned count,
+     return count;
+ }
+ 
+-int Memory_SeekProc (fi_handle handle, long offset, int origin)
++int DLL_CALLCONV Memory_SeekProc (fi_handle handle, long offset, int origin)
+ {
+     Memory_IO_Handle * ioh = (Memory_IO_Handle *) handle;
+ 
+@@ -186,7 +186,7 @@ int Memory_SeekProc (fi_handle handle, long offset, int origin)
+     return 0;
+ }
+ 
+-long Memory_TellProc (fi_handle handle)
++long DLL_CALLCONV Memory_TellProc (fi_handle handle)
+ {
+   Memory_IO_Handle * ioh = (Memory_IO_Handle *) handle;
+ 
+@@ -199,7 +199,7 @@ long Memory_TellProc (fi_handle handle)
+   return (ioh->ptr - ioh->data);
+ }
+ 
+-unsigned Memory_WriteProc (void *buffer, unsigned size, unsigned count,
++unsigned DLL_CALLCONV Memory_WriteProc (void *buffer, unsigned size, unsigned count,
+                            fi_handle handle)
+ {
+     Memory_IO_Handle * ioh = (Memory_IO_Handle *) handle;

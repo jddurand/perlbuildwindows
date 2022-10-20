@@ -1,0 +1,41 @@
+diff --git a/Win32-GUI_Grid/Makefile.PL b/Win32-GUI_Grid/Makefile.PL
+index c9115bc..e1381ee 100644
+--- a/Win32-GUI_Grid/Makefile.PL
++++ b/Win32-GUI_Grid/Makefile.PL
+@@ -15,13 +15,35 @@ use lib '../build_tools';
+ my @demos;
+ File::Find::find(sub { push @demos, $File::Find::name if $File::Find::name =~ /\.(pl|bmp)$/ }, 'demos');
+ 
++my $mfcVersion = 42; # Default from the package
++if ($Config{cc} =~ /cl/i) {
++	#
++	# We want to determine the mfc version that we will depend on
++	#
++	open(TMPFILE, '>', "tmpFile.cpp") || die "Cannot open tmpFile.cpp, $!";
++	my $tmp = <<FIND_MSC;
++#include<iostream>
++using namespace std;
++#include <afx.h>
++
++int main() {
++    cout << _MFC_FILENAME_VER << endl;
++    return 0;
++}
++FIND_MSC
++	print TMPFILE $tmp || die "Cannot print to tmpFile.cpp, $!";
++	close(TMPFILE) || die "Cannot close tmpFile.cpp, $!";
++	system("$Config{cc} tmpFile.cpp");
++	$mfcVersion = `.\\tmpFile.exe`;
++}
++
+ my %config = (
+     NAME          =>  'Win32::GUI::Grid',
+     VERSION_FROM  =>  'Grid.pm',
+     ABSTRACT_FROM =>  'Grid.pm',
+     AUTHOR        =>  'ROCHER Laurent (lrocher@cpan.org)',
+     XS            => { 'Grid.xs' => 'Grid.cpp' },
+-    LIBS          => ['-lcomctl32 -lMfc42 -lEafxis'],
++    LIBS          => ["-lcomctl32 -lMfc$mfcVersion -lEafxis"],
+     MYEXTLIB      =>  './MFCGrid/Lib/MFCGrid.lib',
+     PL_FILES      => {'GridRC.PL' => '$(BASEEXT).rc', },
+     OBJECT        =>  '$(BASEEXT)$(OBJ_EXT) $(BASEEXT).res',

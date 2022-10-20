@@ -1,0 +1,35 @@
+diff --git a/Win32-GUI_DIBitmap/DIBitmap.xs b/Win32-GUI_DIBitmap/DIBitmap.xs
+index 63811e5..4e96158 100644
+--- a/Win32-GUI_DIBitmap/DIBitmap.xs
++++ b/Win32-GUI_DIBitmap/DIBitmap.xs
+@@ -2368,7 +2368,11 @@ Rotate(dib, angle)
+     Win32::GUI::DIBitmap dib
+     double angle
+ CODE:
++#if (FREEIMAGE_MAJOR_VERSION) >= 3 && (FREEIMAGE_MINOR_VERSION >= 18)
++    RETVAL = FreeImage_Rotate(dib, angle, NULL);
++#else
+     RETVAL = FreeImage_RotateClassic(dib, angle);
++#endif
+ OUTPUT:
+     RETVAL
+ 
+@@ -2687,10 +2691,18 @@ _newFromFile (packname="Win32::GUI::MDIBitmap",fif,filename,create_new=0,read_on
+     int      read_only
+     int      keep_cache_in_memory
+ CODE:
++#if (FREEIMAGE_MAJOR_VERSION) >= 3 && (FREEIMAGE_MINOR_VERSION >= 12)
++    RETVAL = FreeImage_OpenMultiBitmap (fif,filename,
++                                        create_new,
++                                        read_only,
++                                        keep_cache_in_memory,
++										0);
++#else
+     RETVAL = FreeImage_OpenMultiBitmap (fif,filename,
+                                         create_new,
+                                         read_only,
+                                         keep_cache_in_memory);
++#endif
+ OUTPUT:
+     RETVAL
+ 
