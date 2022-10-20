@@ -1,5 +1,5 @@
---- SSLeay.xs.orig	2022-03-20 18:25:48.000000000 +0100
-+++ SSLeay.xs.new	2022-10-06 06:13:32.903648100 +0200
+--- a/SSLeay.xs	2022-03-20 18:25:48.000000000 +0100
++++ b/SSLeay.xs	2022-10-06 06:13:32.903648100 +0200
 @@ -4221,14 +4221,17 @@
  	    ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
  	    if (OBJ_obj2nid(ad->method) == NID_ad_OCSP
