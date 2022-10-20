@@ -1,5 +1,5 @@
 diff --git a/Win32-GUI_Grid/Makefile.PL b/Win32-GUI_Grid/Makefile.PL
-index c9115bc..e1381ee 100644
+index c9115bc..f99d563 100644
 --- a/Win32-GUI_Grid/Makefile.PL
 +++ b/Win32-GUI_Grid/Makefile.PL
 @@ -15,13 +15,35 @@ use lib '../build_tools';
@@ -27,7 +27,7 @@ index c9115bc..e1381ee 100644
 +	system("$Config{cc} tmpFile.cpp");
 +	$mfcVersion = `.\\tmpFile.exe`;
 +}
-+
++my $atllib = $Config{cc} =~ /cl/i ? '-latls' : '-latl';
  my %config = (
      NAME          =>  'Win32::GUI::Grid',
      VERSION_FROM  =>  'Grid.pm',
@@ -35,7 +35,7 @@ index c9115bc..e1381ee 100644
      AUTHOR        =>  'ROCHER Laurent (lrocher@cpan.org)',
      XS            => { 'Grid.xs' => 'Grid.cpp' },
 -    LIBS          => ['-lcomctl32 -lMfc42 -lEafxis'],
-+    LIBS          => ["-lcomctl32 -lMfc$mfcVersion -lEafxis"],
++    LIBS          => ["-lcomctl32 -lMfc$mfcVersion -lEafxis $atllib"],
      MYEXTLIB      =>  './MFCGrid/Lib/MFCGrid.lib',
      PL_FILES      => {'GridRC.PL' => '$(BASEEXT).rc', },
      OBJECT        =>  '$(BASEEXT)$(OBJ_EXT) $(BASEEXT).res',
