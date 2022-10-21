@@ -19,6 +19,13 @@ project(perlbuildwindows LANGUAGES C CXX)
 # - CMP0077
 #
 cmake_minimum_required(VERSION 3.14)
+#
+# Look for patch command - this is required
+#
+find_package(Patch)
+if (NOT Patch_FOUND)
+  message(FATAL_ERROR "Patch not found")
+endif()
 
 #
 # Get list of logical drives
@@ -164,38 +171,23 @@ string (REGEX REPLACE "/" "\\\\" PERLPATCH_BAT_DOS ${PERLPATCH_BAT_DOS})
 set (REPLACE_VBS_DOS "${PROJECT_SOURCE_DIR}/replace.vbs")
 string (REGEX REPLACE "/" "\\\\" REPLACE_VBS_DOS ${REPLACE_VBS_DOS})
 
-set (PERL_SOURCE_DIR_DOS "${CMAKE_CURRENT_BINARY_DIR}/perl-${PERL_VERSION}")
-string (REGEX REPLACE "/" "\\\\" PERL_SOURCE_DIR_DOS ${PERL_SOURCE_DIR_DOS})
-
-set (CMAKE_MAKE_PROGRAM_DOS "${CMAKE_MAKE_PROGRAM}")
-string (REGEX REPLACE "/" "\\\\" CMAKE_MAKE_PROGRAM_DOS ${CMAKE_MAKE_PROGRAM_DOS})
-
 set (CMAKE_COMMAND_DOS "${CMAKE_COMMAND}")
 string (REGEX REPLACE "/" "\\\\" CMAKE_COMMAND_DOS ${CMAKE_COMMAND_DOS})
 
 set (CMAKE_CURRENT_BINARY_DIR_DOS "${CMAKE_CURRENT_BINARY_DIR}")
 string (REGEX REPLACE "/" "\\\\" CMAKE_CURRENT_BINARY_DIR_DOS ${CMAKE_CURRENT_BINARY_DIR_DOS})
 
-#
-# Perl specific bat files
-#
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"
+set (PERL_INST_DIR "${PERL_INST_DRV}/${PERL_INSTSUBDIR}")
+set (PERL_INST_DIR_DOS "${PERL_INST_DIR}")
+string (REGEX REPLACE "/" "\\\\" PERL_INST_DIR_DOS ${PERL_INST_DIR_DOS})
+
+# =======================================================
+# Generic bat file to invoke anything related to our perl
+# =======================================================
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat"
 "@ECHO OFF
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
 REM
-REM For Net::SSLeay...
-REM
-SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
-REM
-REM For Win32::GUI...
-REM
-SET WIN32_GUI_USE_FREEIMAGE_DLL=1
-SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\\freeimage.lib
-SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include
-REM
-REM For runtime of the above packages
-REM
-SET PATH=%PATH%;${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin
+REM We want to have our OWN distro prefs. This mean our OWN .cpan
 REM
 REM If you look closely to CPAN::HandleConfig.pm you will see that:
 REM - If File::HomeDir is usable it gives precedence do
@@ -240,172 +232,103 @@ IF NOT EXIST \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\" (
   TYPE .\\tmpFile | cpan
   DEL .\\tmpFile
 )
-ECHO | cpan %*
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-"@ECHO OFF
 REM
-REM cpanm give definitely priority to HOME environment variable, but it seems
-REM it has to be a full path to work
-REM
-SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-ECHO | cpanm %*
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat"
-"@ECHO OFF
 REM
 REM For Net::SSLeay...
 REM
-SET OPENSSL_PREFIX=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c
+SET OPENSSL_PREFIX=${PERL_INST_DIR_DOS}\\c
 REM
 REM For Win32::GUI...
 REM
 SET WIN32_GUI_USE_FREEIMAGE_DLL=1
-SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\\freeimage.lib
-SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include
+SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DIR_DOS}\\c\\lib\\freeimage.lib
+SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DIR_DOS}\\c\\include
 REM
 REM For runtime of the above packages
 REM
-SET PATH=%PATH%;${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin
-REM
-REM Put perl at the top of the path
-REM
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-ECHO | perl %*
+SET PATH=${PERL_INST_DIR_DOS}\\bin;${PERL_INST_DIR_DOS}\\c\\bin;%PATH%
+SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
+ECHO | %*
 ")
 
 # ===========================================================
-# Download and build perl
+# External project perl-core
 # ===========================================================
 if (PERL_TEST)
-	ExternalProject_Add(perl
-						PREFIX perl
-						URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
-						SOURCE_DIR perl-${PERL_VERSION}
-						SOURCE_SUBDIR win32
-						#
-						# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
-						# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
-						#
-						PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
-						CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
-						BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
-						TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
-						INSTALL_COMMAND   ${CMAKE_MAKE_PROGRAM_DOS} install
-						#
-						# Uncomment if you want to run make test only if explicitly required on the command-line
-						#
-						# TEST_EXCLUDE_FROM_MAIN TRUE
-						TEST_BEFORE_INSTALL	TRUE
-						BUILD_IN_SOURCE TRUE)
+	set (PERL_TEST_BEFORE_INSTALL ON)
+	set (PERL_TEST_EXCLUDE_FROM_MAIN OFF)
 else ()
-	ExternalProject_Add(perl
-						PREFIX perl
-						URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
-						SOURCE_DIR perl-${PERL_VERSION}
-						SOURCE_SUBDIR win32
-						#
-						# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
-						# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
-						#
-						PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_SOURCE_DIR_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
-						CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using ${PERL_SOURCE_DIR_DOS}\\win32\\Makefile"
-						BUILD_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS}
-						# TEST_COMMAND      ${CMAKE_MAKE_PROGRAM_DOS} test
-						# INSTALL_COMMAND     ${CMAKE_MAKE_PROGRAM_DOS} install
-						#
-						# Uncomment if you want to run make test only if explicitly required on the command-line
-						#
-						TEST_EXCLUDE_FROM_MAIN TRUE
-						# TEST_BEFORE_INSTALL	TRUE
-						BUILD_IN_SOURCE TRUE)
+	set (PERL_TEST_BEFORE_INSTALL OFF)
+	set (PERL_TEST_EXCLUDE_FROM_MAIN ON)
 endif ()
 
-#
-# We use a local cpan thing - this target initializes it
-#
-add_custom_target(PerlBoostrapCpan
-                  COMMENT "Perl CPAN bootstrap"
-				  #
-				  # "Bootstrap" modules - their installation must not fail
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E rm -rf .cpan .cpanm
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           CPAN::DistnameInfo App::cpanminus HTTP::Tiny YAML
-				  )
+ExternalProject_Add(perl-core
+					URL "https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz"
+					SOURCE_SUBDIR win32
+					#
+					# One might think that putting environment CCTYPE is enough, but no. It fails near the end.
+					# So let's follow perl recommandation, that is putting explicitly CCTYPE in the Makefile
+					#
+					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${PERLPATCH_BAT_DOS}" "${REPLACE_VBS_DOS}" "${PERL_CCTYPE}" "${PERL_WIN64}" "${PERL_INSTSUBDIR}" "${PERL_INST_DRV}"
+					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
+					#
+					# Uncomment if you want to run make test only if explicitly required on the command-line
+					#
+					# TEST_EXCLUDE_FROM_MAIN ${PERL_TEST_EXCLUDE_FROM_MAIN}
+					TEST_EXCLUDE_FROM_MAIN $<IF:${PERL_TEST},OFF,ON>
+					# TEST_BEFORE_INSTALL	${PERL_TEST_BEFORE_INSTALL}
+					TEST_BEFORE_INSTALL $<IF:${PERL_TEST},ON,OFF>
+					BUILD_IN_SOURCE TRUE)
 
 # ===========================================================
-# Download and build nasm
+# External project nasm
 # ===========================================================
-set(NASM_SOURCE_DIR "nasm-${NASM_VERSION}")
-set (NASM_SOURCE_DIR_DOS "${NASM_SOURCE_DIR}")
-string (REGEX REPLACE "/" "\\\\" NASM_SOURCE_DIR_DOS ${NASM_SOURCE_DIR_DOS})
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-"@ECHO OFF
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" -f Mkfiles\\msvc_patched.mak
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat"
-"@ECHO OFF
-SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\ldrdf.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"nasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"ndisasm.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdf2bin.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdf2com.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdf2ihx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdf2ith.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdf2srec.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdfdump.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdflib.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"rdoff\\rdx.exe\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
-COPY /Y \"LICENSE\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\nasm\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\ldrdf.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"nasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"ndisasm.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdf2bin.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdf2com.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdf2ihx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdf2ith.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdf2srec.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdfdump.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdflib.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-COPY /Y \"rdoff\\rdx.1\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\man\\man1\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-COPY /Y \"rdoff\\librdoff.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-COPY /Y \"libnasm.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-")
-
 ExternalProject_Add(nasm
-					PREFIX nasm
-					DEPENDS perl
+					DEPENDS perl-core
 					URL "https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.gz"
-					SOURCE_DIR ${NASM_SOURCE_DIR}
 					#
 					# C.f. https://forum.nasm.us/index.php?topic=2746.msg12335#msg12335
 					#
 					#
 					# We use Text::Patch to patch Mkfiles/msvc.mak that contain a little error
 					#
-					PATCH_COMMAND     ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Text::Patch
-					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/perl-call.bat" "${PROJECT_SOURCE_DIR}/patch.pl" "Mkfiles/msvc.mak" "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff" "Mkfiles/msvc_patched.mak"
+					PATCH_COMMAND     ${Patch_EXECUTABLE} Mkfiles/msvc.mak "${PROJECT_SOURCE_DIR}/nasm_msvc_mak.diff"
 					#
 					# It needs Font::TTF Sort::Versions perl modules as per the doc
 					#
-					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" Font::TTF Sort::Versions
+					CONFIGURE_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" cpan Font::TTF Sort::Versions
 					BUILD_COMMAND     ${CMAKE_COMMAND} -E rm -f asm/warnings.time
 					COMMAND           ${CMAKE_COMMAND} -E touch asm/warnings.time
-					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/nasm-build.bat"
-					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/nasm-install.bat" "${NASM_SOURCE_DIR}"
+					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake -f Mkfiles/msvc.mak
+					INSTALL_COMMAND   ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy nasm.exe           ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy ndisasm.exe        ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/ldrdf.exe    ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2bin.exe  ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2com.exe  ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2ihx.exe  ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2ith.exe  ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2srec.exe ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdfdump.exe  ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdflib.exe   ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdx.exe      ${PERL_INST_DIR}/c/bin
+					COMMAND           ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/nasm
+					COMMAND           ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/nasm
+					COMMAND           ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy nasm.1             ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy ndisasm.1          ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/ldrdf.1      ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2bin.1    ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2com.1    ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2ihx.1    ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2ith.1    ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdf2srec.1   ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdfdump.1    ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdflib.1     ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/rdx.1        ${PERL_INST_DIR}/c/man/man1
+					COMMAND           ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/lib
+					COMMAND           ${CMAKE_COMMAND} -E copy libnasm.lib        ${PERL_INST_DIR}/c/lib
+					COMMAND           ${CMAKE_COMMAND} -E copy rdoff/librdoff.lib ${PERL_INST_DIR}/c/lib
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					#
@@ -416,31 +339,31 @@ ExternalProject_Add(nasm
 # Download and build openssl.
 # ===========================================================
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
 SET LDFLAGS=${OPENSSL_LDFLAGS}
-ECHO | perl Configure --prefix=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\" --openssldir=\"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
+ECHO | perl Configure --prefix=\"${PERL_INST_DIR_DOS}\\c\" --openssldir=\"${PERL_INST_DIR_DOS}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\"
+ECHO | nmake
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" install
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
-COPY /Y \"LICENSE.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\openssl\"
+ECHO | nmake install
+IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\"
+IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
+COPY /Y \"LICENSE.txt\" \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-"SET PATH=${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\bin;%PATH%
+"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | \"${CMAKE_MAKE_PROGRAM_DOS}\" test
+ECHO | nmake test
 ")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
@@ -448,10 +371,14 @@ ExternalProject_Add(openssl
 					DEPENDS             nasm
 					URL                 "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
 					SOURCE_DIR          ${OPENSSL_SOURCE_DIR}
-					CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
-					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-					INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-					TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
+					CONFIGURE_COMMAND   ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" perl Configure --prefix=${PERL_INST_DIR_DOS}\\c --openssldir=${PERL_INST_DIR_DOS}\\c\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
+					# CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
+					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake
+					# BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
+					INSTALL_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake install
+					# INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
+					TEST_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake test
+					# TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					# On windows 70-test_comp.t is hanging, despite openssl seems ok. This is a bug in their test suite I strongly guess.
@@ -474,13 +401,13 @@ set (FREEIMAGE_ORIG_DIR_DOS "${FREEIMAGE_ORIG_DIR}")
 string (REGEX REPLACE "/" "\\\\" FREEIMAGE_ORIG_DIR ${FREEIMAGE_ORIG_DIR})
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/freeimage-install.bat"
-"IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\"
-IF NOT EXIST \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\" MKDIR \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
-COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\license*.txt\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\license\\freeimage\"
-COPY /Y \"*.lib\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\lib\"
-COPY /Y \"*.dll\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"*.pdb\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\"
-COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\include\"
+"IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\"
+IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\\freeimage\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\\freeimage\"
+COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\license*.txt\" \"${PERL_INST_DIR_DOS}\\c\\license\\freeimage\"
+COPY /Y \"*.lib\" \"${PERL_INST_DIR_DOS}\\c\\lib\"
+COPY /Y \"*.dll\" \"${PERL_INST_DIR_DOS}\\c\\bin\"
+COPY /Y \"*.pdb\" \"${PERL_INST_DIR_DOS}\\c\\bin\"
+COPY /Y \"${FREEIMAGE_ORIG_DIR_DOS}\\\\Source\\FreeImage.h\" \"${PERL_INST_DIR_DOS}\\c\\include\"
 ")
 
 ExternalProject_Add(freeimage
@@ -495,15 +422,15 @@ ExternalProject_Add(freeimage
 # Net::SSLeay: we require a specific version that matches our patch, and we do post-installation of openssl libraries near Net::SSLeay
 # ====================================================================================================================================
 ExternalProject_Add(perl-net-ssleay
-					DEPENDS             openssl PerlBoostrapCpan
+					DEPENDS             openssl
 					URL                 "https://github.com/radiator-software/p5-net-ssleay/archive/refs/tags/${PERL_NET_SSLEAY_VERSION}.tar.gz"
 					CONFIGURE_COMMAND   "" # cpan will take of configure
 				    BUILD_COMMAND        ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
 					#
 					# Post-install: copy openssl libraries near Net::SSLeay
 					#
-					COMMAND             COPY /Y "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\\libcrypto-3*" "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay"
-					COMMAND             COPY /Y "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\c\\bin\\libssl-3*" "${PERL_INST_DRV}\\${PERL_INSTSUBDIR}\\site\\lib\\auto\\Net\\SSLeay"
+					COMMAND             COPY /Y "${PERL_INST_DIR_DOS}\\c\\bin\\libcrypto-3*" "${PERL_INST_DIR_DOS}\\site\\lib\\auto\\Net\\SSLeay"
+					COMMAND             COPY /Y "${PERL_INST_DIR_DOS}\\c\\bin\\libssl-3*" "${PERL_INST_DIR_DOS}\\site\\lib\\auto\\Net\\SSLeay"
 					INSTALL_COMMAND     "" # cpan will take of configure
 					TEST_EXCLUDE_FROM_MAIN TRUE # cpan will take care of test
 					BUILD_IN_SOURCE TRUE)
@@ -538,7 +465,7 @@ add_custom_target(PerlModules
 				  # Others
 				  #
 				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           MarpaX::ESLIF
-				  DEPENDS PerlBoostrapCpan)
+				  DEPENDS openssl)
 
 if (FALSE)
 # ===========================================================
