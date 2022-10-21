@@ -299,7 +299,7 @@ ExternalProject_Add(nasm
 					CONFIGURE_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" cpan Font::TTF Sort::Versions
 					BUILD_COMMAND     ${CMAKE_COMMAND} -E rm -f asm/warnings.time
 					COMMAND           ${CMAKE_COMMAND} -E touch asm/warnings.time
-					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake -f Mkfiles/msvc.mak
+					COMMAND           "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_COMMAND} -f Mkfiles/msvc.mak
 					INSTALL_COMMAND   ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/bin
 					COMMAND           ${CMAKE_COMMAND} -E copy nasm.exe           ${PERL_INST_DIR}/c/bin
 					COMMAND           ${CMAKE_COMMAND} -E copy ndisasm.exe        ${PERL_INST_DIR}/c/bin
@@ -348,13 +348,13 @@ ECHO | perl Configure --prefix=\"${PERL_INST_DIR_DOS}\\c\" --openssldir=\"${PERL
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
 "SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | nmake
+ECHO | ${CMAKE_MAKE_COMMAND}
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
 "SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | nmake install
+ECHO | ${CMAKE_MAKE_COMMAND} install
 IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\"
 IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
 COPY /Y \"LICENSE.txt\" \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
@@ -363,7 +363,7 @@ COPY /Y \"LICENSE.txt\" \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 "SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
 SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | nmake test
+ECHO | ${CMAKE_MAKE_COMMAND} test
 ")
 set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
@@ -373,11 +373,11 @@ ExternalProject_Add(openssl
 					SOURCE_DIR          ${OPENSSL_SOURCE_DIR}
 					CONFIGURE_COMMAND   ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" perl Configure --prefix=${PERL_INST_DIR_DOS}\\c --openssldir=${PERL_INST_DIR_DOS}\\c\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					# CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
-					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake
+					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_COMMAND}
 					# BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-					INSTALL_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake install
+					INSTALL_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_COMMAND} install
 					# INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-					TEST_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" nmake test
+					TEST_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_COMMAND} test
 					# TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
