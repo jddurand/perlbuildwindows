@@ -338,53 +338,21 @@ ExternalProject_Add(nasm
 # ===========================================================
 # Download and build openssl.
 # ===========================================================
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat"
-"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
-SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-SET LDFLAGS=${OPENSSL_LDFLAGS}
-ECHO | perl Configure --prefix=\"${PERL_INST_DIR_DOS}\\c\" --openssldir=\"${PERL_INST_DIR_DOS}\\c\\SSL\" enable-fips enable-weak-ssl-ciphers %1
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
-SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | ${CMAKE_MAKE_PROGRAM}
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
-SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | ${CMAKE_MAKE_PROGRAM} install
-IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\"
-IF NOT EXIST \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\" MKDIR \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
-COPY /Y \"LICENSE.txt\" \"${PERL_INST_DIR_DOS}\\c\\license\\openssl\"
-")
-
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
-"SET PATH=${PERL_INST_DIR_DOS}\\bin;%PATH%
-SET PATH=\"${CMAKE_CURRENT_BINARY_DIR}/${NASM_SOURCE_DIR}\";%PATH%
-ECHO | ${CMAKE_MAKE_PROGRAM} test
-")
-set(OPENSSL_SOURCE_DIR "openssl-${OPENSSL_VERSION}")
 ExternalProject_Add(openssl
-					PREFIX              openssl
-					DEPENDS             nasm
-					URL                 "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
-					SOURCE_DIR          ${OPENSSL_SOURCE_DIR}
-					CONFIGURE_COMMAND   ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" perl Configure --prefix=${PERL_INST_DIR_DOS}\\c --openssldir=${PERL_INST_DIR_DOS}\\c\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
-					# CONFIGURE_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/openssl-configure.bat" "${OPENSSL_VC}"
-					BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM}
-					# BUILD_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/openssl-build.bat"
-					INSTALL_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM} install
-					# INSTALL_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/openssl-install.bat"
-					TEST_COMMAND       "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM} test
-					# TEST_COMMAND        "${CMAKE_CURRENT_BINARY_DIR}/openssl-test.bat"
+					PREFIX            openssl
+					DEPENDS           nasm
+					URL               "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
+					CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" perl Configure --prefix=${PERL_INST_DIR_DOS}\\c --openssldir=${PERL_INST_DIR_DOS}\\c\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
+					BUILD_COMMAND     "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM}
+					INSTALL_COMMAND   "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM} install
+					COMMAND           ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
+					COMMAND           ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/license/nasm
+					TEST_COMMAND      "${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat" ${CMAKE_MAKE_PROGRAM} test
 					#
 					# Uncomment if you want to run make test only if explicitly required on the command-line
 					# On windows 70-test_comp.t is hanging, despite openssl seems ok. This is a bug in their test suite I strongly guess.
 					#
 					TEST_EXCLUDE_FROM_MAIN TRUE
-					# TEST_BEFORE_INSTALL	TRUE
 					BUILD_IN_SOURCE     TRUE)
 
 # ===========================================================
