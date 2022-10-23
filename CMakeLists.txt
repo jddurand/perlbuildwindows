@@ -186,6 +186,29 @@ string (REGEX REPLACE "/" "\\\\" PERL_INST_DIR_DOS ${PERL_INST_DIR_DOS})
 # =======================================================
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat
 "@ECHO OFF
+
+REM
+REM For Net::SSLeay...
+REM
+SET OPENSSL_PREFIX=${PERL_INST_DIR_DOS}\\c
+
+REM
+REM For Win32::GUI...
+REM
+SET WIN32_GUI_USE_FREEIMAGE_DLL=1
+SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DIR_DOS}\\c\\lib\\freeimage.lib
+SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DIR_DOS}\\c\\include
+
+REM
+REM For runtime of the above packages
+REM
+SET PATH=${PERL_INST_DIR_DOS}\\bin;${PERL_INST_DIR_DOS}\\c\\bin;%PATH%
+
+REM
+REM For CPAN
+REM
+SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
+
 REM
 REM We want to have our OWN distro prefs. This mean our OWN .cpan
 REM
@@ -202,7 +225,6 @@ REM This can sound dangerous, but this is ok because the /first/ time CPAN is in
 REM is not present, so cpan will default to one of the three cases that are always applied, and %APPDATA% is not one of them
 REM
 IF EXIST %LOCALAPPDATA%\\.cpan RMDIR /Q /S %LOCALAPPDATA%\\.cpan
-SET HOME=${CMAKE_CURRENT_BINARY_DIR_DOS}
 REM
 REM The very first time we initialize .cpan/CPAN/MyConfig and cpan will overwrite it
 REM
@@ -232,21 +254,10 @@ IF NOT EXIST \"%HOME%\\.cpan\\CPAN\\MyConfig.pm\" (
   TYPE .\\tmpFile | cpan
   DEL .\\tmpFile
 )
+
 REM
+REM Execute the command
 REM
-REM For Net::SSLeay...
-REM
-SET OPENSSL_PREFIX=${PERL_INST_DIR_DOS}\\c
-REM
-REM For Win32::GUI...
-REM
-SET WIN32_GUI_USE_FREEIMAGE_DLL=1
-SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_INST_DIR_DOS}\\c\\lib\\freeimage.lib
-SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_INST_DIR_DOS}\\c\\include
-REM
-REM For runtime of the above packages
-REM
-SET PATH=${PERL_INST_DIR_DOS}\\bin;${PERL_INST_DIR_DOS}\\c\\bin;%PATH%
 ECHO | cmd /C %*
 ")
 
