@@ -90,6 +90,9 @@ set (LIBJPEG_TURBO_VERSION_DEFAULT         2.1.4)
 set (JBIGKIT_VERSION_DEFAULT               2.1)
 set (LERC_VERSION_DEFAULT                  4.0.0)
 set (XZ_VERSION_DEFAULT                    5.2.7)
+set (ZSTD_VERSION_DEFAULT                  1.5.2)
+set (WEBP_VERSION_DEFAULT                  1.2.4)
+set (LIBPNG_VERSION_DEFAULT                1.6.38)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -105,6 +108,9 @@ set (LIBJPEG_TURBO_VERSION         ${LIBJPEG_TURBO_VERSION_DEFAULT}         CACH
 set (JBIGKIT_VERSION               ${JBIGKIT_VERSION_DEFAULT}               CACHE STRING "Jbigkit version")
 set (LERC_VERSION                  ${LERC_VERSION_DEFAULT}                  CACHE STRING "Lerc version")
 set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACHE STRING "Xz version")
+set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "Zstd version")
+set (WEBP_VERSION                  ${WEBP_VERSION_DEFAULT}                  CACHE STRING "Webp version")
+set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACHE STRING "Libpng version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -120,6 +126,9 @@ set_property (CACHE LIBJPEG_TURBO_VERSION         PROPERTY STRINGS ${LIBJPEG_TUR
 set_property (CACHE JBIGKIT_VERSION               PROPERTY STRINGS ${JBIGKIT_VERSION_DEFAULT})
 set_property (CACHE LERC_VERSION                  PROPERTY STRINGS ${LERC_VERSION_DEFAULT})
 set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_DEFAULT})
+set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
+set_property (CACHE WEBP_VERSION                  PROPERTY STRINGS ${WEBP_VERSION_DEFAULT})
+set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -135,6 +144,9 @@ message (STATUS "Version of Libjpeg-turbo          : ${LIBJPEG_TURBO_VERSION}")
 message (STATUS "Version of Jbigkit                : ${JBIGKIT_VERSION}")
 message (STATUS "Version of Lerc                   : ${LERC_VERSION}")
 message (STATUS "Version of Xz                     : ${XZ_VERSION}")
+message (STATUS "Version of Zstd                   : ${ZSTD_VERSION}")
+message (STATUS "Version of Webp                   : ${WEBP_VERSION}")
+message (STATUS "Version of Libpng                 : ${LIBPNG_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -466,10 +478,38 @@ ExternalProject_Add(xz
 					)
 
 # ===========================================================
+# External project Zstd
+# ===========================================================
+ExternalProject_Add(zstd
+					URL                    https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz
+					SOURCE_SUBDIR          build/cmake
+					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					)
+
+# ===========================================================
+# External project Libpng
+# ===========================================================
+ExternalProject_Add(libpng
+					DEPENDS                libjpeg-turbo zlib
+					URL                    https://github.com/glennrp/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz
+					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					)
+
+# ===========================================================
+# External project Webp
+# ===========================================================
+ExternalProject_Add(webp
+					DEPENDS                libjpeg-turbo zlib libpng
+					URL                    https://github.com/webmproject/libwebp/archive/refs/tags/v${WEBP_VERSION}.zip
+					# WEBP_LINK_STATIC is ON otherwise this is a circular dependency on tiff
+					CMAKE_ARGS             -DWEBP_LINK_STATIC=ON -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					)
+
+# ===========================================================
 # External project libtiff
 # ===========================================================
 ExternalProject_Add(libtiff
-					DEPENDS                zlib libdeflate libjpeg-turbo jbigkit lerc
+					DEPENDS                zlib libdeflate libjpeg-turbo jbigkit lerc xz zstd
 					URL                    https://download.osgeo.org/libtiff/tiff-${LIBTIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} cmake/LZMACodec.cmake ${PROJECT_SOURCE_DIR}/libtiff-4.4.0.diff
 					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
