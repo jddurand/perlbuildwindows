@@ -63,7 +63,7 @@ add_library(LibJPEG
 			Source/LibJPEG/jutils.c
 			Source/LibJPEG/transupp.c
 			)
-target_compile_definitions(LibJPEG PRIVATE -DWIN32 -D_DEBUG -D_LIB -D_CRT_SECURE_NO_DEPRECATE)
+target_compile_definitions(LibJPEG PRIVATE -D_CRT_SECURE_NO_DEPRECATE)
 target_include_directories(LibJPEG PRIVATE Source/zlib)
 
 add_library(LibPNG
@@ -84,7 +84,7 @@ add_library(LibPNG
 			Source/LibPNG/pngwtran.c
 			Source/LibPNG/pngwutil.c
 			)
-target_compile_definitions(LibPNG PRIVATE -DWIN32 -DNDEBUG -D_LIB -D_CRT_SECURE_NO_DEPRECATE)
+target_compile_definitions(LibPNG PRIVATE -D_CRT_SECURE_NO_DEPRECATE)
 target_include_directories(LibPNG PRIVATE Source/zlib)
 
 add_library(LibTIFF4
@@ -126,7 +126,7 @@ add_library(LibTIFF4
 			Source/LibTIFF4/tif_write.c
 			Source/LibTIFF4/tif_zip.c
 			)
-target_compile_definitions(LibTIFF4 PRIVATE -DWIN32 -DNDEBUG -D_LIB -D_CRT_SECURE_NO_DEPRECATE)
+target_compile_definitions(LibTIFF4 PRIVATE -D_CRT_SECURE_NO_DEPRECATE)
 target_include_directories(LibTIFF4 PRIVATE Source/zlib Source/LibJPEG)
 
 add_library(ZLib
@@ -147,7 +147,7 @@ add_library(ZLib
 			Source/ZLib/uncompr.c
 			Source/ZLib/zutil.c
 			)
-target_compile_definitions(ZLib PRIVATE -DWIN32 -DNDEBUG -D_LIB -D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+target_compile_definitions(ZLib PRIVATE -D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 
 add_library(LibOpenJPEG
 			OBJECT
@@ -171,7 +171,7 @@ add_library(LibOpenJPEG
 			Source/LibOpenJPEG/tcd.c
 			Source/LibOpenJPEG/tgt.c
 			)
-target_compile_definitions(LibOpenJPEG PRIVATE -DWIN32 -DNDEBUG -D_LIB -DOPJ_STATIC -D_CRT_SECURE_NO_DEPRECATE)
+target_compile_definitions(LibOpenJPEG PRIVATE -DOPJ_STATIC -D_CRT_SECURE_NO_DEPRECATE)
 
 add_library(OpenEXR
 			OBJECT
@@ -282,7 +282,7 @@ add_library(OpenEXR
 			Source/OpenEXR/IlmThread/IlmThreadSemaphore.cpp
 			Source/OpenEXR/IexMath/IexMathFloatExc.cpp
 			)
-target_compile_definitions(OpenEXR PRIVATE -DWIN32 -DNDEBUG -D_LIB -D_CRT_SECURE_NO_DEPRECATE)
+target_compile_definitions(OpenEXR PRIVATE -D_CRT_SECURE_NO_DEPRECATE)
 target_include_directories(OpenEXR PRIVATE Source/OpenEXR Source/OpenEXR/IlmImf Source/OpenEXR/Imath Source/OpenEXR/IexMath Source/OpenEXR/Iex Source/OpenEXR/Half Source/OpenEXR/IlmThread Source/ZLib)
 
 add_library(LibRawLite
@@ -294,7 +294,7 @@ add_library(LibRawLite
 			Source/LibRawLite/src/libraw_cxx.cpp
 			Source/LibRawLite/src/libraw_datastream.cpp
 			)
-target_compile_definitions(LibRawLite PRIVATE -DWIN32 -D_DEBUG -D_LIB -D_CRT_SECURE_NO_WARNINGS -DLIBRAW_NODLL)
+target_compile_definitions(LibRawLite PRIVATE -D_CRT_SECURE_NO_WARNINGS -DLIBRAW_NODLL)
 target_include_directories(LibRawLite PRIVATE Source/LibRawLite Source/ZLib)
 
 add_library(LibWebP
@@ -414,7 +414,7 @@ add_library(LibWebP
 			Source/LibWebP/src/utils/thread_utils.c
 			Source/LibWebP/src/utils/utils.c
 			)
-target_compile_definitions(LibWebP PRIVATE -DWIN32 -D_WINDOWS -D_DEBUG -D_LIB -DWIN32_LEAN_AND_MEAN)
+target_compile_definitions(LibWebP PRIVATE -DWIN32_LEAN_AND_MEAN)
 target_include_directories(LibWebP PRIVATE Source/LibWebP)
 
 add_library(LibJXR
@@ -443,7 +443,7 @@ add_library(LibJXR
 			Source/LibJXR/jxrgluelib/JXRGluePFC.c
 			Source/LibJXR/jxrgluelib/JXRMeta.c
 			)
-target_compile_definitions(LibJXR PRIVATE -DWIN32 -D_DEBUG -D_LIB -DDISABLE_PERF_MEASUREMENT)
+target_compile_definitions(LibJXR PRIVATE -DDISABLE_PERF_MEASUREMENT)
 target_include_directories(LibJXR PRIVATE Source/LibJXR/image/sys Source/LibJXR/jxrgluelib)
 
 set (FREEIMAGE_SRCS
@@ -570,11 +570,12 @@ target_include_directories(freeimage PRIVATE
 						   Source/LibJXR/jxrgluelib
 						   Source/LibJXR/image/sys
 						   )
-target_compile_definitions(freeimage PRIVATE -DWIN32 -DNDEBUG -D_WINDOWS -D_USRDLL -DOPJ_STATIC -DFREEIMAGE_EXPORTS -D_CRT_SECURE_NO_DEPRECATE -DLIBRAW_NODLL)
+target_compile_definitions(freeimage PRIVATE -DOPJ_STATIC -DFREEIMAGE_EXPORTS -D_CRT_SECURE_NO_DEPRECATE -DLIBRAW_NODLL)
 
 set_target_properties(freeimage
     PROPERTIES
     VERSION       "${freeimage_VERSION}"
     SOVERSION     "${freeimage_VERSION_MAJOR}"
+	PUBLIC_HEADER source/FreeImage.h
     )
 install(TARGETS freeimage)
