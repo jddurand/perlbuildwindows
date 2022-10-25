@@ -542,6 +542,9 @@ set (FREEIMAGETOOLKIT_SRCS
 			Source/FreeImageToolkit/Rescale.cpp
 			Source/FreeImageToolkit/Resize.cpp
 			)
+			
+set (FREEIMAGE_RC FreeImage.rc)
+
 add_library(freeimage
 			SHARED
 			${FREEIMAGE_SRCS}
@@ -556,6 +559,7 @@ add_library(freeimage
 			$<TARGET_OBJECTS:LibRawLite>
 			$<TARGET_OBJECTS:LibWebP>
 			$<TARGET_OBJECTS:LibJXR>
+			${FREEIMAGE_RC}
 			)
 target_include_directories(freeimage PRIVATE
 						   Source
