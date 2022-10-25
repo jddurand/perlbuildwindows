@@ -93,6 +93,8 @@ set (XZ_VERSION_DEFAULT                    5.2.7)
 set (ZSTD_VERSION_DEFAULT                  1.5.2)
 set (WEBP_VERSION_DEFAULT                  1.2.4)
 set (LIBPNG_VERSION_DEFAULT                1.6.38)
+set (GIFLIB_VERSION_DEFAULT                5.2.1)
+set (SDL2_VERSION_DEFAULT                  2.24.1)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -111,6 +113,8 @@ set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACH
 set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "Zstd version")
 set (WEBP_VERSION                  ${WEBP_VERSION_DEFAULT}                  CACHE STRING "Webp version")
 set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACHE STRING "Libpng version")
+set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "Giflib version")
+set (SDL2_VERSION                  ${SDL2_VERSION_DEFAULT}                  CACHE STRING "Sdl2 version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -129,6 +133,7 @@ set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_
 set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
 set_property (CACHE WEBP_VERSION                  PROPERTY STRINGS ${WEBP_VERSION_DEFAULT})
 set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERSION_DEFAULT})
+set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -147,6 +152,8 @@ message (STATUS "Version of Xz                     : ${XZ_VERSION}")
 message (STATUS "Version of Zstd                   : ${ZSTD_VERSION}")
 message (STATUS "Version of Webp                   : ${WEBP_VERSION}")
 message (STATUS "Version of Libpng                 : ${LIBPNG_VERSION}")
+message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
+message (STATUS "Version of Sdl2                   : ${SDL2_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -335,6 +342,7 @@ ECHO | cmd /C %*
 # External project perl-core
 # ===========================================================
 ExternalProject_Add(perl-core
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz
 					SOURCE_SUBDIR          win32
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E env ${PERLPATCH_BAT_DOS} ${REPLACE_VBS_DOS} ${PERL_CCTYPE} ${PERL_WIN64} ${PERL_INSTSUBDIR} ${PERL_INST_DRV}
@@ -347,6 +355,7 @@ ExternalProject_Add(perl-core
 # External project nasm
 # ===========================================================
 ExternalProject_Add(nasm
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                perl-core
 					URL                    https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.gz
 					#
@@ -418,8 +427,8 @@ ExternalProject_Add(openssl
 # External project zlib
 # ===========================================================
 ExternalProject_Add(zlib
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
@@ -446,79 +455,101 @@ ExternalProject_Add(libdeflate
 # External project libjpeg-turbo
 # ===========================================================
 ExternalProject_Add(libjpeg-turbo
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DOLD-JPEG=ON -DCMAKE_ASM_NASM_COMPILER=${PERL_C_INST_DIR}/bin/nasm.exe
 					DEPENDS                nasm
 					URL                    https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/${LIBJPEG_TURBO_VERSION}.tar.gz
 					# Note that it is voluntarily that CMAKE_ASM_NASM_COMPILER uses UNIX style syntax, otherwise enable_language will not like it
-					CMAKE_ARGS             -DOLD-JPEG=ON -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_ASM_NASM_COMPILER=${PERL_C_INST_DIR}/bin/nasm.exe
 					)
 
 # ===========================================================
 # External project jbigkit
 # ===========================================================
 ExternalProject_Add(jbigkit
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    http://www.cl.cam.ac.uk/~mgk25/download/jbigkit-${JBIGKIT_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/jbigkit-CMakeLists.txt CMakeLists.txt
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project lerc
 # ===========================================================
 ExternalProject_Add(lerc
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project Xz
 # ===========================================================
 ExternalProject_Add(xz
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=ON
 					URL                    https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz
-					CMAKE_ARGS             -DBUILD_SHARED_LIBS=ON -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project Zstd
 # ===========================================================
 ExternalProject_Add(zstd
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz
 					SOURCE_SUBDIR          build/cmake
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project Libpng
 # ===========================================================
 ExternalProject_Add(libpng
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                libjpeg-turbo zlib
 					URL                    https://github.com/glennrp/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					)
+
+# ===========================================================
+# External project Giflib
+# ===========================================================
+ExternalProject_Add(giflib
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					URL                    https://github.com/jddurand/perlbuildwindows/raw/main/giflib-${GIFLIB_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} < ${PROJECT_SOURCE_DIR}/giflib-5.2.1.diff
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/license/giflib
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/license/giflib
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					BUILD_IN_SOURCE        TRUE
+					)
+
+# ===========================================================
+# External project Sdl2
+# ===========================================================
+ExternalProject_Add(sdl2
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					URL                    https://github.com/libsdl-org/SDL/releases/download/release-${SDL2_VERSION}/SDL2-${SDL2_VERSION}.tar.gz
 					)
 
 # ===========================================================
 # External project Webp
 # ===========================================================
 ExternalProject_Add(webp
-					DEPENDS                libjpeg-turbo zlib libpng
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON
+					DEPENDS                libjpeg-turbo zlib libpng giflib
 					URL                    https://github.com/webmproject/libwebp/archive/refs/tags/v${WEBP_VERSION}.zip
-					# WEBP_LINK_STATIC is ON otherwise this is a circular dependency on tiff
-					CMAKE_ARGS             -DWEBP_LINK_STATIC=ON -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project libtiff
 # ===========================================================
 ExternalProject_Add(libtiff
-					DEPENDS                zlib libdeflate libjpeg-turbo jbigkit lerc xz zstd
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DEPENDS                zlib libdeflate libjpeg-turbo jbigkit lerc xz zstd webp
 					URL                    https://download.osgeo.org/libtiff/tiff-${LIBTIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} cmake/LZMACodec.cmake ${PROJECT_SOURCE_DIR}/libtiff-4.4.0.diff
-					CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					)
 
 # ===========================================================
 # External project freeimage
 # ===========================================================
 ExternalProject_Add(freeimage
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                libtiff
 					SOURCE_SUBDIR 		   Source
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E make_directory          ${CMAKE_CURRENT_BINARY_DIR}/freeimage-prefix/src/freeimage
