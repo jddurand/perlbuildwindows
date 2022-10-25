@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QNet-SSLeay-1.93_01.tar.gz\E'
+patches:
+  - Net-SSLeay-1.93_01.patch
