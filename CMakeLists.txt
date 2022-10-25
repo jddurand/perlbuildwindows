@@ -556,17 +556,10 @@ ExternalProject_Add(freeimage
 					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
-# We consider that perl is ready when perl-core and openssl are installed
-# ====================================================================================================================================
-add_custom_target(perl
-				  DEPENDS                  perl-core openssl
-				  )
-
-# ====================================================================================================================================
 # Net::SSLeay has post-installation of openssl libraries near Net::SSLeay
 # ====================================================================================================================================
 add_custom_target(perl-net-ssleay
-				  DEPENDS                  perl
+				  DEPENDS                  perl-core openssl
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
 				  #
 				  # Post-install: copy openssl libraries near Net::SSLeay
@@ -579,12 +572,19 @@ add_custom_target(perl-net-ssleay
 # Win32::GUI has post-installation of freeimage library near Win32::GUI
 # ====================================================================================================================================
 add_custom_target(perl-win32-gui
-				  DEPENDS                  perl freeimage
+				  DEPENDS                  perl-core freeimage
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
 				  #
 				  # Post-install: copy freeimage library near Win32::GUI::DIBitmap
 				  #
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
+				  )
+
+# ====================================================================================================================================
+# We consider that perl is ready when perl-core and modules that require special additional commands are complete
+# ====================================================================================================================================
+add_custom_target(perl
+				  DEPENDS                  perl-net-ssleay perl-win32-gui
 				  )
 
 # ====================================================================================================================================
