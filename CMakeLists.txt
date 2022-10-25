@@ -550,22 +550,8 @@ ExternalProject_Add(libtiff
 # ===========================================================
 ExternalProject_Add(freeimage
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DEPENDS                libtiff
-					SOURCE_SUBDIR 		   Source
-					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E make_directory          ${CMAKE_CURRENT_BINARY_DIR}/freeimage-prefix/src/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E copy_directory          ${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-Adv ${CMAKE_CURRENT_BINARY_DIR}/freeimage-prefix/src/freeimage
-					INSTALL_COMMAND        ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E copy freeimage.dll      ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E copy freeimage.pdb      ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/lib
-					COMMAND                ${CMAKE_COMMAND} -E copy freeimage.lib      ${PERL_INST_DIR}/c/lib
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E copy license-fi.txt     ${PERL_INST_DIR}/c/license/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E copy license-fi.txt     ${PERL_INST_DIR}/c/license/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv2.txt  ${PERL_INST_DIR}/c/license/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv3.txt  ${PERL_INST_DIR}/c/license/freeimage
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/include
-					COMMAND                ${CMAKE_COMMAND} -E copy Source/FreeImage.h ${PERL_INST_DIR}/c/include
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/FreeImage-3.18.0.tar.gz
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
@@ -596,10 +582,9 @@ add_custom_target(perl-win32-gui
 				  DEPENDS                  perl freeimage
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
 				  #
-				  # Post-install: copy freeimage library near Win32::GUI
+				  # Post-install: copy freeimage library near Win32::GUI::DIBitmap
 				  #
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libcrypto-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
+				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
 				  )
 
 # ====================================================================================================================================
@@ -608,8 +593,12 @@ add_custom_target(perl-win32-gui
 # Every module that needs a patch
 add_custom_target(PerlModules
 				  ALL
-                  COMMENT "Perl modules"
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::GUI
+				  #
+				  # We want to depend on perl modules that required a custom installation (i.e. a copy of a dlls near the module binary)
+				  #
+				  DEPENDS                  perl-net-ssleay perl-win32-gui
+                  COMMENT                  "Perl modules"
+				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           IO::Socket
 				  #
 				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
 				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs
