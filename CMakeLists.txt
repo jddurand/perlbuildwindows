@@ -80,6 +80,7 @@ endif ()
 
 set (PERL_TEST_DEFAULT                     ON)
 set (OPENSSL_VERSION_DEFAULT               3.0.5)
+set (OPENSSL_TEST_DEFAULT                  ON)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
@@ -100,6 +101,7 @@ set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACH
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
 set (PERL_TEST                     ${PERL_TEST_DEFAULT}                     CACHE STRING "Perl test")
 set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACHE STRING "Openssl version")
+set (OPENSSL_TEST                  ${OPENSSL_TEST_DEFAULT}                  CACHE STRING "Openssl test")
 set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
@@ -120,6 +122,7 @@ set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
 set_property (CACHE PERL_TEST                     PROPERTY STRINGS ON OFF)
 set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VERSION_DEFAULT})
+set_property (CACHE OPENSSL_TEST                  PROPERTY STRINGS ON OFF)
 set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
@@ -139,6 +142,7 @@ message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
 message (STATUS "Test of Perl                      : ${PERL_TEST}")
 message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
+message (STATUS "Test of Openssl                   : ${OPENSSL_TEST}")
 message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
@@ -246,7 +250,7 @@ cmake_path(CONVERT "${CPAN_PATCHES_DIR}" TO_NATIVE_PATH_LIST CPAN_PATCHES_DIR_DO
 # Generic bat file to invoke anything related to our perl
 # =======================================================
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat
-"REM @ECHO OFF
+"@ECHO OFF
 
 REM
 REM For Net::SSLeay...
@@ -415,12 +419,13 @@ ExternalProject_Add(openssl
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/license/openssl
-					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					#
-					# Uncomment if you want to run make test only if explicitly required on the command-line
-					# On windows 70-test_comp.t is hanging, despite openssl seems ok. This is a bug in their test suite I strongly guess.
+					# On Windows openssl test suite is working ok only in Win32::Process is installed
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::Process
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
+					TEST_EXCLUDE_FROM_MAIN $<IF:${OPENSSL_TEST},OFF,ON>
+					TEST_BEFORE_INSTALL    $<IF:${OPENSSL_TEST},ON,OFF>
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
