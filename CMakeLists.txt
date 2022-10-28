@@ -78,7 +78,7 @@ else ()
   set (PERL_VERSION_DEFAULT OFF)
 endif ()
 
-set (PERL_TEST_DEFAULT                     ON)set (OPENSSL_VERSION_DEFAULT               3.0.5)
+set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
@@ -410,14 +410,13 @@ ExternalProject_Add(nasm
 if (${OPENSSL_VERSION} STREQUAL "3.0.5")
   set (OPENSLL_PATCH_COMMAND ${Patch_EXECUTABLE} util/perl/TLSProxy/Proxy.pm ${PROJECT_SOURCE_DIR}/openssl-3.0.5-util-perl-TLSProxy-Proxy.diff)
 else ()
-  set (OPENSLL_PATCH_COMMAND "")
+  set (OPENSLL_PATCH_COMMAND ${CMAKE_COMMAND} -E echo "No patch for version ${OPENSSL_VERSION}")
 endif ()
 
 ExternalProject_Add(openssl
 					DEPENDS                nasm
 					URL                    https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
-					PATCH_COMMAND          ${CMAKE_COMMAND} -E echo "Checking local patches"
-					COMMAND                ${OPENSLL_PATCH_COMMAND}
+					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
