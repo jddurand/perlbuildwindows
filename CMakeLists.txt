@@ -78,9 +78,7 @@ else ()
   set (PERL_VERSION_DEFAULT OFF)
 endif ()
 
-set (PERL_TEST_DEFAULT                     ON)
-set (OPENSSL_VERSION_DEFAULT               3.0.5)
-set (OPENSSL_TEST_DEFAULT                  ON)
+set (PERL_TEST_DEFAULT                     ON)set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
@@ -99,9 +97,7 @@ set (SDL2_VERSION_DEFAULT                  2.24.1)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
-set (PERL_TEST                     ${PERL_TEST_DEFAULT}                     CACHE STRING "Perl test")
 set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACHE STRING "Openssl version")
-set (OPENSSL_TEST                  ${OPENSSL_TEST_DEFAULT}                  CACHE STRING "Openssl test")
 set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
@@ -120,9 +116,7 @@ set (SDL2_VERSION                  ${SDL2_VERSION_DEFAULT}                  CACH
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
-set_property (CACHE PERL_TEST                     PROPERTY STRINGS ON OFF)
 set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VERSION_DEFAULT})
-set_property (CACHE OPENSSL_TEST                  PROPERTY STRINGS ON OFF)
 set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
@@ -140,9 +134,7 @@ set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERS
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
-message (STATUS "Test of Perl                      : ${PERL_TEST}")
 message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
-message (STATUS "Test of Openssl                   : ${OPENSSL_TEST}")
 message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
@@ -351,8 +343,8 @@ ExternalProject_Add(perl-core
 					SOURCE_SUBDIR          win32
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E env ${PERLPATCH_BAT_DOS} ${REPLACE_VBS_DOS} ${PERL_CCTYPE} ${PERL_WIN64} ${PERL_INSTSUBDIR} ${PERL_INST_DRV}
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
-					TEST_EXCLUDE_FROM_MAIN $<IF:${PERL_TEST},OFF,ON>
-					TEST_BEFORE_INSTALL    $<IF:${PERL_TEST},ON,OFF>
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -411,9 +403,21 @@ ExternalProject_Add(nasm
 # ===========================================================
 # External project openssl
 # ===========================================================
+#
+# Why does is not work ?
+# COMMAND                $<IF:$<STREQUAL:"${OPENSSL_VERSION}","3.0.5">,"${Patch_EXECUTABLE} util/perl/TLSProxy/Proxy.pm b/util/perl/TLSProxy/Proxy.pm ${PROJECT_SOURCE_DIR}/openssl-3.0.5-util-perl-TLSProxy-Proxy.diff",${CMAKE_COMMAND} -E echo "Not applicable: openssl-3.0.5-util-perl-TLSProxy-Proxy.diff">
+#
+if (${OPENSSL_VERSION} STREQUAL "3.0.5")
+  set (OPENSLL_PATCH_COMMAND ${Patch_EXECUTABLE} util/perl/TLSProxy/Proxy.pm ${PROJECT_SOURCE_DIR}/openssl-3.0.5-util-perl-TLSProxy-Proxy.diff)
+else ()
+  set (OPENSLL_PATCH_COMMAND "")
+endif ()
+
 ExternalProject_Add(openssl
 					DEPENDS                nasm
 					URL                    https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E echo "Checking local patches"
+					COMMAND                ${OPENSLL_PATCH_COMMAND}
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
@@ -422,10 +426,10 @@ ExternalProject_Add(openssl
 					#
 					# On Windows openssl test suite is working ok only in Win32::Process is installed
 					#
-					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::Process
-					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
-					TEST_EXCLUDE_FROM_MAIN $<IF:${OPENSSL_TEST},OFF,ON>
-					TEST_BEFORE_INSTALL    $<IF:${OPENSSL_TEST},ON,OFF>
+					# TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::Process
+					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
