@@ -417,7 +417,7 @@ ExternalProject_Add(openssl
 					DEPENDS                nasm
 					URL                    https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
-					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
+					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers enable-ssl-trace ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
@@ -573,7 +573,9 @@ add_custom_target(perl-net-ssleay
 				  # Post-install: copy openssl libraries near Net::SSLeay
 				  #
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libcrypto-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
+				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libcrypto-3.pdb ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
+				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.pdb ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
 				  )
 
 # ====================================================================================================================================
