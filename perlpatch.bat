@@ -22,3 +22,7 @@ REM
 REM We enable the support of $Config{sitelibexp}\sitecustomize.pl
 REM
 cscript "%1" "win32\Makefile" "#\s*USE_SITECUST" "USE_SITECUST"
+REM
+REM We enable CFG=Debug
+REM
+REM cscript "%1" "win32\Makefile" "#\s*CFG\s*=\s*Debug" "CFG		= Debug"
