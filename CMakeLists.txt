@@ -335,6 +335,11 @@ ECHO | cmd /C %*
 ")
 
 # ===========================================================
+# Install system files
+# ===========================================================
+include(InstallRequiredSystemLibraries)
+
+# ===========================================================
 # External project perl-core
 # ===========================================================
 ExternalProject_Add(perl-core
@@ -342,6 +347,10 @@ ExternalProject_Add(perl-core
 					URL                    https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz
 					SOURCE_SUBDIR          win32
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E env ${PERLPATCH_BAT_DOS} ${REPLACE_VBS_DOS} ${PERL_CCTYPE} ${PERL_WIN64} ${PERL_INSTSUBDIR} ${PERL_INST_DRV}
+					COMMAND                ${Patch_EXECUTABLE} inline.h         ${PROJECT_SOURCE_DIR}/perl-rt12986-inline.h.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32.c    ${PROJECT_SOURCE_DIR}/perl-rt12986-win32-win32.c.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32.h    ${PROJECT_SOURCE_DIR}/perl-rt12986-win32-win32.h.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32sck.c ${PROJECT_SOURCE_DIR}/perl-rt12986-win32-win32sck.c.patch
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
@@ -417,15 +426,11 @@ ExternalProject_Add(openssl
 					DEPENDS                nasm
 					URL                    https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
-					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers enable-ssl-trace ${OPENSSL_VC}
+					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/license/openssl
-					#
-					# On Windows openssl test suite is working ok only in Win32::Process is installed
-					#
-					# TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::Process
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
