@@ -1,0 +1,326 @@
+diff --git a/win32/win32sck.c b/win32/win32sck.c
+index ef5c682101..a1363e295d 100644
+--- a/win32/win32sck.c
++++ b/win32/win32sck.c
+@@ -58,8 +58,133 @@ static struct servent* win32_savecopyservent(struct servent*d,
+ 
+ static int wsock_started = 0;
+ 
+-#ifdef WIN32_DYN_IOINFO_SIZE
+-EXTERN_C Size_t w32_ioinfo_size;
++/*
++ * Array of arrays of control structures for lowio files and
++ * definition of IOINFO_L2E, the log base 2 of the number of elements in each
++ * array of ioinfo structs.
++ */
++#if _MSC_VER >= 1900                            /* >= Visual Studio 2015 */
++EXTERN_C ioinfo ** __pioinfo = NULL;
++#define IOINFO_L2E 6
++#else
++EXTERN_C _CRTIMP ioinfo * __pioinfo[];
++#define IOINFO_L2E 5
++#endif
++static inline ioinfo* _pioinfo(int);
++#define _osfhnd(i)  (_pioinfo(i)->osfhnd)
++/* since we are not doing a dup2(), this works fine */
++#define _set_osfhnd(fh, osfh) (void)(_osfhnd(fh) = (intptr_t)osfh)
++
++/*
++ * Method for getting at an ioinfo struct and its fields from a
++ * file handle
++ */
++EXTERN_C size_t pioinfo_extra = 0;	/* workaround for VC++8 SP1 */
++#if _MSC_VER >= 1400                /* Visual Studio 2005 */
++/* License: Ruby's */
++static FARPROC
++get_proc_address(const char *module, const char *func, HANDLE *mh)
++{
++    HANDLE h;
++    FARPROC ptr;
++
++    if (mh)
++        h = LoadLibrary(module);
++    else
++        h = GetModuleHandle(module);
++    if (!h)
++        return NULL;
++
++    ptr = GetProcAddress(h, func);
++    if (mh) {
++        if (ptr)
++            *mh = h;
++        else
++            FreeLibrary(h);
++    }
++    return ptr;
++}
++
++EXTERN_C void
++set_pioinfo_extra(void)
++{
++#if _MSC_VER >= 1900                /* Visual Studio 2015 */
++# define FUNCTION_RET 0xc3 /* ret */
++# ifdef _DEBUG
++#  define UCRTBASE "ucrtbased.dll"
++# else
++#  define UCRTBASE "ucrtbase.dll"
++# endif
++    /* get __pioinfo addr with _isatty */
++    char *p = (char*)get_proc_address(UCRTBASE, "_isatty", NULL);
++    char *pend = p;
++    /* _osfile(fh) & FDEV */
++
++# ifdef _WIN64
++    int32_t rel;
++    char *rip;
++    /* add rsp, _ */
++#  define FUNCTION_BEFORE_RET_MARK "\x48\x83\xc4"
++#  define FUNCTION_SKIP_BYTES 1
++#  ifdef _DEBUG
++    /* lea rcx,[__pioinfo's addr in RIP-relative 32bit addr] */
++#   define PIOINFO_MARK "\x48\x8d\x0d"
++#  else
++    /* lea rdx,[__pioinfo's addr in RIP-relative 32bit addr] */
++#   define PIOINFO_MARK "\x48\x8d\x15"
++#  endif
++
++# else /* x86 */
++    /* pop ebp */
++#  define FUNCTION_BEFORE_RET_MARK "\x5d"
++#  define FUNCTION_SKIP_BYTES 0
++    /* mov eax,dword ptr [eax*4+100EB430h] */
++#  define PIOINFO_MARK "\x8B\x04\x85"
++# endif
++    if (p) {
++        for (pend += 10; pend < p + 300; pend++) {
++            // find end of function
++            if (memcmp(pend, FUNCTION_BEFORE_RET_MARK, sizeof(FUNCTION_BEFORE_RET_MARK) - 1) == 0 &&
++                (*(pend + (sizeof(FUNCTION_BEFORE_RET_MARK) - 1) + FUNCTION_SKIP_BYTES) & FUNCTION_RET) == FUNCTION_RET) {
++                // search backwards from end of function
++                for (pend -= (sizeof(PIOINFO_MARK) - 1); pend > p; pend--) {
++                    if (memcmp(pend, PIOINFO_MARK, sizeof(PIOINFO_MARK) - 1) == 0) {
++                        p = pend;
++                        goto found;
++                    }
++                }
++                break;
++            }
++        }
++    }
++    fprintf(stderr, "unexpected " UCRTBASE "\n");
++    _exit(1);
++
++    found:
++    p += sizeof(PIOINFO_MARK) - 1;
++#ifdef _WIN64
++    rel = *(int32_t*)(p);
++    rip = p + sizeof(int32_t);
++    __pioinfo = (ioinfo**)(rip + rel);
++#else
++    __pioinfo = *(ioinfo***)(p);
++#endif
++#endif
++    int fd;
++
++    fd = _open("NUL", O_RDONLY);
++    for (pioinfo_extra = 0; pioinfo_extra <= 64; pioinfo_extra += sizeof(void *)) {
++        if (_osfhnd(fd) == _get_osfhandle(fd)) {
++            break;
++        }
++    }
++    _close(fd);
++
++    if (pioinfo_extra > 64) {
++        /* not found, maybe something wrong... */
++        pioinfo_extra = 0;
++    }
++}
+ #endif
+ 
+ EXTERN_C void
+@@ -394,7 +519,14 @@ win32_accept(SOCKET s, struct sockaddr *addr, int *addrlen)
+     SOCKET r;
+ 
+     SOCKET_TEST((r = accept(TO_SOCKET(s), addr, addrlen)), INVALID_SOCKET);
+-    return OPEN_SOCKET(r);
++#ifndef WIN32_NO_SOCKETS
++    assert(!(SOCKET_FLAG_FROM_HANDLE(r) || IS_PSUEDO_HANDLE(r)));
++    if (r != INVALID_SOCKET)
++        r |= HANDLE_IS_SCK;
++#endif
++    /* why is this call creating a fd for an invalud socket ??? */
++    r = OPEN_SOCKET(r);
++    return r;
+ }
+ 
+ int
+@@ -617,6 +749,15 @@ open_ifs_socket(int af, int type, int protocol)
+     int error_code, found = 0;
+     SOCKET out = INVALID_SOCKET;
+ 
++/* looking all this up on every socket call is stupid,
++ everything (including the convert_proto_info_w2a calls, should use WSASocketW instead)
++ but the for loop needs to be factored out into StartSockets, assuming this
++ code from Winsock 1 era isn't completly removed
++
++ https://rt.perl.org/Ticket/Display.html?id=24269
++
++ http://perl5.git.perl.org/perl.git/commitdiff/036c1c1eb70a0dfc5a7187959eb5e39d499c9396
++ */
+     if ((s = PerlEnv_getenv("PERL_ALLOW_NON_IFS_LSP")) && atoi(s))
+         return WSASocket(af, type, protocol, NULL, 0, 0);
+ 
+@@ -663,6 +804,8 @@ open_ifs_socket(int af, int type, int protocol)
+     return out;
+ }
+ 
++#ifndef WIN32_NO_SOCKETS
++
+ SOCKET
+ win32_socket(int af, int type, int protocol)
+ {
+@@ -676,8 +819,12 @@ win32_socket(int af, int type, int protocol)
+         errno = convert_wsa_error_to_errno(wsaerr);
+         SetLastError(wsaerr);
+         }
+-    else
++    else {
++        assert(!(SOCKET_FLAG_FROM_HANDLE(s) || IS_PSUEDO_HANDLE(s)));
++        if (s != INVALID_SOCKET)
++            s |= HANDLE_IS_SCK;
+         s = OPEN_SOCKET(s);
++    }
+ 
+     return s;
+ }
+@@ -696,29 +843,50 @@ int my_close(int fd)
+         return(close(fd));	/* Then not a socket. */
+     osf = TO_SOCKET(fd);/* Get it now before it's gone! */
+     if (osf != -1) {
+-        int err;
+-        err = closesocket(osf);
+-        if (err == 0) {
+-#ifdef _set_osfhnd
+-            assert(_osfhnd(fd) == osf); /* catch a bad ioinfo struct def */
+-            /* don't close freed handle */
+-            _set_osfhnd(fd, INVALID_HANDLE_VALUE);
+-            return close(fd);
+-#else
+-            (void)close(fd);    /* handle already closed, ignore error */
+-            return 0;
+-#endif
+-        }
+-        else if (err == SOCKET_ERROR) {
+-            int wsaerr = WSAGetLastError();
+-            err = convert_wsa_error_to_errno(wsaerr);
+-            if (err != ENOTSOCK) {
++        if(SOCKET_FLAG_FROM_HANDLE(osf)) {
++            int err;
++            int osftagged = osf;
++            int errtagged = closesocket(osftagged) == SOCKET_ERROR ?  WSAGetLastError() : ERROR_SUCCESS;
++            int osfuntagged = osftagged &~ HANDLE_IS_SCK;
++            int erruntagged = closesocket(osfuntagged)  == SOCKET_ERROR ?  WSAGetLastError() : ERROR_SUCCESS;
++/* use Socket; socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname(\"tcp\"));
++open(SOCKTWO, '<&' . fileno(SOCK)); close(SOCKTWO);
++this code sample uses dup/DuplicateHandle and creates a tagged handle,
++that is never once passed to a socket function, until the 1st closesocket, and then
++the 2nd closesocket fails with WSAENOTSOCK since winsock front end never got a func call on the untagged handle before, and attempting to vivify/"Import" the untagged handle fails, since the socket was closed in the WSP layer/mswsock.dll/afd.sys in the 1st closesocket, and on the 2nd closesocket, WSP layer/mswsock.dll/afd.sys does not tell the front end "yes I created this handle/socket"
++
++Therefore, only if tagged and untagged both return WSAENOTSOCK, will the result be WSAENOTSOCK, else the result of the operation will be something other than WSAENOTSOCK
++*/
++	    /* both kernel handles should be dead by now */
++            assert(!S_is_handle_valid((HANDLE)osfuntagged)
++			       && !S_is_handle_valid((HANDLE)osftagged));
++            if (errtagged == erruntagged) /* this catches WSAENOTSOCK */
++                err = erruntagged;
++            else if (errtagged != WSAENOTSOCK && erruntagged == WSAENOTSOCK)
++                err = errtagged;
++            else if (errtagged == WSAENOTSOCK && erruntagged != WSAENOTSOCK)
++                err = erruntagged;
++            else
++                DebugBreak(); /* 2 different states, which to pass to caller ??? */
++            if (err == ERROR_SUCCESS) {
++                assert(_osfhnd(fd) == osftagged); /* catch a bad ioinfo struct def */
++                /* don't close freed handle */
++                _set_osfhnd(fd, INVALID_HANDLE_VALUE);
++                return close(fd);
++            }
++            else {
++                assert(err != ENOTSOCK);
++                /* note close() does a not allowed by MS CloseHandle
++                on the socket handle */
+                 (void)close(fd);
+-                errno = err;
+-                SetLastError(wsaerr);
++                errno = convert_wsa_error_to_errno(err);
++                SetLastError(err);
+                 return EOF;
+             }
+         }
++        else {
++            assert(!PUBLIC_IS_SOCKET(osf));
++        }
+     }
+     return close(fd);
+ }
+@@ -728,37 +896,42 @@ int
+ my_fclose (FILE *pf)
+ {
+     int osf;
++    int fd;
+     if (!wsock_started)		/* No WinSock? */
+         return(fclose(pf));	/* Then not a socket. */
+-    osf = TO_SOCKET(win32_fileno(pf));/* Get it now before it's gone! */
++    osf = TO_SOCKET(fd = win32_fileno(pf));/* Get it now before it's gone! */
+     if (osf != -1) {
+-        int err;
+         win32_fflush(pf);
+-        err = closesocket(osf);
+-        if (err == 0) {
+-#ifdef _set_osfhnd
+-            assert(_osfhnd(win32_fileno(pf)) == osf); /* catch a bad ioinfo struct def */
+-            /* don't close freed handle */
+-            _set_osfhnd(win32_fileno(pf), INVALID_HANDLE_VALUE);
+-            return fclose(pf);
+-#else
+-            (void)fclose(pf);   /* handle already closed, ignore error */
+-            return 0;
+-#endif
+-        }
+-        else if (err == SOCKET_ERROR) {
+-            int wsaerr = WSAGetLastError();
+-            err = convert_wsa_error_to_errno(wsaerr);
+-            if (err != ENOTSOCK) {
++        if(SOCKET_FLAG_FROM_HANDLE(osf)) {
++            /* this code does not match my_close ATM, my_close is authoritative */
++            int err = closesocket(osf);
++            int err2 = closesocket(osf&~HANDLE_IS_SCK);
++            assert(err == err2); /* ???? */
++            if (err == 0) {
++                assert(_osfhnd(fd) == osf); /* catch a bad ioinfo struct def */
++                /* don't close freed handle */
++                _set_osfhnd(fd, INVALID_HANDLE_VALUE);
++                return fclose(pf);
++            }
++            else if (err == SOCKET_ERROR) {
++                int wsaerr = WSAGetLastError();
++                err = convert_wsa_error_to_errno(wsaerr);
++                assert(wsaerr != ENOTSOCK);
++                /* note this does a not allowed by MS CloseHandle
++                   on the socket handle */
+                 (void)fclose(pf);
+                 errno = err;
+                 SetLastError(wsaerr);
+                 return EOF;
+             }
+         }
++        else {
++            assert(!PUBLIC_IS_SOCKET(osf));
++        }
+     }
+     return fclose(pf);
+ }
++#endif /* #ifndef WIN32_NO_SOCKETS */
+ 
+ struct hostent *
+ win32_gethostbyaddr(const char *addr, int len, int type)

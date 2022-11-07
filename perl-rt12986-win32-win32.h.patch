@@ -1,0 +1,169 @@
+diff --git a/win32/win32.h b/win32/win32.h
+index 499203a5a0..6609912e7d 100644
+--- a/win32/win32.h
++++ b/win32/win32.h
+@@ -595,13 +595,6 @@ void win32_wait_for_children(pTHX);
+ #  define PERL_WAIT_FOR_CHILDREN win32_wait_for_children(aTHX)
+ #endif
+ 
+-/* The following ioinfo struct manipulations had been removed but were
+- * reinstated to fix RT#120091/118059. However, they do not work with
+- * the rewritten CRT in VS2015 so they are removed once again for VS2015
+- * onwards, which will therefore suffer from the reintroduction of the
+- * close socket bug. */
+-#if (!defined(_MSC_VER)) || (defined(_MSC_VER) && _MSC_VER < 1900)
+-
+ #ifdef PERL_CORE
+ 
+ /* C doesn't like repeat struct definitions */
+@@ -612,65 +605,115 @@ void win32_wait_for_children(pTHX);
+ #  define _CRTIMP __declspec(dllimport)
+ #endif
+ 
+-#ifndef __MINGW32__
+-/* size of ioinfo struct is determined at runtime */
+-#  define WIN32_DYN_IOINFO_SIZE
+-#endif
+-
+-#ifndef WIN32_DYN_IOINFO_SIZE
+ /*
+  * Control structure for lowio file handles
+  */
++#if _MSC_VER >= 1900                            /* >= Visual Studio 2015 */
++typedef char lowio_text_mode;
++typedef char lowio_pipe_lookahead[3];
++
++typedef struct {
++    CRITICAL_SECTION           lock;
++    intptr_t                   osfhnd;          /* underlying OS file HANDLE */
++    __int64                    startpos;        /* File position that matches buffer start */
++    unsigned char              osfile;          /* Attributes of file (e.g., open in text mode?) */
++    lowio_text_mode            textmode;
++    lowio_pipe_lookahead       _pipe_lookahead;
++
++    U8 unicode          : 1;                    /* Was the file opened as unicode? */
++    U8 utf8translations : 1;                    /* Buffer contains translations other than CRLF */
++    U8 dbcsBufferUsed   : 1;                    /* Is the dbcsBuffer in use? */
++    char dbcsBuffer;                            /* Buffer for the lead byte of DBCS when converting from DBCS to Unicode */
++} ioinfo;
++#else
+ typedef struct {
+     intptr_t osfhnd;/* underlying OS file HANDLE */
+     char osfile;    /* attributes of file (e.g., open in text mode?) */
+     char pipech;    /* one char buffer for handles opened on pipes */
+     int lockinitflag;
+     CRITICAL_SECTION lock;
++#if _MSC_VER >= 1400                            /* >= Visual Studio 2005 */
++    char textmode;
++    char pipech2[2];
++#endif
+ } ioinfo;
+-#else
+-typedef intptr_t ioinfo;
+ #endif
+ 
+ /*
+- * Array of arrays of control structures for lowio files.
+- */
+-EXTERN_C _CRTIMP ioinfo* __pioinfo[];
+-
+-/*
+- * Definition of IOINFO_L2E, the log base 2 of the number of elements in each
++ * Array of arrays of control structures for lowio files and
++ * definition of IOINFO_L2E, the log base 2 of the number of elements in each
+  * array of ioinfo structs.
+  */
+-#define IOINFO_L2E	    5
++EXTERN_C size_t pioinfo_extra;
++#if _MSC_VER >= 1900                            /* >= Visual Studio 2015 */
++EXTERN_C ioinfo ** __pioinfo;
++#define IOINFO_L2E 6
++#else
++EXTERN_C _CRTIMP ioinfo * __pioinfo[];
++#define IOINFO_L2E 5
++#endif
++static inline ioinfo* _pioinfo(int);
++#define _osfhnd(i)  (_pioinfo(i)->osfhnd)
++/* since we are not doing a dup2(), this works fine */
++#define _set_osfhnd(fh, osfh) (void)(_osfhnd(fh) = (intptr_t)osfh)
+ 
+ /*
+  * Definition of IOINFO_ARRAY_ELTS, the number of elements in ioinfo array
+  */
+ #define IOINFO_ARRAY_ELTS   (1 << IOINFO_L2E)
+ 
+-/*
+- * Access macros for getting at an ioinfo struct and its fields from a
+- * file handle
+- */
+-#ifdef WIN32_DYN_IOINFO_SIZE
+-#  define _pioinfo(i) ((intptr_t *) \
+-     (((Size_t)__pioinfo[(i) >> IOINFO_L2E])/* * to head of array ioinfo [] */\
+-      /* offset to the head of a particular ioinfo struct */ \
+-      + (((i) & (IOINFO_ARRAY_ELTS - 1)) * w32_ioinfo_size)) \
+-   )
+-/* first slice of ioinfo is always the OS handle */
+-#  define _osfhnd(i)  (*(_pioinfo(i)))
+-#else
+-#  define _pioinfo(i) (__pioinfo[(i) >> IOINFO_L2E] + ((i) & (IOINFO_ARRAY_ELTS - 1)))
+-#  define _osfhnd(i)  (_pioinfo(i)->osfhnd)
+-#endif
++static inline ioinfo*
++_pioinfo(int fd)
++{
++    const size_t sizeof_ioinfo = sizeof(ioinfo) + pioinfo_extra;
++    return (ioinfo*)((char*)__pioinfo[fd >> IOINFO_L2E] +
++                     (fd & (IOINFO_ARRAY_ELTS - 1)) * sizeof_ioinfo);
++}
+ 
+-/* since we are not doing a dup2(), this works fine */
+-#define _set_osfhnd(fh, osfh) (void)(_osfhnd(fh) = (intptr_t)osfh)
++/* derived from IsConsoleHandle macro, (((ULONG_PTR)(h) & 0x10000003) == 0x3)
++   if low 2 bits are 11, then its a console psuedo handle that only Win32
++   subsystem understands, not a kernel handle, a kernel handle ends in 00, we
++   reserve 10 to mean socket handle, starting in Windows 8 according to reports
++   online, console handles are kernel handles, low 2 bits behaviour on Win8
++   consone handles is unresearched, 0x80000000 catches negative values are
++   other psuedo handles (STD_INPUT_HANDLE/-10/STD_OUTPUT_HANDLE/-11) or invalid
++   handle (-1), meaning behind flag 0x10000000 is unknown, 01 can not be used
++   since 01 handles are special cased to fail by GetFileType,
++   and the handle is not passed to a kernel call to determine its type, this
++   causes _fstati64 to fail, making open() from PP fail when opening a numeric
++   fd that contains 01 tagged handle, thus leaving 10 as the only permutation
++   that can be used.
++*/
+ 
+-#endif /* PERL_CORE */
++/*
++static void
++PerlIOUnix_setfd(pTHX_ PerlIO *f, int fd, int imode)
++{
++    PerlIOUnix * const s = PerlIOSelf(f, PerlIOUnix);
++#if defined(WIN32)
++    Stat_t st;
++    if (PerlLIO_fstat(fd, &st) == 0) { <<<<< calls GetFileType in CRT which makes fstat fail
++*/
+ 
+-#endif /* !defined(_MSC_VER) || _MSC_VER<1900 */
++#  ifndef WIN32_NO_SOCKETS
++#    define HANDLE_IS_SCK 0x2
++#    define PSUEDO_HANDLES_MASK 0x90000003
++#    define IS_PSUEDO_HANDLE(h) ((ULONG_PTR)(h) & PSUEDO_HANDLES_MASK)
++#    define SOCKET_FLAG_FROM_HANDLE(h) ((IS_PSUEDO_HANDLE(h) == HANDLE_IS_SCK) ? HANDLE_IS_SCK : 0x0)
++/* [use] public [api to find out if the handle] is [a] socket
++
++   Slow, and does failing kernel calls, use only in DEBUGGING, not for regular builds.
++   There is no simple way to find out what is a socket, since the NT drivers for
++   named pipes (NPFS) and TCPIP (AFD or ws2ifsl) both call themselves
++   FILE_TYPE_PIPE/FILE_DEVICE_NAMED_PIPE. GetNamedPipeInfo internally is an
++   named pipe driver only ioctl. If the handle/driver sucessfully responds to a
++   NPFS ioctl, it proves that the handle is a pipe. Else it is assumed (but it
++   can't be proven without doing a winsock call) to be a socket.
++*/
++#    define PUBLIC_IS_SOCKET(h) (GetFileType((HANDLE)h) == FILE_TYPE_PIPE \
++                                && GetNamedPipeInfo((HANDLE)h, 0, 0, 0, 0) == 0)
++#  endif
++#endif /* PERL_CORE */
+ 
+ /* IO.xs and POSIX.xs define PERLIO_NOT_STDIO to 1 */
+ #if defined(PERL_EXT_IO) || defined(PERL_EXT_POSIX)

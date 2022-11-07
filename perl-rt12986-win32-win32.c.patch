@@ -1,0 +1,69 @@
+diff --git a/win32/win32.c b/win32/win32.c
+index 619f2a4375..c46e9912a7 100644
+--- a/win32/win32.c
++++ b/win32/win32.c
+@@ -156,9 +156,7 @@ static void translate_to_errno(void);
+ START_EXTERN_C
+ HANDLE	w32_perldll_handle = INVALID_HANDLE_VALUE;
+ char	w32_module_name[MAX_PATH+1];
+-#ifdef WIN32_DYN_IOINFO_SIZE
+-Size_t	w32_ioinfo_size;/* avoid 0 extend op b4 mul, otherwise could be a U8 */
+-#endif
++void    set_pioinfo_extra(void);
+ END_EXTERN_C
+ 
+ static OSVERSIONINFO g_osver = {0, 0, 0, 0, 0, ""};
+@@ -3907,13 +3905,41 @@ win32_isatty(int fd)
+ DllExport int
+ win32_dup(int fd)
+ {
+-    return dup(fd);
++    int ret;
++    ret = dup(fd);
++#ifndef WIN32_NO_SOCKETS
++    if(ret != -1) {
++        int old_h = _osfhnd(fd);
++        int flag = SOCKET_FLAG_FROM_HANDLE(old_h);
++        int new_h = _osfhnd(ret);
++        assert(!SOCKET_FLAG_FROM_HANDLE(new_h)
++		       && PUBLIC_IS_SOCKET(new_h) == PUBLIC_IS_SOCKET(old_h));
++        new_h |= flag;
++        _osfhnd(ret) = new_h;
++    }
++#endif
++    return ret;
+ }
+ 
+ DllExport int
+ win32_dup2(int fd1,int fd2)
+ {
+-    return dup2(fd1,fd2);
++    int ret;
++    ret = dup2(fd1,fd2);
++#ifndef WIN32_NO_SOCKETS
++    if(ret != -1) {
++        /* assert(!SOCKET_FLAG_FROM_HANDLE(_osfhnd(fd2)));
++        _osfhnd(fd2) |= SOCKET_FLAG_FROM_HANDLE(_osfhnd(fd1)); */
++        int old_h = _osfhnd(fd1);
++        int flag = SOCKET_FLAG_FROM_HANDLE(old_h);
++        int new_h = _osfhnd(fd2);
++        assert(!SOCKET_FLAG_FROM_HANDLE(new_h)
++               && PUBLIC_IS_SOCKET(new_h) == PUBLIC_IS_SOCKET(old_h));
++        new_h |= flag;
++        _osfhnd(fd2) = new_h;
++    }
++#endif
++    return ret;
+ }
+ 
+ static int
+@@ -5135,6 +5161,9 @@ Perl_win32_init(int *argcp, char ***argvp)
+     newHandler = my_invalid_parameter_handler;
+     oldHandler = _set_invalid_parameter_handler(newHandler);
+     _CrtSetReportMode(_CRT_ASSERT, 0);
++#endif
++#if _MSC_VER >= 1400
++    set_pioinfo_extra();
+ #endif
+     /* Disable floating point errors, Perl will trap the ones we
+      * care about.  VC++ RTL defaults to switching these off

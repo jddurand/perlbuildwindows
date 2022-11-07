@@ -1,0 +1,21 @@
+diff --git a/inline.h b/inline.h
+index 597b0709f8..4fd93db7a0 100644
+--- a/inline.h
++++ b/inline.h
+@@ -2605,6 +2605,16 @@ S_lossless_NV_to_IV(const NV nv, IV *ivp)
+ 
+ #endif
+ 
++/* ------------------ win32sck.c ------------ */
++
++#if defined(WIN32) && !defined(WIN32_NO_SOCKETS)
++PERL_STATIC_INLINE BOOL
++S_is_handle_valid(HANDLE hnd) {
++    DWORD dwFlags;
++    return GetHandleInformation(hnd, &dwFlags);
++}
++#endif
++
+ /* ------------------ pp.c, regcomp.c, toke.c, universal.c ------------ */
+ 
+ #if defined(PERL_IN_PP_C) || defined(PERL_IN_REGCOMP_C) || defined(PERL_IN_TOKE_C) || defined(PERL_IN_UNIVERSAL_C)
