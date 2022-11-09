@@ -1,5 +1,5 @@
 diff --git a/win32/win32.c b/win32/win32.c
-index 619f2a4375..c46e9912a7 100644
+index 619f2a4375..9eb3ac2423 100644
 --- a/win32/win32.c
 +++ b/win32/win32.c
 @@ -156,9 +156,7 @@ static void translate_to_errno(void);
@@ -67,3 +67,22 @@ index 619f2a4375..c46e9912a7 100644
  #endif
      /* Disable floating point errors, Perl will trap the ones we
       * care about.  VC++ RTL defaults to switching these off
+@@ -5160,18 +5189,6 @@ Perl_win32_init(int *argcp, char ***argvp)
+     g_osver.dwOSVersionInfoSize = sizeof(g_osver);
+     GetVersionEx(&g_osver);
+ 
+-#ifdef WIN32_DYN_IOINFO_SIZE
+-    {
+-        Size_t ioinfo_size = _msize((void*)__pioinfo[0]);;
+-        if((SSize_t)ioinfo_size <= 0) { /* -1 is err */
+-            fprintf(stderr, "panic: invalid size for ioinfo\n"); /* no interp */
+-            exit(1);
+-        }
+-        ioinfo_size /= IOINFO_ARRAY_ELTS;
+-        w32_ioinfo_size = ioinfo_size;
+-    }
+-#endif
+-
+     ansify_path();
+ 
+ #ifndef WIN32_NO_REGISTRY
