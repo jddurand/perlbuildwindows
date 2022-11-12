@@ -3,5 +3,6 @@ match:
   distribution: '/\QIO-Socket-SSL-2.075.tar.gz\E'
 patches:
   - IO-Socket-SSL-t_sni_verify.patch
+  - IO-Socket-SSL-t_sni.patch
   - IO-Socket-SSL-t_nonblock.patch
   
