@@ -5,6 +5,7 @@ REM %2: ${PERL_CCTYPE}
 REM %3: ${PERL_WIN64}
 REM %4: ${PERL_INSTSUBDIR}
 REM %5: ${PERL_INSTDRV}
+REM %6: ${CMAKE_BUILD_TYPE} but it is not used
 
 REM Change PERL_CCTYPE
 cscript "%1" "win32\Makefile" "#\s*CCTYPE\s*=\s*%2" "CCTYPE = %2"
@@ -25,4 +26,4 @@ cscript "%1" "win32\Makefile" "#\s*USE_SITECUST" "USE_SITECUST"
 REM
 REM We enable CFG=Debug
 REM
-REM cscript "%1" "win32\Makefile" "#\s*CFG\s*=\s*Debug" "CFG		= Debug"
+REM if "%6" == "Debug" ( cscript "%1" "win32\Makefile" "#\s*CFG\s*=\s*Debug" "CFG		= Debug" )
