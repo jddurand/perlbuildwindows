@@ -1,5 +1,5 @@
 #
-# Example: cmake -G "NMake Makefiles" .
+# Example: cmake -G "NMake Makefiles"
 #
 # Note that perl had real problems with symlink on MSWin32 between 5.34 and
 # 5.36 - this is fixed since 5.37.4, therefore building a 5.37.4 version at
@@ -82,6 +82,7 @@ set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
+set (ZLIB_VERSION_DEFAULT                  1.2.13)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -89,6 +90,7 @@ set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACH
 set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
+set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "Zlib version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -96,13 +98,16 @@ set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VER
 set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
+set_property (CACHE ZLIB_VERSION                  PROPERTY STRINGS ${ZLIB_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
-message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
+message (STATUS "===================================")
 message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
+message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
+message (STATUS "Version of Zlib                   : ${ZLIB_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -185,8 +190,20 @@ cmake_path(CONVERT "${CMAKE_CURRENT_BINARY_DIR}" TO_NATIVE_PATH_LIST CMAKE_CURRE
 set (PERL_INST_DIR "${PERL_INST_DRV}/${PERL_INSTSUBDIR}")
 cmake_path(CONVERT "${PERL_INST_DIR}" TO_NATIVE_PATH_LIST PERL_INST_DIR_DOS)
 
+set (PERL_BIN_INST_DIR "${PERL_INST_DRV}/${PERL_INSTSUBDIR}/bin")
+cmake_path(CONVERT "${PERL_BIN_INST_DIR}" TO_NATIVE_PATH_LIST PERL_BIN_INST_DIR_DOS)
+
 set (PERL_C_INST_DIR "${PERL_INST_DIR}/c")
 cmake_path(CONVERT "${PERL_C_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_INST_DIR_DOS)
+
+set (PERL_C_INCLUDE_INST_DIR "${PERL_INST_DIR}/c/include")
+cmake_path(CONVERT "${PERL_C_INCLUDE_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_INCLUDE_INST_DIR_DOS)
+
+set (PERL_C_LIB_INST_DIR "${PERL_INST_DIR}/c/lib")
+cmake_path(CONVERT "${PERL_C_LIB_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_LIB_INST_DIR_DOS)
+
+set (PERL_C_BIN_INST_DIR "${PERL_INST_DIR}/c/bin")
+cmake_path(CONVERT "${PERL_C_BIN_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_BIN_INST_DIR_DOS)
 
 set (CPAN_PATCHES_DIR "${CMAKE_CURRENT_BINARY_DIR}/.cpan/patches")
 cmake_path(CONVERT "${CPAN_PATCHES_DIR}" TO_NATIVE_PATH_LIST CPAN_PATCHES_DIR_DOS)
@@ -206,13 +223,13 @@ REM
 REM For Win32::GUI...
 REM
 SET WIN32_GUI_USE_FREEIMAGE_DLL=1
-SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_C_INST_DIR_DOS}\\lib\\freeimage.lib
-SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_C_INST_DIR_DOS}\\include
+SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_C_LIB_INST_DIR_DOS}\\freeimage.lib
+SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_C_INCLUDE_INST_DIR_DOS}
 
 REM
 REM For runtime of the above packages, we absolutely want perl to be before
 REM
-SET PATH=${PERL_INST_DIR_DOS}\\bin;${PERL_C_INST_DIR_DOS}\\bin;%PATH%
+SET PATH=${PERL_BIN_INST_DIR_DOS};${PERL_C_BIN_INST_DIR_DOS};%PATH%
 
 REM
 REM For CPAN
@@ -296,7 +313,6 @@ include(InstallRequiredSystemLibraries)
 # External project perl-core
 # ===========================================================
 ExternalProject_Add(perl-core
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://www.cpan.org/src/5.0/perl-${PERL_VERSION}.tar.gz
 					SOURCE_SUBDIR          win32
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E env ${PERLPATCH_BAT_DOS} ${REPLACE_VBS_DOS} ${PERL_CCTYPE} ${PERL_WIN64} ${PERL_INSTSUBDIR} ${PERL_INST_DRV}
@@ -305,15 +321,32 @@ ExternalProject_Add(perl-core
 					COMMAND                ${Patch_EXECUTABLE} win32/win32.h    ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.h.patch
 					COMMAND                ${Patch_EXECUTABLE} win32/win32sck.c ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32sck.c.patch
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
+					BUILD_COMMAND          ${CMAKE_MAKE_PROGRAM}
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					TEST_COMMAND           ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
-# Net::SSLeay: needs openssl that needs nasm + post-installation of openssl libraries near Net::SSLeay
+# Net::SSLeay: needs openssl that needs nasm + zlib + post-installation of openssl libraries near Net::SSLeay
+# Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
-ExternalProject_Add(nasm
+add_custom_target(perl-win32-api DEPENDS perl-core COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::API)
+ExternalProject_Add(zlib
+					#
+					# We need to set RelWithDebInfo so that the library name is predictable: zlibstatic.lib instead of zlibstaticd.lib
+					#
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					URL                    https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/zlib
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/zlib
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+ExternalProject_Add(nasm
+                    CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                perl-core
 					URL                    https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.gz
 					#
@@ -373,10 +406,10 @@ else ()
 endif ()
 
 ExternalProject_Add(openssl
-					DEPENDS                nasm
+					DEPENDS                nasm perl-win32-api
 					URL                    https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
-					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
+					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL --with-zlib-include=${PERL_C_INCLUDE_INST_DIR_DOS} --with-zlib-lib=${PERL_C_LIB_INST_DIR_DOS}\\zlibstatic.lib zlib enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
@@ -402,7 +435,7 @@ add_custom_target(perl-net-ssleay
 # Win32::GUI: needs freeimage + post-installation of freeimage library near Win32::GUI
 # ====================================================================================================================================
 ExternalProject_Add(freeimage
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+                    CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/FreeImage-3.18.0.tar.gz
 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
 					TEST_EXCLUDE_FROM_MAIN TRUE
@@ -417,20 +450,16 @@ add_custom_target(perl-win32-gui
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
 				  )
 
-# ====================================================================================================================================
-# We consider that perl is ready when perl-core and modules that require post-installation rules are complete
-# ====================================================================================================================================
-add_custom_target(perl DEPENDS perl-net-ssleay perl-win32-gui)
+# =============================================================================
+# Explicit list of modules
+# =============================================================================
+# Net:SSLeay has special post-installation rules
+add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan IO::Socket::SSL)
 
 # ====================================================================================================================================
-# We are doing to use cpanm from now for one specific reason: less verbose + the --notest feature on some insane modules like IPC::Run
-# It yells about CPAN::DistnameInfo - we explicitly do HTTP::Tiny as well do very early to use perl built-in fetch
+# We consider that perl is ready when modules that require special post-install rules, built-in network fetch and cpanm are ready.
 # ====================================================================================================================================
-add_custom_target(perl-cpan-distnameinfo DEPENDS perl                                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan CPAN::DistnameInfo)
-add_custom_target(perl-http-tiny         DEPENDS perl                                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan HTTP::Tiny)
-add_custom_target(perl-app-cpanminus     DEPENDS perl-cpan-distnameinfo perl-http-tiny COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan App::cpanminus)
+add_custom_target(perl-http-tiny     DEPENDS perl-core                       COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan HTTP::Tiny)
+add_custom_target(perl-app-cpanminus DEPENDS perl-http-tiny                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan App::cpanminus)
+add_custom_target(perl               DEPENDS perl-net-ssleay perl-win32-gui perl-app-cpanminus)
 
-# =============================================================================
-# Explicit list of modules: we rely on cpanm to manage dependencies from now on
-# =============================================================================
-add_custom_target(perl-io-socket-ssl DEPENDS perl-app-cpanminus COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpanm IO::Socket::SSL)
