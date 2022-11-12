@@ -82,18 +82,6 @@ set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
-set (LIBTIFF_VERSION_DEFAULT               4.4.0)
-set (ZLIB_VERSION_DEFAULT                  1.2.13)
-set (LIBDEFLATE_VERSION_DEFAULT            1.14)
-set (LIBJPEG_TURBO_VERSION_DEFAULT         2.1.4)
-set (JBIGKIT_VERSION_DEFAULT               2.1)
-set (LERC_VERSION_DEFAULT                  4.0.0)
-set (XZ_VERSION_DEFAULT                    5.2.7)
-set (ZSTD_VERSION_DEFAULT                  1.5.2)
-set (WEBP_VERSION_DEFAULT                  1.2.4)
-set (LIBPNG_VERSION_DEFAULT                1.6.38)
-set (GIFLIB_VERSION_DEFAULT                5.2.1)
-set (SDL2_VERSION_DEFAULT                  2.24.1)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -101,18 +89,6 @@ set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACH
 set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
-set (LIBTIFF_VERSION               ${LIBTIFF_VERSION_DEFAULT}               CACHE STRING "Libtiff version")
-set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "Zlib version")
-set (LIBDEFLATE_VERSION            ${LIBDEFLATE_VERSION_DEFAULT}            CACHE STRING "Libdeflateversion")
-set (LIBJPEG_TURBO_VERSION         ${LIBJPEG_TURBO_VERSION_DEFAULT}         CACHE STRING "Libjpeg-turbo version")
-set (JBIGKIT_VERSION               ${JBIGKIT_VERSION_DEFAULT}               CACHE STRING "Jbigkit version")
-set (LERC_VERSION                  ${LERC_VERSION_DEFAULT}                  CACHE STRING "Lerc version")
-set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACHE STRING "Xz version")
-set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "Zstd version")
-set (WEBP_VERSION                  ${WEBP_VERSION_DEFAULT}                  CACHE STRING "Webp version")
-set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACHE STRING "Libpng version")
-set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "Giflib version")
-set (SDL2_VERSION                  ${SDL2_VERSION_DEFAULT}                  CACHE STRING "Sdl2 version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -120,17 +96,6 @@ set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VER
 set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
-set_property (CACHE LIBTIFF_VERSION               PROPERTY STRINGS ${LIBTIFF_VERSION_DEFAULT})
-set_property (CACHE ZLIB_VERSION                  PROPERTY STRINGS ${ZLIB_VERSION_DEFAULT})
-set_property (CACHE LIBDEFLATE_VERSION            PROPERTY STRINGS ${LIBDEFLATE_VERSION_DEFAULT})
-set_property (CACHE LIBJPEG_TURBO_VERSION         PROPERTY STRINGS ${LIBJPEG_TURBO_VERSION_DEFAULT})
-set_property (CACHE JBIGKIT_VERSION               PROPERTY STRINGS ${JBIGKIT_VERSION_DEFAULT})
-set_property (CACHE LERC_VERSION                  PROPERTY STRINGS ${LERC_VERSION_DEFAULT})
-set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_DEFAULT})
-set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
-set_property (CACHE WEBP_VERSION                  PROPERTY STRINGS ${WEBP_VERSION_DEFAULT})
-set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERSION_DEFAULT})
-set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -138,18 +103,6 @@ message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
 message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
-message (STATUS "Version of Libtiff                : ${LIBTIFF_VERSION}")
-message (STATUS "Version of Zlib                   : ${ZLIB_VERSION}")
-message (STATUS "Version of Libdeflfate            : ${LIBDEFLATE_VERSION}")
-message (STATUS "Version of Libjpeg-turbo          : ${LIBJPEG_TURBO_VERSION}")
-message (STATUS "Version of Jbigkit                : ${JBIGKIT_VERSION}")
-message (STATUS "Version of Lerc                   : ${LERC_VERSION}")
-message (STATUS "Version of Xz                     : ${XZ_VERSION}")
-message (STATUS "Version of Zstd                   : ${ZSTD_VERSION}")
-message (STATUS "Version of Webp                   : ${WEBP_VERSION}")
-message (STATUS "Version of Libpng                 : ${LIBPNG_VERSION}")
-message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
-message (STATUS "Version of Sdl2                   : ${SDL2_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -356,9 +309,9 @@ ExternalProject_Add(perl-core
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
-# ===========================================================
-# External project nasm
-# ===========================================================
+# ====================================================================================================================================
+# Net::SSLeay: needs openssl that needs nasm + post-installation of openssl libraries near Net::SSLeay
+# ====================================================================================================================================
 ExternalProject_Add(nasm
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                perl-core
@@ -409,9 +362,6 @@ ExternalProject_Add(nasm
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
-# ===========================================================
-# External project openssl
-# ===========================================================
 #
 # Why does is not work ?
 # COMMAND                $<IF:$<STREQUAL:"${OPENSSL_VERSION}","3.0.5">,"${Patch_EXECUTABLE} util/perl/TLSProxy/Proxy.pm b/util/perl/TLSProxy/Proxy.pm ${PROJECT_SOURCE_DIR}/openssl-3.0.5-util-perl-TLSProxy-Proxy.diff",${CMAKE_COMMAND} -E echo "Not applicable: openssl-3.0.5-util-perl-TLSProxy-Proxy.diff">
@@ -436,141 +386,6 @@ ExternalProject_Add(openssl
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
-# ===========================================================
-# External project zlib
-# ===========================================================
-ExternalProject_Add(zlib
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz
-					)
-
-# ===========================================================
-# External project libdeflate
-# ===========================================================
-ExternalProject_Add(libdeflate
-					URL                    https://github.com/ebiggers/libdeflate/archive/refs/tags/v${LIBDEFLATE_VERSION}.tar.gz
-					CONFIGURE_COMMAND      ""
-					BUILD_COMMAND          ${CMAKE_MAKE_PROGRAM} -f Makefile.msc
-					INSTALL_COMMAND        ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E copy libdeflate.dll       ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/license/libdeflate
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/license/libdeflate
-					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/include
-					COMMAND                ${CMAKE_COMMAND} -E copy libdeflate.h         ${PERL_INST_DIR}/c/include
-					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/lib
-					COMMAND                ${CMAKE_COMMAND} -E copy libdeflate.lib       ${PERL_INST_DIR}/c/lib
-					COMMAND                ${CMAKE_COMMAND} -E copy libdeflatestatic.lib ${PERL_INST_DIR}/c/lib
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					BUILD_IN_SOURCE        TRUE
-					)
-
-# ===========================================================
-# External project libjpeg-turbo
-# ===========================================================
-ExternalProject_Add(libjpeg-turbo
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DOLD-JPEG=ON -DCMAKE_ASM_NASM_COMPILER=${PERL_C_INST_DIR}/bin/nasm.exe
-					DEPENDS                nasm
-					URL                    https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/${LIBJPEG_TURBO_VERSION}.tar.gz
-					# Note that it is voluntarily that CMAKE_ASM_NASM_COMPILER uses UNIX style syntax, otherwise enable_language will not like it
-					)
-
-# ===========================================================
-# External project jbigkit
-# ===========================================================
-ExternalProject_Add(jbigkit
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    http://www.cl.cam.ac.uk/~mgk25/download/jbigkit-${JBIGKIT_VERSION}.tar.gz
-					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/jbigkit-CMakeLists.txt CMakeLists.txt
-					)
-
-# ===========================================================
-# External project lerc
-# ===========================================================
-ExternalProject_Add(lerc
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz
-					)
-
-# ===========================================================
-# External project Xz
-# ===========================================================
-ExternalProject_Add(xz
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=ON
-					URL                    https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz
-					)
-
-# ===========================================================
-# External project Zstd
-# ===========================================================
-ExternalProject_Add(zstd
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz
-					SOURCE_SUBDIR          build/cmake
-					)
-
-# ===========================================================
-# External project Libpng
-# ===========================================================
-ExternalProject_Add(libpng
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DEPENDS                libjpeg-turbo zlib
-					URL                    https://github.com/glennrp/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz
-					)
-
-# ===========================================================
-# External project Giflib
-# ===========================================================
-ExternalProject_Add(giflib
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    https://github.com/jddurand/perlbuildwindows/raw/main/giflib-${GIFLIB_VERSION}.tar.gz
-					PATCH_COMMAND          ${Patch_EXECUTABLE} < ${PROJECT_SOURCE_DIR}/giflib-5.2.1.diff
-					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/license/giflib
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/license/giflib
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					BUILD_IN_SOURCE        TRUE
-					)
-
-# ===========================================================
-# External project Sdl2
-# ===========================================================
-ExternalProject_Add(sdl2
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					URL                    https://github.com/libsdl-org/SDL/releases/download/release-${SDL2_VERSION}/SDL2-${SDL2_VERSION}.tar.gz
-					)
-
-# ===========================================================
-# External project Webp
-# ===========================================================
-ExternalProject_Add(webp
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON
-					DEPENDS                libjpeg-turbo zlib libpng giflib
-					URL                    https://github.com/webmproject/libwebp/archive/refs/tags/v${WEBP_VERSION}.zip
-					)
-
-# ===========================================================
-# External project libtiff
-# ===========================================================
-ExternalProject_Add(libtiff
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DEPENDS                zlib libdeflate libjpeg-turbo jbigkit lerc xz zstd webp
-					URL                    https://download.osgeo.org/libtiff/tiff-${LIBTIFF_VERSION}.tar.gz
-					PATCH_COMMAND          ${Patch_EXECUTABLE} cmake/LZMACodec.cmake ${PROJECT_SOURCE_DIR}/libtiff-4.4.0.diff
-					)
-
-# ===========================================================
-# External project freeimage
-# ===========================================================
-ExternalProject_Add(freeimage
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/FreeImage-3.18.0.tar.gz
-				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					BUILD_IN_SOURCE        TRUE)
-
-# ====================================================================================================================================
-# Net::SSLeay has post-installation of openssl libraries near Net::SSLeay
-# ====================================================================================================================================
 add_custom_target(perl-net-ssleay
 				  DEPENDS                  perl-core openssl
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
@@ -584,8 +399,15 @@ add_custom_target(perl-net-ssleay
 				  )
 
 # ====================================================================================================================================
-# Win32::GUI has post-installation of freeimage library near Win32::GUI
+# Win32::GUI: needs freeimage + post-installation of freeimage library near Win32::GUI
 # ====================================================================================================================================
+ExternalProject_Add(freeimage
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/FreeImage-3.18.0.tar.gz
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					BUILD_IN_SOURCE        TRUE)
+
 add_custom_target(perl-win32-gui
 				  DEPENDS                  perl-core freeimage
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
@@ -596,103 +418,19 @@ add_custom_target(perl-win32-gui
 				  )
 
 # ====================================================================================================================================
-# We consider that perl is ready when perl-core and modules that require special additional commands are complete
+# We consider that perl is ready when perl-core and modules that require post-installation rules are complete
 # ====================================================================================================================================
-add_custom_target(perl
-				  DEPENDS                  perl-net-ssleay perl-win32-gui
-				  )
+add_custom_target(perl DEPENDS perl-net-ssleay perl-win32-gui)
 
 # ====================================================================================================================================
-# Other perl modules
+# We are doing to use cpanm from now for one specific reason: less verbose + the --notest feature on some insane modules like IPC::Run
+# It yells about CPAN::DistnameInfo - we explicitly do HTTP::Tiny as well do very early to use perl built-in fetch
 # ====================================================================================================================================
-# Every module that needs a patch
-add_custom_target(PerlModules
-				  ALL
-				  #
-				  # We want to depend on perl modules that required a custom installation (i.e. a copy of a dlls near the module binary)
-				  #
-				  DEPENDS                  perl-net-ssleay perl-win32-gui
-                  COMMENT                  "Perl modules"
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           IO::Socket
-				  #
-				  # IO::Socket::SSL is painful, its test suite regularly fails though the module seems ok
-				  # IPC::Run - cross fingers, it is a pain to depend on this module that accumulates too many bugs
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat" --notest IO::Socket::SSL IPC::Run
-				  #
-				  # Most of WIN32:: thingies
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::WQL Win32::ADO Win32::API Win32::ASP Win32::CLR Win32::Env Win32::HTA Win32::IPC
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Job Win32::File Win32::ODBC Win32::Pipe Win32::SDDL Win32::Sound Win32::Vcpkg Config::Win32
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Daemon Win32::FileOp Win32::JobAdd Win32::Locale Win32::PEFile Win32::Uptime
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::AbsPath Win32::Console Win32::MinXSLT Win32::Printer Win32::Process Win32::Service
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Symlink Win32::Tracert Win32::Wingraph Win32::Autoglob Win32::Detached
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::EventLog Win32::Hardlink Win32::IPConfig Win32::IPHelper Win32::Internet Win32::Registry
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Shortcut Win32::ShutDown Win32::Symlinks Win32::VBScript Win32::ADRecurse
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Clipboard Win32::CryptData Win32::DriveInfo Win32::EmailSend Win32::ErrorMode
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           Win32::Filenames Win32::FileNotify Win32::Unicode::Shortcut Win32::Unicode::InternetShortcut
-				  #
-				  # We choose first "big" packages, that install a lot of stuff, though we avoid Acme
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           DBD::SQLite Dist::Zilla
-				  #
-				  # Others
-				  #
-				  COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat"           MarpaX::ESLIF
-				  DEPENDS openssl)
+add_custom_target(perl-cpan-distnameinfo DEPENDS perl                                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan CPAN::DistnameInfo)
+add_custom_target(perl-http-tiny         DEPENDS perl                                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan HTTP::Tiny)
+add_custom_target(perl-app-cpanminus     DEPENDS perl-cpan-distnameinfo perl-http-tiny COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan App::cpanminus)
 
-if (FALSE)
-# ===========================================================
-# Install cpanm assap
-# We ask to depend on the perl modules that we patched.
-# Namely only Net::SSLeay at this stage.
-# ===========================================================
-
-# cpanm strongly suggests CPAN::DistnameInfo
-add_custom_target(PerlCPANDistnameInfo
-                  COMMENT "Perl module CPAN::DistnameInfo"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" CPAN::DistnameInfo
-				  DEPENDS perl)
-
-# HTTP::Tiny is better suited for download
-add_custom_target(PerlHTTPTiny
-                  COMMENT "Perl module HTTP::Tiny"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" HTTP::Tiny
-				  DEPENDS perl)
-
-add_custom_target(PerlAppcpanminus
-                  ALL
-				  DEPENDS perl-net-ssleay PerlCPANDistnameInfo PerlHTTPTiny
-				  COMMENT "Perl module App::cpanminus"
-				  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpan.bat" App::cpanminus)
-
-# ===========================================================
-# Install other perl modules
-# ===========================================================
-set(PERL_MODULES_TXT "${PROJECT_SOURCE_DIR}/perl_modules.txt")
-file(STRINGS ${PERL_MODULES_TXT} perl_modules)
-foreach(line ${perl_modules})
-    string(REGEX REPLACE "[ \t]*#.*" "" line ${line})
-    string(REGEX REPLACE "^[ \t]+" "" line ${line})
-    string(REGEX REPLACE "[ \t]+" " " line ${line})
-    string(REGEX MATCH "^[a-zA-Z0-9_: -]+" perl_module_cpanm_all_arguments ${line})
-	string(LENGTH "${perl_module_cpanm_all_arguments}" perl_module_cpanm_all_arguments_length)
-	if (perl_module_cpanm_all_arguments_length GREATER 0)
-        string(REGEX MATCH "[a-zA-Z0-9_:]+$" perl_module_name ${perl_module_cpanm_all_arguments})
-		string(LENGTH "${perl_module_name}" perl_module_name_length)
-		if (perl_module_name_length GREATER 0)
-			set(perl_module_target ${perl_module_name})
-			string(REGEX REPLACE ":" "_" perl_module_target ${perl_module_target})
-			string(REGEX MATCHALL "[^ \t]+" perl_module_cpanm_arguments ${perl_module_cpanm_all_arguments})
-			message(STATUS "To be executed: cpanm ${perl_module_cpanm_all_arguments}")
-			add_custom_target(${perl_module_target}
-							  ALL
-							  DEPENDS PerlAppcpanminus
-							  COMMENT "Perl module ${perl_module_name} using cpanm ${perl_module_cpanm_all_arguments}"
-							  COMMAND "${CMAKE_CURRENT_BINARY_DIR}/perl-cpanm.bat"
-							  ${perl_module_cpanm_arguments}
-							  )
-		endif ()
-	endif ()
-endforeach()
-endif()
+# =============================================================================
+# Explicit list of modules: we rely on cpanm to manage dependencies from now on
+# =============================================================================
+add_custom_target(perl-io-socket-ssl DEPENDS perl-app-cpanminus COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpanm IO::Socket::SSL)
