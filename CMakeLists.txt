@@ -457,9 +457,19 @@ add_custom_target(perl-win32-gui
 add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan IO::Socket::SSL)
 
 # ====================================================================================================================================
-# We consider that perl is ready when modules that require special post-install rules, built-in network fetch and cpanm are ready.
+# We consider that perl is ready when modules that require special post-install rules are done:
+# Net::SSleay
+# Win32::GUI
 # ====================================================================================================================================
-add_custom_target(perl-http-tiny     DEPENDS perl-core                       COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan HTTP::Tiny)
-add_custom_target(perl-app-cpanminus DEPENDS perl-http-tiny                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan App::cpanminus)
-add_custom_target(perl               DEPENDS perl-net-ssleay perl-win32-gui perl-app-cpanminus)
+add_custom_target(perl               DEPENDS perl-net-ssleay perl-win32-gui)
 
+# ====================================================================================================================================
+# From now on, we just create rules for all the extra packages
+# ====================================================================================================================================
+foreach(package Log::Log4perl)
+  # Transform package to a rule like perl-xxx
+  SET(rule "perl-${package}")
+  string(TOLOWER ${rule} rule)
+  string(REPLACE "::" "-" rule ${rule})
+  add_custom_target(${rule} DEPENDS perl COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan ${package})
+endforeach()
