@@ -332,7 +332,7 @@ ExternalProject_Add(perl-core
 # Net::SSLeay: needs openssl that needs nasm + zlib + post-installation of openssl libraries near Net::SSLeay
 # Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
-add_custom_target(perl-win32-api DEPENDS perl-core COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Win32::API)
+add_custom_target(perl-win32-api DEPENDS perl-core COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API)
 ExternalProject_Add(zlib
 					#
 					# We need to set RelWithDebInfo so that the library name is predictable: zlibstatic.lib instead of zlibstaticd.lib
@@ -356,7 +356,7 @@ ExternalProject_Add(nasm
 					#
 					# It needs Font::TTF Sort::Versions perl modules as per the doc
 					#
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan Font::TTF Sort::Versions
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Font::TTF Sort::Versions
 					BUILD_COMMAND          ${CMAKE_COMMAND} -E rm -f asm/warnings.time
 					COMMAND                ${CMAKE_COMMAND} -E touch asm/warnings.time
 					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} -f Mkfiles/msvc.mak
@@ -421,7 +421,7 @@ ExternalProject_Add(openssl
 
 add_custom_target(perl-net-ssleay
 				  DEPENDS                  perl-core openssl
-				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
 				  #
 				  # Post-install: copy openssl libraries near Net::SSLeay
 				  #
@@ -443,7 +443,7 @@ ExternalProject_Add(freeimage
 
 add_custom_target(perl-win32-gui
 				  DEPENDS                  perl-core freeimage
-				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
 				  #
 				  # Post-install: copy freeimage library near Win32::GUI::DIBitmap
 				  #
@@ -454,7 +454,7 @@ add_custom_target(perl-win32-gui
 # Explicit list of modules
 # =============================================================================
 # Net:SSLeay has special post-installation rules
-add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan IO::Socket::SSL)
+add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl IO::Socket::SSL)
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules are done:
@@ -471,5 +471,5 @@ foreach(package Log::Log4perl)
   SET(rule "perl-${package}")
   string(TOLOWER ${rule} rule)
   string(REPLACE "::" "-" rule ${rule})
-  add_custom_target(${rule} ALL DEPENDS perl COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cpan ${package})
+  add_custom_target(${rule} ALL DEPENDS perl COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl ${package})
 endforeach()
