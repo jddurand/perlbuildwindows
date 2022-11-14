@@ -92,7 +92,18 @@ if ($inst_version) {
 
 my $ok;
 if (!$inst_version || !$modulewantedversion || CPAN::Version->vcmp($inst_version, $modulewantedversion) < 0) {
-	$ok = CPAN::Shell->install($name);
+	system('cpan', $name);
+	if ($? == -1) {
+		print "failed to execute: $!\n";
+		$ok = 0;
+    } elsif ($? & 127) {
+        printf "child died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
+		$ok = 0;
+    } else {
+		my $childstatus = $? >> 8;
+        printf "child exited with value %d\n", $childstatus;
+		$ok = $childstatus == 0 ? 1 : 0;
+    }
 } else {
 	$ok = 1;
 }
