@@ -83,6 +83,7 @@ set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
 set (ZLIB_VERSION_DEFAULT                  1.2.13)
+set (EXPAT_VERSION_DEFAULT                 2.5.0)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -91,6 +92,7 @@ set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACH
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
 set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "Zlib version")
+set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACHE STRING "Expat version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -99,6 +101,7 @@ set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSIO
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
 set_property (CACHE ZLIB_VERSION                  PROPERTY STRINGS ${ZLIB_VERSION_DEFAULT})
+set_property (CACHE EXPAT_VERSION                 PROPERTY STRINGS ${EXPAT_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -108,6 +111,7 @@ message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}"
 message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
 message (STATUS "Version of Zlib                   : ${ZLIB_VERSION}")
+message (STATUS "Version of Expat                  : ${EXPAT_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -451,6 +455,21 @@ add_custom_target(perl-win32-gui
 				  #
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
 				  )
+
+# ===========================================================
+# External project expat
+# ===========================================================
+set (EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION})
+string(REGEX REPLACE "\\." "_" EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION_UNDERSCORE})
+ExternalProject_Add(expat
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					URL                    https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORE}/expat-${EXPAT_VERSION}.tar.gz
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/expat
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/expat
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules are done:
