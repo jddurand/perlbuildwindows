@@ -431,6 +431,8 @@ add_custom_target(perl-net-ssleay
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.pdb ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
 				  )
 
+add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl IO::Socket::SSL)
+
 # ====================================================================================================================================
 # Win32::GUI: needs freeimage + post-installation of freeimage library near Win32::GUI
 # ====================================================================================================================================
@@ -450,18 +452,12 @@ add_custom_target(perl-win32-gui
 				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
 				  )
 
-# =============================================================================
-# Explicit list of modules
-# =============================================================================
-# Net:SSLeay has special post-installation rules
-add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl IO::Socket::SSL)
-
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules are done:
 # Net::SSleay
 # Win32::GUI
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-net-ssleay perl-win32-gui)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
