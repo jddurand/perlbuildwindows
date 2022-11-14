@@ -231,6 +231,12 @@ SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_C_LIB_INST_DIR_DOS}\\freeimage.lib
 SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_C_INCLUDE_INST_DIR_DOS}
 
 REM
+REM For use XML::Parser
+REM
+SET EXPATLIBPATH=${PERL_C_LIB_INST_DIR_DOS}
+SET EXPATINCPATH=${PERL_C_INCLUDE_INST_DIR_DOS}
+
+REM
 REM For runtime of the above packages, we absolutely want perl to be before
 REM
 SET PATH=${PERL_BIN_INST_DIR_DOS};${PERL_C_BIN_INST_DIR_DOS};%PATH%
@@ -467,16 +473,26 @@ ExternalProject_Add(expat
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/expat
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/expat
+					#
+					# XML::Expat want expat.lib and expat.dll, not libexpat.lib or libexpat.dll
+					#
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/lib/libexpat.lib ${PERL_INST_DIR}/c/lib/expat.lib 
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libexpat.dll ${PERL_INST_DIR}/c/bin/expat.dll 
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
+add_custom_target(perl-xml-parser
+				  DEPENDS                  perl-core expat
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl XML::Parser
+				  )
 
 # ====================================================================================================================================
-# We consider that perl is ready when modules that require special post-install rules are done:
+# We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
 # Net::SSleay
 # Win32::GUI
+# XML::Parser
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
