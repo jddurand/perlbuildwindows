@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QXML-Parser-2.46.tar.gz\E'
+patches:
+  - XML-Parser-2.46.patch

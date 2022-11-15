@@ -1,0 +1,20 @@
+diff -Naur XML-Parser-2.46.orig/Makefile.PL XML-Parser-2.46.new/Makefile.PL
+--- XML-Parser-2.46.orig/Makefile.PL	2019-09-24 07:20:53.000000000 +0200
++++ XML-Parser-2.46.new/Makefile.PL	2022-11-15 04:30:48.842205800 +0100
+@@ -7,6 +7,7 @@
+ 
+ $expat_libpath = $ENV{EXPATLIBPATH} || '';
+ $expat_incpath = $ENV{EXPATINCPATH} || '';
++$expat_libprefix = $ENV{EXPATLIBPREFIX} || '';
+ 
+ my @replacement_args;
+ 
+@@ -30,7 +31,7 @@
+ 
+ unless (
+     check_lib(    # fill in what you prompted the user for here
+-        lib     => [qw(expat)],
++        lib     => ["${expat_libprefix}expat"],
+         header  => ['expat.h'],
+         incpath => $expat_incpath,
+         ( $expat_libpath ? ( libpath => $expat_libpath ) : () ),
