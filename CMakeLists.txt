@@ -235,6 +235,7 @@ REM For use XML::Parser
 REM
 SET EXPATLIBPATH=${PERL_C_LIB_INST_DIR_DOS}
 SET EXPATINCPATH=${PERL_C_INCLUDE_INST_DIR_DOS}
+SET EXPATLIBPREFIX=lib
 
 REM
 REM For runtime of the above packages, we absolutely want perl to be before
@@ -468,7 +469,7 @@ add_custom_target(perl-win32-gui
 set (EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION})
 string(REGEX REPLACE "\\." "_" EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION_UNDERSCORE})
 ExternalProject_Add(expat
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DEXPAT_BUILD_FUZZERS=ON
 					URL                    https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORE}/expat-${EXPAT_VERSION}.tar.gz
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/expat
@@ -476,8 +477,6 @@ ExternalProject_Add(expat
 					#
 					# XML::Expat want expat.lib and expat.dll, not libexpat.lib or libexpat.dll
 					#
-				    COMMAND                ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/lib/libexpat.lib ${PERL_INST_DIR}/c/lib/expat.lib 
-				    COMMAND                ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libexpat.dll ${PERL_INST_DIR}/c/bin/expat.dll 
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
