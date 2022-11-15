@@ -1,0 +1,51 @@
+diff -Naur Win32-MMF.old/MMF.xs Win32-MMF.new/MMF.xs
+--- Win32-MMF.old/MMF.xs	2004-02-13 23:06:26.000000000 +0100
++++ Win32-MMF.new/MMF.xs	2022-11-15 06:24:18.660754700 +0100
+@@ -545,7 +545,7 @@
+ IV CreateFileMapping(IV szMapFileHandle, IV szMapFileSize, char *szNameSpace)
+ PREINIT:
+ 	HANDLE hmmFile = NULL;
+-	HANDLE hFile = (HANDLE)0xFFFFFFFF;
++	HANDLE hFile = INVALID_HANDLE_VALUE;
+ CODE:
+ {
+ 	if (szMapFileHandle) {
+diff -Naur Win32-MMF.old/Makefile.PL Win32-MMF.new/Makefile.PL
+--- Win32-MMF.old/Makefile.PL	2004-02-06 01:51:46.000000000 +0100
++++ Win32-MMF.new/Makefile.PL	2022-11-15 06:28:38.152423200 +0100
+@@ -15,7 +15,7 @@
+ WriteMakefile(
+     'NAME'		    => 'Win32::MMF',
+     'VERSION_FROM'	=> 'MMF.pm',
+-    'PREREQ_PM'		=> {},
++    'PREREQ_PM'		=> { 'File::Spec' => 0 }, # Well, this is for the tests in reality - but File::Spec is so used everywhere ;)
+     'LIBS'		    => [],
+     'DEFINE'		=> '',
+     'INC'		    => '',
+diff -Naur Win32-MMF.old/t/04_private_swap.t Win32-MMF.new/t/04_private_swap.t
+--- Win32-MMF.old/t/04_private_swap.t	2004-05-29 11:05:58.000000000 +0200
++++ Win32-MMF.new/t/04_private_swap.t	2022-11-15 06:54:30.027863100 +0100
+@@ -1,7 +1,9 @@
+ use strict;
+ use warnings;
++use File::Spec;
+ use Test::More tests => 1;
+-use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=>"C:/private.swp", size=>1024*1024 };
++my $swapfile = File::Spec->catfile(File::Spec->tmpdir(), "private.swp");
++use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=> $swapfile, size=>1024*1024 };
+ 
+-is( (-s "C:/private.swp"), 1024*1024, "Private swap OK" );
++is( (-s $swapfile), 1024*1024, "Private swap OK" );
+ 
+diff -Naur Win32-MMF.old/t/04_private_swap.t.bak Win32-MMF.new/t/04_private_swap.t.bak
+--- Win32-MMF.old/t/04_private_swap.t.bak	1970-01-01 01:00:00.000000000 +0100
++++ Win32-MMF.new/t/04_private_swap.t.bak	2022-11-15 06:29:42.831970900 +0100
+@@ -0,0 +1,8 @@
++use strict;
++use warnings;
++use File::Spec;
++use Test::More tests => 1;
++use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=> File::Spec->catfile(File::Spec->tmpdir(), "private.swp"), size=>1024*1024 };
++
++is( (-s "C:/private.swp"), 1024*1024, "Private swap OK" );
++

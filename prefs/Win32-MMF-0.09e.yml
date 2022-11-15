@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-MMF-0.09e.zip\E'
+patches:
+  - Win32-MMF-0.09e.patch
