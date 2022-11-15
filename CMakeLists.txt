@@ -500,7 +500,38 @@ add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui p
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
 # ====================================================================================================================================
-foreach(package Log::Log4perl)
+SET (PACKAGES
+	Archive::Zip               # Few old distributions are packaged as ZIP, so get Archive::Zip asap
+	Log::Log4perl
+    Win32::WQL
+	Win32::ADO
+	# Win32::API               Done with perl-win32-api
+	Win32::ASP
+	Win32::CLR
+	Win32::Env
+	# Win32::GUI               Done with perl-win32-gui
+	Win32::HTA
+	Win32::IPC
+	Win32::Job
+	Win32::Ldd
+	Win32::MMF
+	Win32::OLE
+	Win32::File
+	Win32::INET
+	Win32::MBCS
+	Win32::MIDI
+	# Win32::Mock             Too old, too hacky, not needed IMHO
+	Win32::ODBC
+	Win32::Pipe
+	# Win32::RASE             Too old, too hacky, not needed IMHO
+	Win32::SDDL
+	Win32::Scsv
+	Win32::Wlan
+	# Win32::Fmode            Too old, too hacky, not needed IMHO
+	# Win32::Netsh            Tests too buggy
+	
+)
+foreach(package ${PACKAGES})
   # Transform package to a rule like perl-xxx
   SET(rule "perl-${package}")
   string(TOLOWER ${rule} rule)
