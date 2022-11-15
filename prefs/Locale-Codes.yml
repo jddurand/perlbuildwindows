@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QLocale-Codes-3.72.tar.gz\E'
+patches:
+  - Locale-Codes-3.72.patch

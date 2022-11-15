@@ -1,0 +1,12 @@
+diff --git a/t/do_tests.pl b/t/do_tests.pl
+index c072952..294cd51 100644
+--- a/t/do_tests.pl
++++ b/t/do_tests.pl
+@@ -33,6 +33,7 @@ sub init_tests {
+    # Module is based on DATATYPE
+ 
+    my $tmp      = $0;
++   $tmp         =~ s/\\/\//g;
+    $tmp         =~ s,^.*/,,;
+    $tmp         =~ s,\.t$,,;
+    my($dt,$flag,$n) = split(/_/,$tmp);
