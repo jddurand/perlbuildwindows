@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QPod-Parser-1.65.tar.gz\E'
+patches:
+  - Pod-Parser-1.65.patch

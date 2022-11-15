@@ -1,0 +1,34 @@
+diff -Naur Pod-Parser-1.65.old/lib/Pod/Find.pm Pod-Parser-1.65.new/lib/Pod/Find.pm
+--- Pod-Parser-1.65.old/lib/Pod/Find.pm	2022-05-21 19:58:44.000000000 +0200
++++ Pod-Parser-1.65.new/lib/Pod/Find.pm	2022-11-15 16:01:02.100139300 +0100
+@@ -212,7 +212,7 @@
+             $try = VMS::Filespec::unixify($try);
+         }
+         else {
+-            $try = File::Spec->canonpath($try);
++            $try = _unixify(File::Spec->canonpath($try));
+         }
+         my $name;
+         if(-f $try) {
+@@ -255,6 +255,12 @@
+     return %pods;
+ }
+ 
++sub _unixify {
++    my $this = shift;
++    $this =~ s/\\/\//g;
++    return $this;
++}
++
+ sub _check_for_duplicates {
+     my ($file, $name, $names_ref, $pods_ref) = @_;
+     if($$names_ref{$name}) {
+@@ -458,7 +464,7 @@
+ 
+       # Now concatenate this directory with the pod we are searching for
+       my $fullname = File::Spec->catfile($dir, @parts);
+-      $fullname = VMS::Filespec::unixify($fullname) if $^O eq 'VMS';
++      $fullname = $^O eq 'VMS' ? VMS::Filespec::unixify($fullname) : _unixify($fullname);
+       warn "Filename is now $fullname\n"
+         if $options{'-verbose'};
+ 
