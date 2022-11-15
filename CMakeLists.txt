@@ -483,6 +483,10 @@ ExternalProject_Add(expat
 add_custom_target(perl-xml-parser
 				  DEPENDS                  perl-core expat
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl XML::Parser
+				  #
+				  # Post-install: copy openssl libraries near Net::SSLeay
+				  #
+				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libexpat.dll ${PERL_INST_DIR}/site/lib/auto/XML/Parser/Expat
 				  )
 
 # ====================================================================================================================================
