@@ -529,6 +529,39 @@ SET (PACKAGES
 	Win32::Wlan
 	# Win32::Fmode            Too old, too hacky, not needed IMHO
 	# Win32::Netsh            Tests too buggy
+	# Win32::SAPI4            Test fail I do not really understand - has to do the registry ?
+	Win32::SAPI5
+	Win32::Sound
+	Win32::Vcpkg
+	# Win32::Watir            Test fail I do not really understand
+	Win32::pwent 
+	# Win32::Snarl            !?
+	Config::Win32
+	# Win32::ActAcc           !?
+	Win32::Daemon
+	Win32::FileOp             # TAKE CARE Popup a window
+	Win32::JobAdd
+	Win32::Locale
+	Win32::MprApi
+	Win32::PEFile
+	# Win32:Ldd              # Cannot compile (needs gcc?)
+	# Win32::Packer          # Needs Win32::Ldd
+	Win32::Readch
+	# Win32::Script          # Interactive...
+	Win32::Status
+	Win32::Uptime
+	Win32::Useful
+	# Win32::Lanman          # So bad package - I just give up
+	# Win32::DBIODBC         # It is part of DBI
+	Win32::AbsPath
+	Win32::AutoItX
+	Win32::Capture
+	Win32::Console
+	# Win32::Setupsup        # Buggy
+	# Win32::CtrlGUI         # Depends on Win32::Setupsup
+	Win32::DirSize
+	# Win32::Elevate         # Test fails, too dangerous, etc.
+	Win32::Getppid
 	
 )
 foreach(package ${PACKAGES})
