@@ -1,0 +1,6 @@
+---
+match:
+  distribution: '/\QWin32-GuiTest-1.64.tar.gz\E'
+patches:
+  - Win32-GuiTest-1.64-issue-11.patch
+  - Win32-GuiTest-1.64-issue-13.patch
