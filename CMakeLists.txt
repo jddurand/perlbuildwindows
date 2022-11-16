@@ -562,7 +562,7 @@ SET (PACKAGES
 	Win32::DirSize
 	# Win32::Elevate         # Test fails, too dangerous, etc.
 	Win32::Getppid
-	
+	Win32::GuiTest           # TAKE CARE Popup notepad windows
 )
 foreach(package ${PACKAGES})
   # Transform package to a rule like perl-xxx
