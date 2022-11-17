@@ -563,6 +563,21 @@ SET (PACKAGES
 	# Win32::Elevate         # Test fails, too dangerous, etc.
 	Win32::Getppid
 	Win32::GuiTest           # TAKE CARE Popup notepad windows
+	# Win32::IntAuth         # SAPI4 + need to install things I do not want
+	Win32::MinXSLT
+	# Win32::NetName         # Depends on Win32::Lanman that I do not install
+	Win32::NetSend
+	Win32::PerfLib
+	Win32::PerfMon
+	Win32::Printer
+	Win32::ProcFarm::Port    # Damned, has to install a sublib of it, Win32::ProcFarm standalone is not installable
+	Win32::Process
+	Win32::Service
+	Win32::Symlink
+	Win32::SysTray
+	Win32::TarUtil
+	Win32::Tracert
+	Win32::Unicode
 )
 foreach(package ${PACKAGES})
   # Transform package to a rule like perl-xxx
