@@ -3,3 +3,4 @@ match:
   distribution: '/\QWin32-Unicode-0.38.tar.gz\E'
 patches:
   - Win32-Unicode-0.38-stat_semantic.patch
+  - Win32-Unicode-0.38-t_04_print.patch
