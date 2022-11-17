@@ -578,6 +578,15 @@ SET (PACKAGES
 	Win32::TarUtil
 	Win32::Tracert
 	Win32::Unicode
+	Win32::Guidgen
+	Win32::Wingraph
+	Win32::Autoglob
+	# Win32::Codepage       # Tests too buggy for a module that does not look very useful to me
+	Win32::Detached
+	Win32::EventLog
+	# Win32::FileTime       # Unmaintained and not useful IMHO
+	# Win32::FindFile       # Unmaintained and not useful IMHO
+	# Win32::GUIRobot       TO DO DEPENDENCY ON PRIMA BUT PRIMA FAILURE
 )
 foreach(package ${PACKAGES})
   # Transform package to a rule like perl-xxx
