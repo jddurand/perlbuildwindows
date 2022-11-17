@@ -1,0 +1,33 @@
+diff --git a/t/04_print.t b/t/04_print.t
+index f531d4a..ac7a2b4 100644
+--- a/t/04_print.t
++++ b/t/04_print.t
+@@ -7,6 +7,11 @@ use Test::Output;
+ use Win32::Unicode;
+ use File::Spec;
+ 
++BEGIN {
++    binmode STDOUT, ':encoding(utf8)';
++    binmode STDERR, ':encoding(utf8)';
++}
++
+ open STDERR, '>', File::Spec->devnull or die $!;
+ 
+ my $str = " I \x{2665} Perl";
+@@ -15,9 +20,13 @@ stdout_is { printW($str) }  $str;
+ stdout_is { printfW("[%s]", $str) } "[$str]" ;
+ stdout_is { sayW($str) } "$str\n";
+ 
+-stderr_like { printW undef } qr/uninitialized/;
+-stderr_like { printfW undef } qr/uninitialized/;
+-stderr_like { warnW undef } qr/uninitialized/;
++SKIP: {
++    skip 'Depends on how perl react with undef', 3;
++
++    stderr_like { printW undef } qr/uninitialized/;
++    stderr_like { printfW undef } qr/uninitialized/;
++    stderr_like { warnW undef } qr/uninitialized/;
++}
+ 
+ ok warnW($str), "warnW";
+ dies_ok { dieW($str) } "dieW";
