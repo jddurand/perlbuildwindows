@@ -100,10 +100,34 @@ add_library(fribidi SHARED
 fribidi_definitions(fribidi)
 target_compile_definitions(fribidi
 	PUBLIC "-DFRIBIDI_BUILD")
+set(public_headers
+	lib/fribidi-arabic.h
+	lib/fribidi-begindecls.h
+	lib/fribidi-bidi-types-list.h
+	lib/fribidi-bidi-types.h
+	lib/fribidi-bidi.h
+	lib/fribidi-brackets.h
+	lib/fribidi-char-sets-list.h
+	lib/fribidi-char-sets.h
+	lib/fribidi-common.h
+	lib/fribidi-config.h
+	lib/fribidi-deprecated.h
+	lib/fribidi-enddecls.h
+	lib/fribidi-flags.h
+	lib/fribidi-joining-types-list.h
+	lib/fribidi-joining-types.h
+	lib/fribidi-joining.h
+	lib/fribidi-mirroring.h
+	lib/fribidi-shape.h
+	lib/fribidi-types.h
+	lib/fribidi-unicode-version.h
+	lib/fribidi-unicode.h
+	lib/fribidi.h
+)
 set_target_properties(fribidi
     PROPERTIES
     VERSION       "${FRIBIDI_MAJOR_VERSION}.${FRIBIDI_MINOR_VERSION}.${FRIBIDI_MICRO_VERSION}"
     SOVERSION     "${FRIBIDI_MAJOR_VERSION}"
-	PUBLIC_HEADER source/FreeImage.h
+	PUBLIC_HEADER "${public_headers}"
     )
-install(TARGETS fribidi PUBLIC_HEADER)
+install(TARGETS fribidi PUBLIC_HEADER DESTINATION include/fribidi)
