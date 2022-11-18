@@ -4,6 +4,18 @@ project(fribidi)
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
+include(CheckIncludeFile)
+include(CheckIncludeFiles)
+include(CheckTypeSize)
+check_include_files("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
+check_include_file("stdlib.h" HAVE_STDLIB_H)
+check_include_file("string.h" HAVE_STRING_H)
+check_include_file("memory.h" HAVE_MEMORY_H)
+check_include_file("string.h" HAVE_STRING_H)
+check_include_file("strings.h" HAVE_STRINGS_H)
+check_include_file("sys/times.h" HAVE_SYS_TIMES_H)
+check_type_size(int SIZEOF_INT)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(lib)
 
@@ -24,8 +36,9 @@ set(FRIBIDI_VERSION "${FRIBIDI_MAJOR_VERSION}.${FRIBIDI_MINOR_VERSION}.${FRIBIDI
 set(PACKAGE "fribidi")
 set(PACKAGE_NAME "GNU FriBidi")
 set(PACKAGE_BUGREPORT "https://github.com/fribidi/fribidi/issues/new")
-set(SIZEOF_INT 4)
-set(FRIBIDI_MSVC_BUILD_PLACEHOLDER "#define FRIBIDI_BUILT_WITH_MSVC")
+if (MSVC)
+	set(FRIBIDI_MSVC_BUILD_PLACEHOLDER "#define FRIBIDI_BUILT_WITH_MSVC")
+endif ()
 message("detected ${PACKAGE_NAME} version ${FRIBIDI_VERSION}")
 configure_file(lib/fribidi-config.h.in lib/fribidi-config.h @ONLY)
 
@@ -38,17 +51,31 @@ function(prepend var prefix)
 endfunction()
 
 macro(fribidi_definitions _TGT)
-	target_compile_definitions(${_TGT} PUBLIC
-		HAVE_MEMSET
-		HAVE_MEMMOVE
-		HAVE_STRDUP
-		HAVE_STDLIB_H=1
-		HAVE_STRING_H=1
-		HAVE_MEMORY_H=1
-		#HAVE_STRINGS_H
-		#HAVE_SYS_TIMES_H
-		STDC_HEADERS=1
-		HAVE_STRINGIZE=1)
+	if (STDC_HEADERS)
+		target_compile_definitions(${_TGT} PUBLIC STDC_HEADERS)
+	endif ()
+	if (HAVE_STDLIB_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_STDLIB_H)
+	endif ()
+	if (HAVE_STRING_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_STRING_H)
+	endif ()
+	if (HAVE_MEMORY_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_MEMORY_H)
+	endif ()
+	if (HAVE_STRING_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_STRING_H)
+	endif ()
+	if (HAVE_STRINGS_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_STRINGS_H)
+	endif ()
+	if (HAVE_SYS_TIMES_H)
+		target_compile_definitions(${_TGT} PUBLIC HAVE_SYS_TIMES_H)
+	endif ()
+	#
+	# Available pretty much everywhere and needed anyway...
+	#
+	target_compile_definitions(${_TGT} PUBLIC HAVE_STRINGIZE)
 endmacro()
 
 function(fribidi_gen _NAME _OUTNAME _PARAM)
