@@ -13,25 +13,21 @@ function(extract_regex_1 var text regex)
 endfunction()
 
 
-function(fribidi_conf)
-	file(READ configure.ac FRIBIDI_CONF)
-	extract_regex_1(FRIBIDI_MAJOR_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_major_version, ([0-9]+)\\)")
-	extract_regex_1(FRIBIDI_MINOR_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_minor_version, ([0-9]+)\\)")
-	extract_regex_1(FRIBIDI_MICRO_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_micro_version, ([0-9]+)\\)")
-	extract_regex_1(FRIBIDI_INTERFACE_VERSION "${FRIBIDI_CONF}" "\\(fribidi_interface_version, ([0-9]+)\\)")
-	extract_regex_1(FRIBIDI_INTERFACE_AGE     "${FRIBIDI_CONF}" "\\(fribidi_interface_age, ([0-9]+)\\)")
-	extract_regex_1(FRIBIDI_BINARY_AGE        "${FRIBIDI_CONF}" "\\(fribidi_binary_age, ([0-9]+)\\)")
-	set(FRIBIDI_VERSION "${FRIBIDI_MAJOR_VERSION}.${FRIBIDI_MINOR_VERSION}.${FRIBIDI_MICRO_VERSION}")
-	set(PACKAGE "fribidi")
-	set(PACKAGE_NAME "GNU FriBidi")
-	set(PACKAGE_BUGREPORT "https://github.com/fribidi/fribidi/issues/new")
-	set(SIZEOF_INT 4)
-	set(FRIBIDI_MSVC_BUILD_PLACEHOLDER "#define FRIBIDI_BUILT_WITH_MSVC")
-	message("detected ${PACKAGE_NAME} version ${FRIBIDI_VERSION}")
-	configure_file(lib/fribidi-config.h.in lib/fribidi-config.h @ONLY)
-endfunction()
-fribidi_conf()
-
+file(READ configure.ac FRIBIDI_CONF)
+extract_regex_1(FRIBIDI_MAJOR_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_major_version, ([0-9]+)\\)")
+extract_regex_1(FRIBIDI_MINOR_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_minor_version, ([0-9]+)\\)")
+extract_regex_1(FRIBIDI_MICRO_VERSION     "${FRIBIDI_CONF}" "\\(fribidi_micro_version, ([0-9]+)\\)")
+extract_regex_1(FRIBIDI_INTERFACE_VERSION "${FRIBIDI_CONF}" "\\(fribidi_interface_version, ([0-9]+)\\)")
+extract_regex_1(FRIBIDI_INTERFACE_AGE     "${FRIBIDI_CONF}" "\\(fribidi_interface_age, ([0-9]+)\\)")
+extract_regex_1(FRIBIDI_BINARY_AGE        "${FRIBIDI_CONF}" "\\(fribidi_binary_age, ([0-9]+)\\)")
+set(FRIBIDI_VERSION "${FRIBIDI_MAJOR_VERSION}.${FRIBIDI_MINOR_VERSION}.${FRIBIDI_MICRO_VERSION}")
+set(PACKAGE "fribidi")
+set(PACKAGE_NAME "GNU FriBidi")
+set(PACKAGE_BUGREPORT "https://github.com/fribidi/fribidi/issues/new")
+set(SIZEOF_INT 4)
+set(FRIBIDI_MSVC_BUILD_PLACEHOLDER "#define FRIBIDI_BUILT_WITH_MSVC")
+message("detected ${PACKAGE_NAME} version ${FRIBIDI_VERSION}")
+configure_file(lib/fribidi-config.h.in lib/fribidi-config.h @ONLY)
 
 function(prepend var prefix)
 	set(out "")
@@ -98,8 +94,7 @@ add_library(fribidi SHARED
 	${FRIBIDI_HEADERS}
 	${FRIBIDI_SOURCES_GENERATED})
 fribidi_definitions(fribidi)
-target_compile_definitions(fribidi
-	PUBLIC "-DFRIBIDI_BUILD")
+target_compile_definitions(fribidi PRIVATE -DFRIBIDI_BUILD)
 set(public_headers
 	lib/fribidi-arabic.h
 	lib/fribidi-begindecls.h
@@ -131,3 +126,27 @@ set_target_properties(fribidi
 	PUBLIC_HEADER "${public_headers}"
     )
 install(TARGETS fribidi PUBLIC_HEADER DESTINATION include/fribidi)
+
+# For pkgconfig
+set(prefix      ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix ${CMAKE_INSTALL_PREFIX})
+set(libdir      ${CMAKE_INSTALL_PREFIX}/lib)
+set(includedir  ${CMAKE_INSTALL_PREFIX}/include)
+set(VERSION     ${FRIBIDI_VERSION})
+set(ENABLE_SHARED_TRUE "")
+set(ENABLE_SHARED_FALSE "#")
+set(FRIBIDI_CPPFLAGS "")
+# freebidi.pc assumes that compiler/linker uses -L, -l and -I.
+# Make sure we replace them by current settings
+file(READ fribidi.pc.in fribidi_pc)
+# -L is CMAKE_LIBRARY_PATH_FLAG
+# With cl -Lxxx becomes: LIBPATH:xxx
+string(REPLACE "-L" "${CMAKE_LIBRARY_PATH_FLAG}" fribidi_pc ${fribidi_pc})
+# -l([a-zA-Z0-9_.]+) is ${CMAKE_LINK_LIBRARY_FLAG}${CMAKE_IMPORT_LIBRARY_PREFIX}\1${CMAKE_IMPORT_LIBRARY_SUFFIX}
+# With cl -lxxx becomes: xxx.lib
+string(REGEX REPLACE "\\-l([a-zA-Z0-9_.]+)" "${CMAKE_LINK_LIBRARY_FLAG}${CMAKE_IMPORT_LIBRARY_PREFIX}\\1${CMAKE_IMPORT_LIBRARY_SUFFIX}" fribidi_pc ${fribidi_pc})
+# -I seems common to all compilers
+file(WRITE "fribidi.cmakepc.in" ${fribidi_pc})
+ 
+CONFIGURE_FILE("fribidi.cmakepc.in" "fribidi.pc" @ONLY)
+install(FILES fribidi.pc DESTINATION pkgconfig)
