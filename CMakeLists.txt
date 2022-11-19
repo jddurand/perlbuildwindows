@@ -224,6 +224,9 @@ cmake_path(CONVERT "${PERL_C_BIN_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_BIN_INST_
 set (CPAN_PATCHES_DIR "${CMAKE_CURRENT_BINARY_DIR}/.cpan/patches")
 cmake_path(CONVERT "${CPAN_PATCHES_DIR}" TO_NATIVE_PATH_LIST CPAN_PATCHES_DIR_DOS)
 
+set (PERL_C_PKGCONFIG_INST_DIR "${PERL_INST_DIR}/c/pkgconfig")
+cmake_path(CONVERT "${PERL_C_PKGCONFIG_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_PKGCONFIG_INST_DIR)
+
 # =======================================================
 # Generic bat file to invoke anything related to our perl
 # =======================================================
@@ -248,6 +251,12 @@ REM
 SET EXPATLIBPATH=${PERL_C_LIB_INST_DIR_DOS}
 SET EXPATINCPATH=${PERL_C_INCLUDE_INST_DIR_DOS}
 SET EXPATLIBPREFIX=lib
+
+REM
+REM For PkgConfig
+REM
+SET PERL_PKG_CONFIG_SCRIPTS=ppkg-config,pkg-config
+SET PKG_CONFIG_PATH=${PERL_C_PKGCONFIG_INST_DIR}
 
 REM
 REM For runtime of the above packages, we absolutely want perl to be before
@@ -549,11 +558,17 @@ ExternalProject_Add(giflib
 					BUILD_IN_SOURCE        TRUE
 					)
 
+add_custom_target(perl-pkgconfig
+				  DEPENDS                  perl-core
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl PkgConfig
+				  )
+
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
 # Net::SSleay
 # Win32::GUI
 # XML::Parser
+# Win32::Prima
 # ====================================================================================================================================
 add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser)
 
