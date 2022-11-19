@@ -1,0 +1,29 @@
+Description: Fix some typos on the html documentation and man pages
+Author: David Suárez <david.sephirot@gmail.com>
+Origin: vendor
+Bug: https://sourceforge.net/p/giflib/bugs/152/
+Bug-Debian: https://bugs.debian.org/857609
+Last-Update: 2020-12-20
+
+--- a/doc/gif_lib.xml
++++ b/doc/gif_lib.xml
+@@ -280,7 +280,7 @@
+ <para>Create the union of two given color maps and return it.  If the result
+ won't fit into 256 colors, NULL is returned, the allocated union
+ otherwise.  ColorIn1 is copied as it to ColorUnion, while colors from
+-ColorIn2 are copied iff they didn't exist before.  ColorTransIn2 maps
++ColorIn2 are copied if they didn't exist before.  ColorTransIn2 maps
+ the old ColorIn2 into ColorUnion color map table.</para>
+ 
+ <programlisting id="GifAttachImage">
+--- a/doc/gifinto.xml
++++ b/doc/gifinto.xml
+@@ -28,7 +28,7 @@
+ 
+ <refsect1><title>Description</title>
+ 
+-<para>A program to save stdin into a file with given name, iff the
++<para>A program to save stdin into a file with given name, if the
+ result file has size bigger than specified (see below).  This can be
+ used to save a result under the same filename we started with in a
+ chain of pipes.</para>

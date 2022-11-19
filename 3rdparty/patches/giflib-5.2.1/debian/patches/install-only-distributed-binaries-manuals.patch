@@ -1,0 +1,35 @@
+Description: Only install the manuals for installed binaries
+Author: David Suárez <david.sephirot@gmail.com>
+Origin: vendor
+Bug: https://sourceforge.net/p/giflib/bugs/145/
+Last-Update: 2019-11-25
+
+--- a/Makefile
++++ b/Makefile
+@@ -62,6 +62,17 @@
+ 
+ LDLIBS=libgif.a -lm
+ 
++MANUAL_PAGES = \
++	doc/gif2rgb.1 \
++	doc/gifbuild.1 \
++	doc/gifclrmp.1 \
++	doc/gifecho.1 \
++	doc/giffix.1 \
++	doc/gifinto.1 \
++	doc/giflib.1 \
++	doc/giftext.1 \
++	doc/giftool.1
++
+ all: libgif.so libgif.a libutil.so libutil.a $(UTILS)
+ 	$(MAKE) -C doc
+ 
+@@ -105,7 +116,7 @@
+ 	ln -sf libgif.so.$(LIBMAJOR) "$(DESTDIR)$(LIBDIR)/libgif.so"
+ install-man:
+ 	$(INSTALL) -d "$(DESTDIR)$(MANDIR)/man1"
+-	$(INSTALL) -m 644 doc/*.1 "$(DESTDIR)$(MANDIR)/man1"
++	$(INSTALL) -m 644 $(MANUAL_PAGES) "$(DESTDIR)$(MANDIR)/man1"
+ uninstall: uninstall-man uninstall-include uninstall-lib uninstall-bin
+ uninstall-bin:
+ 	cd "$(DESTDIR)$(BINDIR)" && rm -f $(INSTALLABLE)

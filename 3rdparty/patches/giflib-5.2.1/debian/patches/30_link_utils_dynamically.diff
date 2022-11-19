@@ -1,0 +1,71 @@
+Description: Link giflib-tools dynamically against giflib
+Author: Andreas Metzler <ametzler@debian.org>
+Origin: vendor
+Bug: https://sourceforge.net/p/giflib/bugs/123/
+Last-Update: 2019-03-17
+
+--- a/Makefile
++++ b/Makefile
+@@ -59,7 +59,7 @@
+ 	gifsponge \
+ 	gifwedge
+ 
+-LDLIBS=libgif.a -lm
++LDLIBS=-lm
+ 
+ MANUAL_PAGES = \
+ 	doc/gif2rgb.1 \
+@@ -77,16 +77,28 @@
+ all: libgif.so libgif.a libutil.so libutil.a $(UTILS)
+ 	$(MAKE) -C doc
+ 
+-$(UTILS):: libgif.a libutil.a
++$(UTILS):: libutil.a libgif.so
+ 
+-libgif.so: $(OBJECTS) $(HEADERS)
+-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,libgif.so.$(LIBMAJOR) -o libgif.so $(OBJECTS)
++libgif.so.$(LIBVER): $(OBJECTS) $(HEADERS)
++	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,libgif.so.$(LIBMAJOR) -o $@ $(OBJECTS)
++
++libgif.so.$(LIBMAJOR): libgif.so.$(LIBVER)
++	ln -s $< $@
++
++libgif.so: libgif.so.$(LIBMAJOR)
++	ln -s $< $@
+ 
+ libgif.a: $(OBJECTS) $(HEADERS)
+ 	$(AR) rcs libgif.a $(OBJECTS)
+ 
+-libutil.so: $(UOBJECTS) $(UHEADERS)
+-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,libutil.so.$(LIBMAJOR) -o libutil.so $(UOBJECTS)
++libutil.so.$(LIBVER): $(UOBJECTS) $(UHEADERS) libgif.so
++	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,libutil.so.$(LIBMAJOR) -o $@ $(UOBJECTS) libgif.so
++
++libutil.so.$(LIBMAJOR): libutil.so.$(LIBVER)
++	ln -s $< $@
++
++libutil.so: libutil.so.$(LIBMAJOR)
++	ln -s $< $@
+ 
+ libutil.a: $(UOBJECTS) $(UHEADERS)
+ 	$(AR) rcs libutil.a $(UOBJECTS)
+@@ -112,7 +124,7 @@
+ install-lib:
+ 	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
+ 	$(INSTALL) -m 644 libgif.a "$(DESTDIR)$(LIBDIR)/libgif.a"
+-	$(INSTALL) -m 755 libgif.so "$(DESTDIR)$(LIBDIR)/libgif.so.$(LIBVER)"
++	$(INSTALL) -m 755 libgif.so.$(LIBVER) "$(DESTDIR)$(LIBDIR)/libgif.so.$(LIBVER)"
+ 	ln -sf libgif.so.$(LIBVER) "$(DESTDIR)$(LIBDIR)/libgif.so.$(LIBMAJOR)"
+ 	ln -sf libgif.so.$(LIBMAJOR) "$(DESTDIR)$(LIBDIR)/libgif.so"
+ install-man:
+--- a/tests/makefile
++++ b/tests/makefile
+@@ -3,6 +3,8 @@
+ 
+ .SUFFIXES: .gif .rgb
+ 
++export LD_LIBRARY_PATH=$(CURDIR)/..
++
+ # This is what to do by default
+ test: render-regress \
+ 	gifbuild-regress \

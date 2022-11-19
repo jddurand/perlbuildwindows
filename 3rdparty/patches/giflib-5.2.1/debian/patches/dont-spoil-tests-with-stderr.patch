@@ -1,0 +1,44 @@
+Description: Do not spoil tests with stderror output
+Author: Vasyl Gello <vasek.gello@gmail.com>
+Last-Update: 2022-04-22
+Origin: vendor
+Forwarded: not-needed
+
+--- a/tests/makefile
++++ b/tests/makefile
+@@ -74,7 +74,7 @@
+ 	do \
+ 	    stem=`basename $${test} | sed -e "s/.gif$$//"`; \
+ 	    if echo "gifclrmap: Checking colormap of $${test}" >&2; \
+-	    $(UTILS)/gifclrmp <$${test} > $@.$${stem}.regress 2>&1; \
++	    $(UTILS)/gifclrmp <$${test} > $@.$${stem}.regress; \
+ 	    then diff -u $${stem}.map $@.$${stem}.regress; \
+ 	    else echo "*** Nonzero return status on $${test}!"; exit 1; fi; \
+ 	done
+@@ -98,7 +98,7 @@
+ 	do \
+ 	    stem=`basename $${test} | sed -e "s/.gif$$//"`; \
+ 	    if echo "giffiltr: Testing copy of $${test}" >&2; \
+-	    $(UTILS)/giffilter <$${test} | $(UTILS)/gif2rgb > $@.$${stem}.regress 2>&1; \
++	    $(UTILS)/giffilter <$${test} | $(UTILS)/gif2rgb > $@.$${stem}.regress; \
+ 	    then cmp $${stem}.rgb $@.$${stem}.regress; \
+ 	    else echo "*** Nonzero return status on $${test}!"; exit 1; fi; \
+ 	done
+@@ -126,7 +126,7 @@
+ 	do \
+ 	    stem=`basename $${test} | sed -e "s/.gif$$//"`; \
+ 	    if echo "gifsponge: Testing copy of $${test}" >&2; \
+-	    $(UTILS)/gifsponge <$${test} | $(UTILS)/gif2rgb > $@.$${stem}.regress 2>&1; \
++	    $(UTILS)/gifsponge <$${test} | $(UTILS)/gif2rgb > $@.$${stem}.regress; \
+ 	    then cmp $${stem}.rgb  $@.$${stem}.regress; \
+ 	    else echo "*** Nonzero return status on $${test}!"; exit 1; fi; \
+ 	done
+@@ -137,7 +137,7 @@
+ 	do \
+ 	    stem=`basename $${test} | sed -e "s/.gif$$//"`; \
+ 	    if echo "giftext: Checking text dump of $${test}" >&2; \
+-	    $(UTILS)/giftext <$${test} > $@.$${stem}.regress 2>&1; \
++	    $(UTILS)/giftext <$${test} > $@.$${stem}.regress; \
+ 	    then diff -u $${stem}.dmp  $@.$${stem}.regress; \
+ 	    else echo "*** Nonzero return status on $${test}!"; exit 1; fi; \
+ 	done
