@@ -605,7 +605,7 @@ SET (PACKAGES
 	Win32::FileOp             # TAKE CARE Popup a window
 	Win32::JobAdd
 	Win32::Locale
-	Win32::MprApi
+	# Win32::MprApi
 	Win32::PEFile
 	# Win32:Ldd              # Cannot compile (needs gcc?)
 	# Win32::Packer          # Needs Win32::Ldd
