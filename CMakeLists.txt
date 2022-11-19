@@ -457,8 +457,8 @@ add_custom_target(perl-io-socket-ssl DEPENDS perl-net-ssleay COMMAND ${CMAKE_CUR
 # ====================================================================================================================================
 ExternalProject_Add(freeimage
                     CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/FreeImage-3.18.0.tar.gz
-				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-3.18.0.tar.gz
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
@@ -503,7 +503,7 @@ add_custom_target(perl-xml-parser
 ExternalProject_Add(fribidi
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://github.com/fribidi/fribidi/archive/refs/tags/v${FRIBIDI_VERSION}.tar.gz
-					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/fribidi_CMakeLists.txt CMakeLists.txt
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/fribidi_CMakeLists.txt CMakeLists.txt
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/fribidi
