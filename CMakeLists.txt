@@ -576,7 +576,7 @@ SET (PACKAGES
 	Win32::HTA
 	Win32::IPC
 	Win32::Job
-	Win32::Ldd
+	# Win32::Ldd               Does not compile + apparently buggy https://github.com/LRN/ntldd/issues/5
 	Win32::MMF
 	Win32::OLE
 	Win32::File
