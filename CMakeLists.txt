@@ -85,6 +85,7 @@ set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
 set (ZLIB_VERSION_DEFAULT                  1.2.13)
 set (EXPAT_VERSION_DEFAULT                 2.5.0)
 set (FRIBIDI_VERSION_DEFAULT               1.0.12)
+set (GIFLIB_VERSION_DEFAULT                5.2.1)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -95,6 +96,7 @@ set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACH
 set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "Zlib version")
 set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACHE STRING "Expat version")
 set (FRIBIDI_VERSION               ${FRIBIDI_VERSION_DEFAULT}               CACHE STRING "Fribidi version")
+set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "Giflib version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -105,6 +107,7 @@ set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_
 set_property (CACHE ZLIB_VERSION                  PROPERTY STRINGS ${ZLIB_VERSION_DEFAULT})
 set_property (CACHE EXPAT_VERSION                 PROPERTY STRINGS ${EXPAT_VERSION_DEFAULT})
 set_property (CACHE FRIBIDI_VERSION               PROPERTY STRINGS ${FRIBIDI_VERSION_DEFAULT})
+set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -116,6 +119,7 @@ message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
 message (STATUS "Version of Zlib                   : ${ZLIB_VERSION}")
 message (STATUS "Version of Expat                  : ${EXPAT_VERSION}")
 message (STATUS "Version of Fribidi                : ${FRIBIDI_VERSION}")
+message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -499,7 +503,7 @@ add_custom_target(perl-xml-parser
 ExternalProject_Add(fribidi
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					URL                    https://github.com/fribidi/fribidi/archive/refs/tags/v${FRIBIDI_VERSION}.tar.gz
-				    PATCH_COMMAND         ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/fribidi_CMakeLists.txt CMakeLists.txt
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/fribidi_CMakeLists.txt CMakeLists.txt
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/fribidi
@@ -508,6 +512,41 @@ ExternalProject_Add(fribidi
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project Giflib
+# ===========================================================
+ExternalProject_Add(giflib
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/giflib-${GIFLIB_VERSION}.tar.gz
+					#
+					# Apply first debian patches
+					#
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/fix-get-args-segment-violation.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/install-only-distributed-binaries-manuals.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/fix-spelling-errors-on-doc-pages.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/recover-giffilter-docs.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/add-gifsponge-docs.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/30_link_utils_dynamically.diff
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/giflib_quantize.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/dont-spoil-tests-with-stderr.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/debian/patches/giflib_quantize-header.patch
+					#
+					# The our diff on top of that
+					#
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/giflib-5.2.1.diff
+					#
+					# Continue...
+					#
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/license/giflib
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/license/giflib
+					#
+					# Custom pkgconfig
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					BUILD_IN_SOURCE        TRUE
+					)
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
