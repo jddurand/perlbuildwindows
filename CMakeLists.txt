@@ -355,19 +355,6 @@ ExternalProject_Add(perl-core
 # Net::SSLeay: needs openssl that needs nasm + zlib + post-installation of openssl libraries near Net::SSLeay
 # Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
-add_custom_target(perl-win32-api DEPENDS perl-core COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API)
-ExternalProject_Add(zlib
-					#
-					# We need to set RelWithDebInfo so that the library name is predictable: zlibstatic.lib instead of zlibstaticd.lib
-					#
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
-					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/zlib-${ZLIB_VERSION}.tar.gz
-					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/zlib
-					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/zlib
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					BUILD_IN_SOURCE        TRUE)
-
 ExternalProject_Add(nasm
                     CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                perl-core
@@ -418,6 +405,19 @@ ExternalProject_Add(nasm
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
+add_custom_target(perl-win32-api DEPENDS perl-core COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API)
+ExternalProject_Add(zlib
+					#
+					# We need to set RelWithDebInfo so that the library name is predictable: zlibstatic.lib instead of zlibstaticd.lib
+					#
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/zlib-${ZLIB_VERSION}.tar.gz
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/zlib
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/zlib
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					BUILD_IN_SOURCE        TRUE)
+
 #
 # Why does is not work ?
 # COMMAND                $<IF:$<STREQUAL:"${OPENSSL_VERSION}","3.0.5">,"${Patch_EXECUTABLE} util/perl/TLSProxy/Proxy.pm b/util/perl/TLSProxy/Proxy.pm ${PROJECT_SOURCE_DIR}/openssl-3.0.5-util-perl-TLSProxy-Proxy.diff",${CMAKE_COMMAND} -E echo "Not applicable: openssl-3.0.5-util-perl-TLSProxy-Proxy.diff">
@@ -429,7 +429,7 @@ else ()
 endif ()
 
 ExternalProject_Add(openssl
-					DEPENDS                nasm perl-win32-api
+					DEPENDS                nasm perl-win32-api zlib
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/openssl-${OPENSSL_VERSION}.tar.gz
 					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL --with-zlib-include=${PERL_C_INCLUDE_INST_DIR_DOS} --with-zlib-lib=${PERL_C_LIB_INST_DIR_DOS}\\zlibstatic.lib zlib enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
