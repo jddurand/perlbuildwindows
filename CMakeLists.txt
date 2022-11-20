@@ -557,7 +557,7 @@ ExternalProject_Add(libiconv
 # ===========================================================
 ExternalProject_Add(datrie
 					DEPENDS libiconv
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INCLUDE_PATH:PATH=${PERL_C_INCLUDE_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/datrie-${LIBDATRIE_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/datrie_CMakeLists.txt CMakeLists.txt
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/datrie-${LIBDATRIE_VERSION}/datrie-${LIBDATRIE_VERSION}.diff
