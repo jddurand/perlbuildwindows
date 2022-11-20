@@ -120,7 +120,6 @@ add_library(fribidi SHARED
 	${FRIBIDI_SOURCES}
 	${FRIBIDI_HEADERS}
 	${FRIBIDI_SOURCES_GENERATED})
-fribidi_definitions(fribidi)
 target_compile_definitions(fribidi PRIVATE -DFRIBIDI_BUILD)
 set(public_headers
 	lib/fribidi-arabic.h
