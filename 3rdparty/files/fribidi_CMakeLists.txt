@@ -155,25 +155,16 @@ set_target_properties(fribidi
 install(TARGETS fribidi PUBLIC_HEADER DESTINATION include/fribidi)
 
 # For pkgconfig
-set(prefix      ${CMAKE_INSTALL_PREFIX})
-set(exec_prefix ${CMAKE_INSTALL_PREFIX})
-set(libdir      ${CMAKE_INSTALL_PREFIX}/lib)
-set(includedir  ${CMAKE_INSTALL_PREFIX}/include)
+# We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
+set(prefix      "\${pcfiledir}/..")
+set(exec_prefix "\${prefix}")
+set(libdir      "\${exec_prefix}/lib")
+set(includedir  "\${prefix}/include")
 set(VERSION     ${FRIBIDI_VERSION})
 set(ENABLE_SHARED_TRUE "")
 set(ENABLE_SHARED_FALSE "#")
-set(FRIBIDI_CPPFLAGS "")
+set(FRIBIDI_CPPFLAGS "-DFRIBIDI_BUILD")
 # freebidi.pc assumes that compiler/linker uses -L, -l and -I.
 # Make sure we replace them by current settings
-file(READ fribidi.pc.in fribidi_pc)
-# -L is CMAKE_LIBRARY_PATH_FLAG
-# With cl -Lxxx becomes: LIBPATH:xxx
-string(REPLACE "-L" "${CMAKE_LIBRARY_PATH_FLAG}" fribidi_pc ${fribidi_pc})
-# -l([a-zA-Z0-9_.]+) is ${CMAKE_LINK_LIBRARY_FLAG}${CMAKE_IMPORT_LIBRARY_PREFIX}\1${CMAKE_IMPORT_LIBRARY_SUFFIX}
-# With cl -lxxx becomes: xxx.lib
-string(REGEX REPLACE "\\-l([a-zA-Z0-9_.]+)" "${CMAKE_LINK_LIBRARY_FLAG}${CMAKE_IMPORT_LIBRARY_PREFIX}\\1${CMAKE_IMPORT_LIBRARY_SUFFIX}" fribidi_pc ${fribidi_pc})
-# -I seems common to all compilers
-file(WRITE "fribidi.cmakepc.in" ${fribidi_pc})
- 
-CONFIGURE_FILE("fribidi.cmakepc.in" "fribidi.pc" @ONLY)
+CONFIGURE_FILE("fribidi.pc.in" "fribidi.pc" @ONLY)
 install(FILES fribidi.pc DESTINATION pkgconfig)
