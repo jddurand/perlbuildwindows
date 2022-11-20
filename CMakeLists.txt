@@ -87,6 +87,8 @@ set (EXPAT_VERSION_DEFAULT                 2.5.0)
 set (FRIBIDI_VERSION_DEFAULT               1.0.12)
 set (GIFLIB_VERSION_DEFAULT                5.2.1)
 set (FREEIMAGE_VERSION_DEFAULT             3.18.0)
+set (THAI_VERSION_DEFAULT                  0.1.29)
+set (DATRIE_VERSION_DEFAULT                0.2.13)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -99,6 +101,8 @@ set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACH
 set (FRIBIDI_VERSION               ${FRIBIDI_VERSION_DEFAULT}               CACHE STRING "Fribidi version")
 set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "Giflib version")
 set (FREEIMAGE_VERSION             ${FREEIMAGE_VERSION_DEFAULT}             CACHE STRING "Freeimage version")
+set (THAI_VERSION                  ${THAI_VERSION_DEFAULT}                  CACHE STRING "Thai version")
+set (DATRIE_VERSION                ${DATRIE_VERSION_DEFAULT}                CACHE STRING "Datrie version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -111,6 +115,8 @@ set_property (CACHE EXPAT_VERSION                 PROPERTY STRINGS ${EXPAT_VERSI
 set_property (CACHE FRIBIDI_VERSION               PROPERTY STRINGS ${FRIBIDI_VERSION_DEFAULT})
 set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERSION_DEFAULT})
 set_property (CACHE FREEIMAGE_VERSION             PROPERTY STRINGS ${FREEIMAGE_VERSION_DEFAULT})
+set_property (CACHE THAI_VERSION                  PROPERTY STRINGS ${THAI_VERSION_DEFAULT})
+set_property (CACHE DATRIE_VERSION                PROPERTY STRINGS ${DATRIE_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -124,6 +130,8 @@ message (STATUS "Version of Expat                  : ${EXPAT_VERSION}")
 message (STATUS "Version of Fribidi                : ${FRIBIDI_VERSION}")
 message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
 message (STATUS "Version of Freeimage              : ${FREEIMAGE_VERSION}")
+message (STATUS "Version of Thai                   : ${THAI_VERSION}")
+message (STATUS "Version of Datrie                 : ${DATRIE_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -524,6 +532,40 @@ ExternalProject_Add(fribidi
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project datrie
+# ===========================================================
+ExternalProject_Add(datrie
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/datrie-${LIBDATRIE_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/datrie_CMakeLists.txt CMakeLists.txt
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/datrie-${LIBDATRIE_VERSION}/datrie-${LIBDATRIE_VERSION}.diff
+					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/datrie
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/datrie
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project thai
+# ===========================================================
+ExternalProject_Add(thai
+					DEPENDS                datrie
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/thai-${THAI_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/thai_CMakeLists.txt CMakeLists.txt
+					# My patches for export of symbols
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}.diff
+					# https://github.com/fanc999/thai patches
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}-fanc999.diff
+					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/thai
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/thai
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================

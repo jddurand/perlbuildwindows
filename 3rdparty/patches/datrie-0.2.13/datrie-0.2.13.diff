@@ -1,0 +1,215 @@
+diff -Naur datrie.old/datrie/alpha-map.h datrie.new/datrie/alpha-map.h
+--- datrie.old/datrie/alpha-map.h	2021-01-29 10:33:49.000000000 +0100
++++ datrie.new/datrie/alpha-map.h	2022-11-20 05:16:39.969210500 +0100
+@@ -64,18 +64,18 @@
+  */
+ typedef struct _AlphaMap    AlphaMap;
+ 
+-AlphaMap *  alpha_map_new (void);
++DATRIE_ENTRY AlphaMap *  alpha_map_new (void);
+ 
+-AlphaMap *  alpha_map_clone (const AlphaMap *a_map);
++DATRIE_ENTRY AlphaMap *  alpha_map_clone (const AlphaMap *a_map);
+ 
+-void        alpha_map_free (AlphaMap *alpha_map);
++DATRIE_ENTRY void        alpha_map_free (AlphaMap *alpha_map);
+ 
+-int         alpha_map_add_range (AlphaMap  *alpha_map,
++DATRIE_ENTRY int         alpha_map_add_range (AlphaMap  *alpha_map,
+                                  AlphaChar  begin,
+                                  AlphaChar  end);
+ 
+-int         alpha_char_strlen (const AlphaChar *str);
+-int         alpha_char_strcmp (const AlphaChar *str1, const AlphaChar *str2);
++DATRIE_ENTRY int         alpha_char_strlen (const AlphaChar *str);
++DATRIE_ENTRY int         alpha_char_strcmp (const AlphaChar *str1, const AlphaChar *str2);
+ 
+ #ifdef __cplusplus
+ }
+diff -Naur datrie.old/datrie/trie.h datrie.new/datrie/trie.h
+--- datrie.old/datrie/trie.h	2021-01-29 10:33:49.000000000 +0100
++++ datrie.new/datrie/trie.h	2022-11-20 05:17:51.610532700 +0100
+@@ -98,59 +98,59 @@
+  *
+  * @return TRUE to continue enumeration, FALSE to stop
+  */
+-typedef Bool (*TrieEnumFunc) (const AlphaChar  *key,
++DATRIE_ENTRY typedef Bool (*TrieEnumFunc) (const AlphaChar  *key,
+                               TrieData          key_data,
+                               void             *user_data);
+ 
+ /**
+  * @brief Trie walking state
+  */
+-typedef struct _TrieState TrieState;
++DATRIE_ENTRY typedef struct _TrieState TrieState;
+ 
+ 
+ /**
+  * @brief Trie iteration state
+  */
+-typedef struct _TrieIterator TrieIterator;
++DATRIE_ENTRY typedef struct _TrieIterator TrieIterator;
+ 
+ /*-----------------------*
+  *   GENERAL FUNCTIONS   *
+  *-----------------------*/
+ 
+-Trie *  trie_new (const AlphaMap *alpha_map);
++DATRIE_ENTRY Trie *  trie_new (const AlphaMap *alpha_map);
+ 
+-Trie *  trie_new_from_file (const char *path);
++DATRIE_ENTRY Trie *  trie_new_from_file (const char *path);
+ 
+-Trie *  trie_fread (FILE *file);
++DATRIE_ENTRY Trie *  trie_fread (FILE *file);
+ 
+-void    trie_free (Trie *trie);
++DATRIE_ENTRY void    trie_free (Trie *trie);
+ 
+-size_t  trie_get_serialized_size (Trie *trie);
++DATRIE_ENTRY size_t  trie_get_serialized_size (Trie *trie);
+ 
+-void    trie_serialize (Trie *trie, uint8 *ptr);
++DATRIE_ENTRY void    trie_serialize (Trie *trie, uint8 *ptr);
+ 
+-int     trie_save (Trie *trie, const char *path);
++DATRIE_ENTRY int     trie_save (Trie *trie, const char *path);
+ 
+-int     trie_fwrite (Trie *trie, FILE *file);
++DATRIE_ENTRY int     trie_fwrite (Trie *trie, FILE *file);
+ 
+-Bool    trie_is_dirty (const Trie *trie);
++DATRIE_ENTRY Bool    trie_is_dirty (const Trie *trie);
+ 
+ 
+ /*------------------------------*
+  *   GENERAL QUERY OPERATIONS   *
+  *------------------------------*/
+ 
+-Bool    trie_retrieve (const Trie      *trie,
++DATRIE_ENTRY Bool    trie_retrieve (const Trie      *trie,
+                        const AlphaChar *key,
+                        TrieData        *o_data);
+ 
+-Bool    trie_store (Trie *trie, const AlphaChar *key, TrieData data);
++DATRIE_ENTRY Bool    trie_store (Trie *trie, const AlphaChar *key, TrieData data);
+ 
+-Bool    trie_store_if_absent (Trie *trie, const AlphaChar *key, TrieData data);
++DATRIE_ENTRY Bool    trie_store_if_absent (Trie *trie, const AlphaChar *key, TrieData data);
+ 
+-Bool    trie_delete (Trie *trie, const AlphaChar *key);
++DATRIE_ENTRY Bool    trie_delete (Trie *trie, const AlphaChar *key);
+ 
+-Bool    trie_enumerate (const Trie     *trie,
++DATRIE_ENTRY Bool    trie_enumerate (const Trie     *trie,
+                         TrieEnumFunc    enum_func,
+                         void           *user_data);
+ 
+@@ -159,26 +159,26 @@
+  *   STEPWISE QUERY OPERATIONS   *
+  *-------------------------------*/
+ 
+-TrieState * trie_root (const Trie *trie);
++DATRIE_ENTRY TrieState * trie_root (const Trie *trie);
+ 
+ 
+ /*----------------*
+  *   TRIE STATE   *
+  *----------------*/
+ 
+-TrieState * trie_state_clone (const TrieState *s);
++DATRIE_ENTRY TrieState * trie_state_clone (const TrieState *s);
+ 
+-void        trie_state_copy (TrieState *dst, const TrieState *src);
++DATRIE_ENTRY void        trie_state_copy (TrieState *dst, const TrieState *src);
+ 
+-void      trie_state_free (TrieState *s);
++DATRIE_ENTRY void      trie_state_free (TrieState *s);
+ 
+-void      trie_state_rewind (TrieState *s);
++DATRIE_ENTRY void      trie_state_rewind (TrieState *s);
+ 
+-Bool      trie_state_walk (TrieState *s, AlphaChar c);
++DATRIE_ENTRY Bool      trie_state_walk (TrieState *s, AlphaChar c);
+ 
+-Bool      trie_state_is_walkable (const TrieState *s, AlphaChar c);
++DATRIE_ENTRY Bool      trie_state_is_walkable (const TrieState *s, AlphaChar c);
+ 
+-int       trie_state_walkable_chars (const TrieState  *s,
++DATRIE_ENTRY int       trie_state_walkable_chars (const TrieState  *s,
+                                      AlphaChar         chars[],
+                                      int               chars_nelm);
+ 
+@@ -194,7 +194,7 @@
+  */
+ #define   trie_state_is_terminal(s) trie_state_is_walkable((s),0)
+ 
+-Bool      trie_state_is_single (const TrieState *s);
++DATRIE_ENTRY Bool      trie_state_is_single (const TrieState *s);
+ 
+ /**
+  * @brief Check for leaf state
+@@ -209,22 +209,22 @@
+ #define   trie_state_is_leaf(s) \
+     (trie_state_is_single(s) && trie_state_is_terminal(s))
+ 
+-TrieData trie_state_get_data (const TrieState *s);
++DATRIE_ENTRY TrieData trie_state_get_data (const TrieState *s);
+ 
+ 
+ /*----------------------*
+  *    ENTRY ITERATION   *
+  *----------------------*/
+ 
+-TrieIterator *  trie_iterator_new (TrieState *s);
++DATRIE_ENTRY TrieIterator *  trie_iterator_new (TrieState *s);
+ 
+-void            trie_iterator_free (TrieIterator *iter);
++DATRIE_ENTRY void            trie_iterator_free (TrieIterator *iter);
+ 
+-Bool            trie_iterator_next (TrieIterator *iter);
++DATRIE_ENTRY Bool            trie_iterator_next (TrieIterator *iter);
+ 
+-AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
++DATRIE_ENTRY AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
+ 
+-TrieData        trie_iterator_get_data (const TrieIterator *iter);
++DATRIE_ENTRY TrieData        trie_iterator_get_data (const TrieIterator *iter);
+ 
+ 
+ #ifdef __cplusplus
+diff -Naur datrie.old/datrie/typedefs.h datrie.new/datrie/typedefs.h
+--- datrie.old/datrie/typedefs.h	2021-01-29 10:33:49.000000000 +0100
++++ datrie.new/datrie/typedefs.h	2022-11-20 05:15:52.579734000 +0100
+@@ -126,6 +126,30 @@
+ #   error "int32 type is undefined!"
+ # endif
+ 
++/* DATRIE_ENTRY is a macro used to declare library entry points. */
++#ifndef DATRIE_LIB_STATIC
++# ifndef DATRIE_ENTRY
++#  ifdef _WIN32
++#   ifdef DATRIE_BUILD
++#     define DATRIE_ENTRY __declspec(dllexport)
++#   else
++#     define DATRIE_ENTRY __declspec(dllimport)
++#   endif
++#  elif (defined(__SUNPRO_C)  || defined(__SUNPRO_CC))
++#   define DATRIE_ENTRY __global
++#  else
++#   if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__ICC)
++#     define DATRIE_ENTRY __attribute__ ((visibility("default")))
++#   else
++#    define DATRIE_ENTRY
++#   endif
++#  endif
++# endif
++#else
++# ifndef DATRIE_ENTRY
++#   define DATRIE_ENTRY
++# endif
++#endif
+ 
+ #endif /* __TYPEDEFS_H */
+ 

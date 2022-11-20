@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.12)
+
+project(datrie VERSION 0.2.16)
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+)$" "\\1"     VERSION       ${PROJECT_VERSION})
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$" "\\1" MAJOR_VERSION ${PROJECT_VERSION})
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$" "\\2" MINOR_VERSION ${PROJECT_VERSION})
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$" "\\3" PATCH_VERSION ${PROJECT_VERSION})
+
+
+add_library(datrie SHARED
+	datrie/dstring.c
+	datrie/trie-string.c
+	datrie/fileutils.c
+	datrie/darray.c
+	datrie/tail.c
+	datrie/trie.c
+	datrie/alpha-map.c
+	)
+target_compile_definitions(datrie PRIVATE -DLIBDATRIE_BUILD)
+
+set(public_headers
+    datrie/alpha-map.h
+    datrie/trie.h
+    datrie/triedefs.h
+    datrie/typedefs.h)
+
+set_target_properties(datrie
+    PROPERTIES
+    VERSION       "${VERSION}"
+    SOVERSION     "${MAJOR_VERSION}"
+	PUBLIC_HEADER "${public_headers}"
+    )
+install(TARGETS datrie PUBLIC_HEADER DESTINATION include/datrie)
+
+# For pkgconfig
+# We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
+set(prefix      "\${pcfiledir}/..")
+set(exec_prefix "\${prefix}")
+set(libdir      "\${exec_prefix}/lib")
+set(includedir  "\${prefix}/include")
+set(VERSION     ${LIBTHAI_VERSION})
+CONFIGURE_FILE("datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc.in" "datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc" @ONLY)
+install(FILES "datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc" DESTINATION pkgconfig)

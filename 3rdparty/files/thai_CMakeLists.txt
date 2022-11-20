@@ -1,0 +1,97 @@
+cmake_minimum_required(VERSION 3.12)
+
+project(thai VERSION 0.1.29)
+
+#
+# Dependency on datrie
+#
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DATRIE REQUIRED datrie-0.2)
+message(STATUS "DATRIE_INCLUDE_DIRS : ${DATRIE_INCLUDE_DIRS}")
+message(STATUS "DATRIE_LIBRARY_DIRS : ${DATRIE_LIBRARY_DIRS}")
+message(STATUS "DATRIE_LIBRARIES    : ${DATRIE_LIBRARIES}")
+include_directories(${DATRIE_INCLUDE_DIRS})
+link_directories(${DATRIE_LIBRARY_DIRS})
+link_libraries(${DATRIE_LIBRARIES})
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+include_directories(include)
+
+add_library(thctype  OBJECT src/thctype/thctype.c src/thctype/wtt.c)
+add_library(thstr    OBJECT src/thstr/thstr.c)
+add_library(thcell   OBJECT src/thcell/thcell.c)
+add_library(thinp    OBJECT src/thinp/thinp.c)
+add_library(thrend   OBJECT src/thrend/thrend.c)
+add_library(thcoll   OBJECT src/thcoll/cweight.c src/thcoll/thcoll.c)
+add_library(thbrk    OBJECT src/thbrk/thbrk.c src/thbrk/brk-ctype.c src/thbrk/brk-common.c src/thbrk/brk-maximal.c)
+add_library(thwchar  OBJECT src/thwchar/thwchar.c)
+add_library(thwctype OBJECT src/thwctype/thwctype.c)
+add_library(thwstr   OBJECT src/thwstr/thwstr.c)
+add_library(thwbrk   OBJECT src/thwbrk/thwbrk.c)
+
+add_library(thai SHARED
+	src/libthai.c
+	$<TARGET_OBJECTS:thctype>
+	$<TARGET_OBJECTS:thstr>
+	$<TARGET_OBJECTS:thcell>
+	$<TARGET_OBJECTS:thinp>
+	$<TARGET_OBJECTS:thrend>
+	$<TARGET_OBJECTS:thcoll>
+	$<TARGET_OBJECTS:thbrk>
+	$<TARGET_OBJECTS:thwchar>
+	$<TARGET_OBJECTS:thwctype>
+	$<TARGET_OBJECTS:thwstr>
+	$<TARGET_OBJECTS:thwbrk>
+	)
+target_compile_definitions(thctype  PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thstr    PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thcell   PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thinp    PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thrend   PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thcoll   PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thbrk    PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thwchar  PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thwctype PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thwstr   PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thwbrk   PRIVATE -DTHAI_BUILD)
+target_compile_definitions(thai     PRIVATE -DTHAI_BUILD)
+
+set(public_headers
+    include/thai/thailib.h
+    include/thai/thbrk.h
+    include/thai/thcell.h
+    include/thai/thcoll.h
+    include/thai/thctype.h
+    include/thai/thinp.h
+    include/thai/thrend.h
+    include/thai/thstr.h
+    include/thai/thwbrk.h
+    include/thai/thwchar.h
+    include/thai/thwcoll.h
+    include/thai/thwctype.h
+    include/thai/thwinp.h
+    include/thai/thwrend.h
+    include/thai/thwstr.h
+    include/thai/tis.h
+    include/thai/wtt.h
+)
+
+set_target_properties(thai
+    PROPERTIES
+    VERSION       "${THAI_MAJOR_VERSION}.${THAI_MINOR_VERSION}.${THAI_MICRO_VERSION}"
+    SOVERSION     "${THAI_MAJOR_VERSION}"
+	PUBLIC_HEADER "${public_headers}"
+    )
+install(TARGETS thai PUBLIC_HEADER DESTINATION include/thai)
+
+# For pkgconfig
+# We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
+set(prefix      "\${pcfiledir}/..")
+set(exec_prefix "\${prefix}")
+set(libdir      "\${exec_prefix}/lib")
+set(includedir  "\${prefix}/include")
+set(VERSION     ${THAI_VERSION})
+# freebidi.pc assumes that compiler/linker uses -L, -l and -I.
+# Make sure we replace them by current settings
+CONFIGURE_FILE("libthai.pc.in" "libthai.pc" @ONLY)
+install(FILES libthai.pc DESTINATION pkgconfig)

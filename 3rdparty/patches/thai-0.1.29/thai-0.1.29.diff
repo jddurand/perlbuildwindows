@@ -1,0 +1,462 @@
+diff -Naur thai.old/include/thai/thailib.h thai.new/include/thai/thailib.h
+--- thai.old/include/thai/thailib.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thailib.h	2022-11-20 05:30:38.594255200 +0100
+@@ -32,6 +32,31 @@
+ 
+ #include <stddef.h>
+ 
++/* THAI_ENTRY is a macro used to declare library entry points. */
++#ifndef THAI_LIB_STATIC
++# ifndef THAI_ENTRY
++#  ifdef _WIN32
++#   ifdef THAI_BUILD
++#     define THAI_ENTRY __declspec(dllexport)
++#   else
++#     define THAI_ENTRY __declspec(dllimport)
++#   endif
++#  elif (defined(__SUNPRO_C)  || defined(__SUNPRO_CC))
++#   define THAI_ENTRY __global
++#  else
++#   if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__ICC)
++#     define THAI_ENTRY __attribute__ ((visibility("default")))
++#   else
++#    define THAI_ENTRY
++#   endif
++#  endif
++# endif
++#else
++# ifndef THAI_ENTRY
++#   define THAI_ENTRY
++# endif
++#endif
++
+ #ifdef __cplusplus
+ # define  BEGIN_CDECL extern "C" {
+ # define  END_CDECL   }
+diff -Naur thai.old/include/thai/thbrk.h thai.new/include/thai/thbrk.h
+--- thai.old/include/thai/thbrk.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thbrk.h	2022-11-20 05:31:55.750261100 +0100
+@@ -36,22 +36,22 @@
+ 
+ typedef struct _ThBrk ThBrk;
+ 
+-extern ThBrk *th_brk_new(const char *dictpath);
++THAI_ENTRY ThBrk *th_brk_new(const char *dictpath);
+ 
+-extern void th_brk_delete(ThBrk *brk);
++THAI_ENTRY void th_brk_delete(ThBrk *brk);
+ 
+-extern int th_brk_find_breaks(ThBrk *brk, const thchar_t *s,
++THAI_ENTRY int th_brk_find_breaks(ThBrk *brk, const thchar_t *s,
+                               int pos[], size_t pos_sz);
+ 
+-extern int th_brk_insert_breaks(ThBrk *brk, const thchar_t *in,
++THAI_ENTRY int th_brk_insert_breaks(ThBrk *brk, const thchar_t *in,
+                                 thchar_t *out, size_t out_sz,
+                                 const char *delim);
+ 
+ TH_DEPRECATED_FOR(th_brk_find_breaks)
+-extern int th_brk(const thchar_t *s, int pos[], size_t pos_sz);
++THAI_ENTRY int th_brk(const thchar_t *s, int pos[], size_t pos_sz);
+ 
+ TH_DEPRECATED_FOR(th_brk_insert_breaks)
+-extern int th_brk_line(const thchar_t *in, thchar_t *out, size_t out_sz,
++THAI_ENTRY int th_brk_line(const thchar_t *in, thchar_t *out, size_t out_sz,
+                        const char *delim);
+ 
+ END_CDECL
+diff -Naur thai.old/include/thai/thcell.h thai.new/include/thai/thcell.h
+--- thai.old/include/thai/thcell.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thcell.h	2022-11-20 05:32:12.884747000 +0100
+@@ -43,14 +43,14 @@
+     thchar_t top;       /**< top-level mark */
+ };
+ 
+-extern void th_init_cell(struct thcell_t *cell);
++THAI_ENTRY void th_init_cell(struct thcell_t *cell);
+ 
+-extern size_t th_next_cell(const thchar_t *s, size_t len,
++THAI_ENTRY size_t th_next_cell(const thchar_t *s, size_t len,
+                            struct thcell_t *cell, int is_decomp_am);
+ 
+-extern size_t th_prev_cell(const thchar_t *s, size_t pos,
++THAI_ENTRY size_t th_prev_cell(const thchar_t *s, size_t pos,
+                            struct thcell_t *cell, int is_decomp_am);
+-extern size_t th_make_cells(const thchar_t *s, size_t len,
++THAI_ENTRY size_t th_make_cells(const thchar_t *s, size_t len,
+                             struct thcell_t cells[], size_t *ncells,
+                             int is_decomp_am);
+ 
+diff -Naur thai.old/include/thai/thcoll.h thai.new/include/thai/thcoll.h
+--- thai.old/include/thai/thcoll.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thcoll.h	2022-11-20 05:32:22.838725500 +0100
+@@ -34,9 +34,9 @@
+  * @brief  Thai string collation
+  */
+ 
+-extern int    th_strcoll(const thchar_t *s1, const thchar_t *s2);
++THAI_ENTRY int    th_strcoll(const thchar_t *s1, const thchar_t *s2);
+ 
+-extern size_t th_strxfrm(thchar_t dest[], const thchar_t *src, size_t n);
++THAI_ENTRY size_t th_strxfrm(thchar_t dest[], const thchar_t *src, size_t n);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/thctype.h thai.new/include/thai/thctype.h
+--- thai.old/include/thai/thctype.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thctype.h	2022-11-20 05:33:12.141523000 +0100
+@@ -328,34 +328,34 @@
+  * TONE, AD and AV are classified as dead character.
+  */
+ 
+-extern int th_istis(thchar_t c);
++THAI_ENTRY int th_istis(thchar_t c);
+ 
+-extern int th_isthai(thchar_t c);
+-extern int th_iseng(thchar_t c);
++THAI_ENTRY int th_isthai(thchar_t c);
++THAI_ENTRY int th_iseng(thchar_t c);
+ 
+ /* Thai letter classification */
+-extern int th_isthcons(thchar_t c);
+-extern int th_isthvowel(thchar_t c);
+-extern int th_isthtone(thchar_t c);
+-extern int th_isthdiac(thchar_t c);
+-extern int th_isthdigit(thchar_t c);
+-extern int th_isthpunct(thchar_t c);
++THAI_ENTRY int th_isthcons(thchar_t c);
++THAI_ENTRY int th_isthvowel(thchar_t c);
++THAI_ENTRY int th_isthtone(thchar_t c);
++THAI_ENTRY int th_isthdiac(thchar_t c);
++THAI_ENTRY int th_isthdigit(thchar_t c);
++THAI_ENTRY int th_isthpunct(thchar_t c);
+ 
+ /* Thai consonant shapes classification */
+-extern int th_istaillesscons(thchar_t c);
+-extern int th_isovershootcons(thchar_t c);
+-extern int th_isundershootcons(thchar_t c);
+-extern int th_isundersplitcons(thchar_t c);
++THAI_ENTRY int th_istaillesscons(thchar_t c);
++THAI_ENTRY int th_isovershootcons(thchar_t c);
++THAI_ENTRY int th_isundershootcons(thchar_t c);
++THAI_ENTRY int th_isundersplitcons(thchar_t c);
+ 
+ /* Thai vowel classification */
+-extern int th_isldvowel(thchar_t c);
+-extern int th_isflvowel(thchar_t c);
+-extern int th_isupvowel(thchar_t c);
+-extern int th_isblvowel(thchar_t c);
++THAI_ENTRY int th_isldvowel(thchar_t c);
++THAI_ENTRY int th_isflvowel(thchar_t c);
++THAI_ENTRY int th_isupvowel(thchar_t c);
++THAI_ENTRY int th_isblvowel(thchar_t c);
+ 
+-extern int th_chlevel(thchar_t c);
++THAI_ENTRY int th_chlevel(thchar_t c);
+ 
+-extern int th_iscombchar(thchar_t c);
++THAI_ENTRY int th_iscombchar(thchar_t c);
+ 
+ /*
+  * implementation parts
+@@ -386,7 +386,7 @@
+   _th_ISpunct = _th_ISbit(10)        /* punctuation */
+ };
+ 
+-extern const unsigned short _th_ctype_tbl[];
++THAI_ENTRY const unsigned short _th_ctype_tbl[];
+ 
+ #define _th_isctype(c, type)      (_th_ctype_tbl[c] & (type))
+ #define _th_isbits(c, mask, val)  ((_th_ctype_tbl[c] & (mask)) == (val))
+@@ -416,7 +416,7 @@
+ #define th_isupvowel(c)     _th_isbits((c), _th_VClassMsk, _th_VCupvowel)
+ #define th_isblvowel(c)     _th_isbits((c), _th_VClassMsk, _th_VCblvowel)
+ 
+-extern const int            _th_chlevel_tbl[];
++THAI_ENTRY const int            _th_chlevel_tbl[];
+ 
+ #define th_chlevel(c)       (_th_chlevel_tbl[c])
+ #define th_iscombchar(c)    (th_chlevel(c) != 0)
+diff -Naur thai.old/include/thai/thinp.h thai.new/include/thai/thinp.h
+--- thai.old/include/thai/thinp.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thinp.h	2022-11-20 05:33:24.353205300 +0100
+@@ -54,10 +54,10 @@
+     int      offset;   /**< offset (<=0) from cur pos where the conv begin */
+ };
+ 
+-extern int th_validate(struct thcell_t context, thchar_t c,
++THAI_ENTRY int th_validate(struct thcell_t context, thchar_t c,
+                        struct thinpconv_t *conv);
+ 
+-extern int th_validate_leveled(struct thcell_t context, thchar_t c,
++THAI_ENTRY int th_validate_leveled(struct thcell_t context, thchar_t c,
+                                struct thinpconv_t *conv, thstrict_t s);
+ 
+ END_CDECL
+diff -Naur thai.old/include/thai/thrend.h thai.new/include/thai/thrend.h
+--- thai.old/include/thai/thrend.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thrend.h	2022-11-20 05:33:41.719133400 +0100
+@@ -45,28 +45,28 @@
+  */
+ #define TH_BLANK_BASE_GLYPH  0xdd
+ 
+-extern int th_render_cell_tis(struct thcell_t cell,
++THAI_ENTRY int th_render_cell_tis(struct thcell_t cell,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+-extern int th_render_cell_win(struct thcell_t cell,
++THAI_ENTRY int th_render_cell_win(struct thcell_t cell,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+-extern int th_render_cell_mac(struct thcell_t cell,
++THAI_ENTRY int th_render_cell_mac(struct thcell_t cell,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+ 
+-extern int th_render_text_tis(const thchar_t *s,
++THAI_ENTRY int th_render_text_tis(const thchar_t *s,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+-extern int th_render_text_win(const thchar_t *s,
++THAI_ENTRY int th_render_text_win(const thchar_t *s,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+-extern int th_render_text_mac(const thchar_t *s,
++THAI_ENTRY int th_render_text_mac(const thchar_t *s,
+                               thglyph_t res[], size_t res_sz,
+                               int is_decomp_am);
+ 
+diff -Naur thai.old/include/thai/thstr.h thai.new/include/thai/thstr.h
+--- thai.old/include/thai/thstr.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thstr.h	2022-11-20 05:33:49.233378700 +0100
+@@ -34,7 +34,7 @@
+  * @brief  Thai string manipulators
+  */
+ 
+-extern size_t th_normalize(thchar_t dest[], const thchar_t *src, size_t n);
++THAI_ENTRY size_t th_normalize(thchar_t dest[], const thchar_t *src, size_t n);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/thwbrk.h thai.new/include/thai/thwbrk.h
+--- thai.old/include/thai/thwbrk.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwbrk.h	2022-11-20 05:34:05.766489800 +0100
+@@ -36,18 +36,18 @@
+  * @brief  Thai wide-char word segmentation
+  */
+ 
+-extern int th_brk_wc_find_breaks(ThBrk *brk, const thwchar_t *s,
++THAI_ENTRY int th_brk_wc_find_breaks(ThBrk *brk, const thwchar_t *s,
+                                  int pos[], size_t pos_sz);
+ 
+-extern int th_brk_wc_insert_breaks(ThBrk *brk, const thwchar_t *in,
++THAI_ENTRY int th_brk_wc_insert_breaks(ThBrk *brk, const thwchar_t *in,
+                                    thwchar_t *out, size_t out_sz,
+                                    const thwchar_t *delim);
+ 
+ TH_DEPRECATED_FOR(th_brk_wc_find_breaks)
+-extern int th_wbrk(const thwchar_t *s, int pos[], size_t pos_sz);
++THAI_ENTRY int th_wbrk(const thwchar_t *s, int pos[], size_t pos_sz);
+ 
+ TH_DEPRECATED_FOR(th_brk_wc_insert_breaks)
+-extern int th_wbrk_line(const thwchar_t *in, thwchar_t *out, size_t out_sz,
++THAI_ENTRY int th_wbrk_line(const thwchar_t *in, thwchar_t *out, size_t out_sz,
+                         const thwchar_t *delim);
+ 
+ 
+diff -Naur thai.old/include/thai/thwchar.h thai.new/include/thai/thwchar.h
+--- thai.old/include/thai/thwchar.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwchar.h	2022-11-20 05:34:28.730338100 +0100
+@@ -45,19 +45,19 @@
+  */
+ typedef wchar_t thwchar_t;
+ 
+-extern thwchar_t th_tis2uni(thchar_t c);
++THAI_ENTRY thwchar_t th_tis2uni(thchar_t c);
+ 
+-extern int th_tis2uni_line(const thchar_t* s, thwchar_t* result, size_t n);
++THAI_ENTRY int th_tis2uni_line(const thchar_t* s, thwchar_t* result, size_t n);
+ 
+-extern thwchar_t th_winthai2uni(thchar_t c);
+-extern thwchar_t th_macthai2uni(thchar_t c);
++THAI_ENTRY thwchar_t th_winthai2uni(thchar_t c);
++THAI_ENTRY thwchar_t th_macthai2uni(thchar_t c);
+ 
+-extern thchar_t th_uni2tis(thwchar_t wc);
++THAI_ENTRY thchar_t th_uni2tis(thwchar_t wc);
+ 
+-extern int th_uni2tis_line(const thwchar_t* s, thchar_t* result, size_t n);
++THAI_ENTRY int th_uni2tis_line(const thwchar_t* s, thchar_t* result, size_t n);
+ 
+-extern thchar_t th_uni2winthai(thwchar_t wc);
+-extern thchar_t th_uni2macthai(thwchar_t wc);
++THAI_ENTRY thchar_t th_uni2winthai(thwchar_t wc);
++THAI_ENTRY thchar_t th_uni2macthai(thwchar_t wc);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/thwcoll.h thai.new/include/thai/thwcoll.h
+--- thai.old/include/thai/thwcoll.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwcoll.h	2022-11-20 05:34:42.559358100 +0100
+@@ -45,7 +45,7 @@
+  * @return  < 0 if @a s1 precedes @a s2; 0 if @a s1 equals @a s2;
+  *          > 0 if @a s1 succeeds @a s2
+  */
+-extern int    th_wcstrcoll(const thwchar_t *s1, const thwchar_t *s2);
++THAI_ENTRY int    th_wcstrcoll(const thwchar_t *s1, const thwchar_t *s2);
+ 
+ /**
+  * @brief  Transform wide-char string into collatable form
+@@ -62,7 +62,7 @@
+  * the same result as that from th_wcstrcoll(). At most @a n characters are
+  * put in @a dest.
+  */
+-extern size_t th_wcstrxfrm(thwchar_t dest[], const thwchar_t *src, size_t n);
++THAI_ENTRY size_t th_wcstrxfrm(thwchar_t dest[], const thwchar_t *src, size_t n);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/thwctype.h thai.new/include/thai/thwctype.h
+--- thai.old/include/thai/thwctype.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwctype.h	2022-11-20 05:35:15.797400100 +0100
+@@ -35,32 +35,32 @@
+  * @brief  Thai wide-char character classifications
+  */
+ 
+-extern int th_wcistis(thwchar_t wc);
++THAI_ENTRY int th_wcistis(thwchar_t wc);
+ 
+-extern int th_wcisthai(thwchar_t wc);
+-extern int th_wciseng(thwchar_t wc);
++THAI_ENTRY int th_wcisthai(thwchar_t wc);
++THAI_ENTRY int th_wciseng(thwchar_t wc);
+ 
+ /* Thai letter classification */
+-extern int th_wcisthcons(thwchar_t wc);
+-extern int th_wcisthvowel(thwchar_t wc);
+-extern int th_wcisthtone(thwchar_t wc);
+-extern int th_wcisthdiac(thwchar_t wc);
+-extern int th_wcisthdigit(thwchar_t wc);
+-extern int th_wcisthpunct(thwchar_t wc);
++THAI_ENTRY int th_wcisthcons(thwchar_t wc);
++THAI_ENTRY int th_wcisthvowel(thwchar_t wc);
++THAI_ENTRY int th_wcisthtone(thwchar_t wc);
++THAI_ENTRY int th_wcisthdiac(thwchar_t wc);
++THAI_ENTRY int th_wcisthdigit(thwchar_t wc);
++THAI_ENTRY int th_wcisthpunct(thwchar_t wc);
+ 
+ /* Thai consonant shapes classification */
+-extern int th_wcistaillesscons(thwchar_t wc);
+-extern int th_wcisovershootcons(thwchar_t wc);
+-extern int th_wcisundershootcons(thwchar_t wc);
+-extern int th_wcisundersplitcons(thwchar_t wc);
++THAI_ENTRY int th_wcistaillesscons(thwchar_t wc);
++THAI_ENTRY int th_wcisovershootcons(thwchar_t wc);
++THAI_ENTRY int th_wcisundershootcons(thwchar_t wc);
++THAI_ENTRY int th_wcisundersplitcons(thwchar_t wc);
+ 
+ /* Thai vowel classification */
+-extern int th_wcisldvowel(thwchar_t wc);
+-extern int th_wcisflvowel(thwchar_t wc);
+-extern int th_wcisupvowel(thwchar_t wc);
+-extern int th_wcisblvowel(thwchar_t wc);
++THAI_ENTRY int th_wcisldvowel(thwchar_t wc);
++THAI_ENTRY int th_wcisflvowel(thwchar_t wc);
++THAI_ENTRY int th_wcisupvowel(thwchar_t wc);
++THAI_ENTRY int th_wcisblvowel(thwchar_t wc);
+ 
+-extern int th_wcchlevel(thwchar_t wc);
++THAI_ENTRY int th_wcchlevel(thwchar_t wc);
+ 
+ 
+ /*
+diff -Naur thai.old/include/thai/thwinp.h thai.new/include/thai/thwinp.h
+--- thai.old/include/thai/thwinp.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwinp.h	2022-11-20 05:35:26.868183000 +0100
+@@ -31,8 +31,8 @@
+ 
+ BEGIN_CDECL
+ 
+-extern int th_wcisaccept(thwchar_t c1, thwchar_t c2, thstrict_t s);
+-extern int th_wcvalidate(thwchar_t *c1, thwchar_t *c2, thstrict_t s);
++THAI_ENTRY int th_wcisaccept(thwchar_t c1, thwchar_t c2, thstrict_t s);
++THAI_ENTRY int th_wcvalidate(thwchar_t *c1, thwchar_t *c2, thstrict_t s);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/thwrend.h thai.new/include/thai/thwrend.h
+--- thai.old/include/thai/thwrend.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwrend.h	2022-11-20 05:35:42.907739800 +0100
+@@ -31,23 +31,23 @@
+ 
+ BEGIN_CDECL
+ 
+-extern const thwchar_t *th_wcnext_cell(const thwchar_t *s, size_t len,
++THAI_ENTRY const thwchar_t *th_wcnext_cell(const thwchar_t *s, size_t len,
+                                        struct thcell *cell, size_t *nchars);
+-extern const thwchar_t *th_wcmake_cells(const thwchar_t *s, size_t len,
++THAI_ENTRY const thwchar_t *th_wcmake_cells(const thwchar_t *s, size_t len,
+                                         struct thcell cells[], size_t *ncells);
+ 
+-extern void th_wcrender_cell_tis(struct thcell cell,
++THAI_ENTRY void th_wcrender_cell_tis(struct thcell cell,
+                                  thglyph_t res[], size_t res_sz);
+-extern void th_wcrender_cell_win(struct thcell cell,
++THAI_ENTRY void th_wcrender_cell_win(struct thcell cell,
+                                  thglyph_t res[], size_t res_sz);
+-extern void th_wcrender_cell_mac(struct thcell cell,
++THAI_ENTRY void th_wcrender_cell_mac(struct thcell cell,
+                                  thglyph_t res[], size_t res_sz);
+ 
+-extern int th_wcrender_text_tis(const thwchar_t *s,
++THAI_ENTRY int th_wcrender_text_tis(const thwchar_t *s,
+                                 thglyph_t res[], size_t res_sz);
+-extern int th_wcrender_text_win(const thwchar_t *s,
++THAI_ENTRY int th_wcrender_text_win(const thwchar_t *s,
+                                 thglyph_t res[], size_t res_sz);
+-extern int th_wcrender_text_mac(const thwchar_t *s,
++THAI_ENTRY int th_wcrender_text_mac(const thwchar_t *s,
+                                 thglyph_t res[], size_t res_sz);
+ 
+ END_CDECL
+diff -Naur thai.old/include/thai/thwstr.h thai.new/include/thai/thwstr.h
+--- thai.old/include/thai/thwstr.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/thwstr.h	2022-11-20 05:35:51.476693500 +0100
+@@ -35,7 +35,7 @@
+  * @brief  Thai wide-char string manipulators
+  */
+ 
+-extern size_t th_wnormalize(thwchar_t dest[], const thwchar_t *src, size_t n);
++THAI_ENTRY size_t th_wnormalize(thwchar_t dest[], const thwchar_t *src, size_t n);
+ 
+ END_CDECL
+ 
+diff -Naur thai.old/include/thai/wtt.h thai.new/include/thai/wtt.h
+--- thai.old/include/thai/wtt.h	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/include/thai/wtt.h	2022-11-20 05:36:18.421974900 +0100
+@@ -113,16 +113,16 @@
+     SR  = 5   /**< STRICT REJECT - REJECT only if in strict mode */
+ } WTTOp;
+ 
+-extern WTTClass TACchtype(thchar_t c);
++THAI_ENTRY WTTClass TACchtype(thchar_t c);
+ 
+-extern WTTOp    TACio_op(thchar_t c1, thchar_t c2);
++THAI_ENTRY WTTOp    TACio_op(thchar_t c1, thchar_t c2);
+ 
+ /*
+  * implementation parts
+  */
+ 
+-extern short TACchtype_[256];
+-extern short TACio_op_[17][17];
++THAI_ENTRY short TACchtype_[256];
++THAI_ENTRY short TACio_op_[17][17];
+ 
+ #define TACchtype(c)     (TACchtype_[c])
+ #define TACio_op(c1, c2) (TACio_op_[TACchtype(c1)][TACchtype(c2)])
