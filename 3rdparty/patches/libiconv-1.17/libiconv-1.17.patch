@@ -1,0 +1,44 @@
+diff -Naur libiconv.old/include/iconv.h.build.in libiconv.new/include/iconv.h.build.in
+--- libiconv.old/include/iconv.h.build.in	2022-05-15 14:59:00.000000000 +0200
++++ libiconv.new/include/iconv.h.build.in	2022-11-20 17:27:17.292755300 +0100
+@@ -24,6 +24,12 @@
+ 
+ #if @HAVE_VISIBILITY@ && BUILDING_LIBICONV
+ #define LIBICONV_DLL_EXPORTED __attribute__((__visibility__("default")))
++#elif defined(_WIN32) && @LIBICONV_DYNAMIC@
++  #if defined(libiconv_EXPORTS)
++    #define LIBICONV_DLL_EXPORTED __declspec(dllexport)
++  #else
++    #define LIBICONV_DLL_EXPORTED __declspec(dllimport)
++  #endif
+ #elif defined _MSC_VER && BUILDING_LIBICONV
+ #define LIBICONV_DLL_EXPORTED __declspec(dllexport)
+ #else
+diff -Naur libiconv.old/lib/loop_wchar.h libiconv.new/lib/loop_wchar.h
+--- libiconv.old/lib/loop_wchar.h	2021-06-06 11:50:48.000000000 +0200
++++ libiconv.new/lib/loop_wchar.h	2022-11-20 17:29:50.665307500 +0100
+@@ -36,7 +36,7 @@
+ # include <wchar.h>
+ # define BUF_SIZE 64  /* assume MB_LEN_MAX <= 64 */
+   /* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
+-  extern size_t mbrtowc ();
++  /* extern size_t mbrtowc (); */
+ # ifdef mbstate_t
+ #  define mbrtowc(pwc, s, n, ps) (mbrtowc)(pwc, s, n, 0)
+ #  define mbsinit(ps) 1
+diff -Naur libiconv.old/libcharset/include/localcharset.h.build.in libiconv.new/libcharset/include/localcharset.h.build.in
+--- libiconv.old/libcharset/include/localcharset.h.build.in	2022-05-15 14:59:12.000000000 +0200
++++ libiconv.new/libcharset/include/localcharset.h.build.in	2022-11-20 17:28:48.440189500 +0100
+@@ -20,6 +20,12 @@
+ 
+ #if @HAVE_VISIBILITY@ && BUILDING_LIBCHARSET
+ #define LIBCHARSET_DLL_EXPORTED __attribute__((__visibility__("default")))
++#elif defined(_WIN32) && @LIBICONV_DYNAMIC@
++  #if defined(libcharset_EXPORTS)
++    #define LIBCHARSET_DLL_EXPORTED __declspec(dllexport)
++  #else
++    #define LIBCHARSET_DLL_EXPORTED __declspec(dllimport)
++  #endif
+ #elif defined _MSC_VER && BUILDING_LIBCHARSET
+ #define LIBCHARSET_DLL_EXPORTED __declspec(dllexport)
+ #else

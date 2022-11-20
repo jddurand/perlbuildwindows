@@ -89,6 +89,7 @@ set (GIFLIB_VERSION_DEFAULT                5.2.1)
 set (FREEIMAGE_VERSION_DEFAULT             3.18.0)
 set (THAI_VERSION_DEFAULT                  0.1.29)
 set (DATRIE_VERSION_DEFAULT                0.2.13)
+set (LIBICONV_VERSION_DEFAULT              1.17)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
@@ -103,6 +104,7 @@ set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACH
 set (FREEIMAGE_VERSION             ${FREEIMAGE_VERSION_DEFAULT}             CACHE STRING "Freeimage version")
 set (THAI_VERSION                  ${THAI_VERSION_DEFAULT}                  CACHE STRING "Thai version")
 set (DATRIE_VERSION                ${DATRIE_VERSION_DEFAULT}                CACHE STRING "Datrie version")
+set (LIBICONV_VERSION              ${LIBICONV_VERSION_DEFAULT}              CACHE STRING "Libiconv version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -117,6 +119,7 @@ set_property (CACHE GIFLIB_VERSION                PROPERTY STRINGS ${GIFLIB_VERS
 set_property (CACHE FREEIMAGE_VERSION             PROPERTY STRINGS ${FREEIMAGE_VERSION_DEFAULT})
 set_property (CACHE THAI_VERSION                  PROPERTY STRINGS ${THAI_VERSION_DEFAULT})
 set_property (CACHE DATRIE_VERSION                PROPERTY STRINGS ${DATRIE_VERSION_DEFAULT})
+set_property (CACHE LIBICONV_VERSION              PROPERTY STRINGS ${LIBICONV_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -132,6 +135,7 @@ message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
 message (STATUS "Version of Freeimage              : ${FREEIMAGE_VERSION}")
 message (STATUS "Version of Thai                   : ${THAI_VERSION}")
 message (STATUS "Version of Datrie                 : ${DATRIE_VERSION}")
+message (STATUS "Version of Libiconv               : ${LIBICONV_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -535,9 +539,24 @@ ExternalProject_Add(fribidi
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
+# External project libiconv
+# ===========================================================
+ExternalProject_Add(libiconv
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libiconv-${LIBICONV_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libiconv_CMakeLists.txt CMakeLists.txt
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libiconv-${LIBICONV_VERSION}/libiconv-${LIBICONV_VERSION}.patch
+					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/libiconv
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/libiconv
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
 # External project datrie
 # ===========================================================
 ExternalProject_Add(datrie
+					DEPENDS libiconv
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/datrie-${LIBDATRIE_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/datrie_CMakeLists.txt CMakeLists.txt
