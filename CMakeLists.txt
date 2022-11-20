@@ -556,8 +556,6 @@ ExternalProject_Add(thai
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/thai-${THAI_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/thai_CMakeLists.txt CMakeLists.txt
-					# My patches for export of symbols
-					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}.diff
 					# https://github.com/fanc999/thai patches
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}-fanc999.diff
 					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}

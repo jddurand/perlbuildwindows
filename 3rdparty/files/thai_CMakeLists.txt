@@ -10,51 +10,34 @@ pkg_check_modules(DATRIE REQUIRED datrie-0.2)
 message(STATUS "DATRIE_INCLUDE_DIRS : ${DATRIE_INCLUDE_DIRS}")
 message(STATUS "DATRIE_LIBRARY_DIRS : ${DATRIE_LIBRARY_DIRS}")
 message(STATUS "DATRIE_LIBRARIES    : ${DATRIE_LIBRARIES}")
-include_directories(${DATRIE_INCLUDE_DIRS})
-link_directories(${DATRIE_LIBRARY_DIRS})
-link_libraries(${DATRIE_LIBRARIES})
 
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-include_directories(include)
-
-add_library(thctype  OBJECT src/thctype/thctype.c src/thctype/wtt.c)
-add_library(thstr    OBJECT src/thstr/thstr.c)
-add_library(thcell   OBJECT src/thcell/thcell.c)
-add_library(thinp    OBJECT src/thinp/thinp.c)
-add_library(thrend   OBJECT src/thrend/thrend.c)
-add_library(thcoll   OBJECT src/thcoll/cweight.c src/thcoll/thcoll.c)
-add_library(thbrk    OBJECT src/thbrk/thbrk.c src/thbrk/brk-ctype.c src/thbrk/brk-common.c src/thbrk/brk-maximal.c)
-add_library(thwchar  OBJECT src/thwchar/thwchar.c)
-add_library(thwctype OBJECT src/thwctype/thwctype.c)
-add_library(thwstr   OBJECT src/thwstr/thwstr.c)
-add_library(thwbrk   OBJECT src/thwbrk/thwbrk.c)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/thai.def
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_CURRENT_BINARY_DIR}/thai.def
+  COMMAND ${CMAKE_COMMAND} -E echo EXPORTS > ${CMAKE_CURRENT_BINARY_DIR}/thai.def
+  COMMAND ${CMAKE_COMMAND} -E cat src/libthai.def >> ${CMAKE_CURRENT_BINARY_DIR}/thai.def
+  )
 
 add_library(thai SHARED
 	src/libthai.c
-	$<TARGET_OBJECTS:thctype>
-	$<TARGET_OBJECTS:thstr>
-	$<TARGET_OBJECTS:thcell>
-	$<TARGET_OBJECTS:thinp>
-	$<TARGET_OBJECTS:thrend>
-	$<TARGET_OBJECTS:thcoll>
-	$<TARGET_OBJECTS:thbrk>
-	$<TARGET_OBJECTS:thwchar>
-	$<TARGET_OBJECTS:thwctype>
-	$<TARGET_OBJECTS:thwstr>
-	$<TARGET_OBJECTS:thwbrk>
+	src/thctype/thctype.c src/thctype/wtt.c
+	src/thstr/thstr.c
+	src/thcell/thcell.c
+	src/thinp/thinp.c
+	src/thrend/thrend.c
+	src/thcoll/cweight.c src/thcoll/thcoll.c
+	src/thbrk/thbrk.c src/thbrk/brk-ctype.c src/thbrk/brk-common.c src/thbrk/brk-maximal.c
+	src/thwchar/thwchar.c
+	src/thwctype/thwctype.c
+	src/thwstr/thwstr.c
+	src/thwbrk/thwbrk.c
+	${CMAKE_CURRENT_BINARY_DIR}/thai.def
 	)
-target_compile_definitions(thctype  PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thstr    PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thcell   PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thinp    PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thrend   PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thcoll   PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thbrk    PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thwchar  PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thwctype PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thwstr   PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thwbrk   PRIVATE -DTHAI_BUILD)
-target_compile_definitions(thai     PRIVATE -DTHAI_BUILD)
+
+target_compile_definitions(thai PRIVATE -D_CRT_SECURE_NO_WARNINGS -DTHAI_BUILD)
+target_include_directories(thai PRIVATE include ${DATRIE_INCLUDE_DIRS})
+target_link_directories(thai PRIVATE ${DATRIE_LIBRARY_DIRS})
+target_link_libraries(thai PRIVATE ${DATRIE_LIBRARIES})
 
 set(public_headers
     include/thai/thailib.h
