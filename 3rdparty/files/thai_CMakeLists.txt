@@ -37,7 +37,7 @@ add_library(thai SHARED
 target_compile_definitions(thai PRIVATE -D_CRT_SECURE_NO_WARNINGS -DTHAI_BUILD)
 target_include_directories(thai PRIVATE include ${DATRIE_INCLUDE_DIRS})
 target_link_directories(thai PRIVATE ${DATRIE_LIBRARY_DIRS})
-target_link_libraries(thai PRIVATE ${DATRIE_LIBRARIES})
+target_link_libraries(thai PUBLIC ${DATRIE_LIBRARIES})
 
 set(public_headers
     include/thai/thailib.h
