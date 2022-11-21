@@ -67,6 +67,27 @@ set_target_properties(thai
     )
 install(TARGETS thai PUBLIC_HEADER DESTINATION include/thai)
 
+# thbrk.tri
+find_program(TRIETOOL trietool)
+if(NOT TRIETOOL)
+  message(FATAL_ERROR "No trietool in path")
+endif()
+file(GLOB TDICT_SRC data/*.txt)
+add_custom_command(OUTPUT data/tdict.txt
+                   WORKING_DIRECTORY data
+                   COMMAND ${CMAKE_COMMAND} -E cat ${TDICT_SRC} > tdict.txt
+				   DEPENDS ${TDICT_SRC})
+add_custom_command(OUTPUT data/thbrk.tri
+                   WORKING_DIRECTORY data
+                   COMMAND ${TRIETOOL} -p . thbrk add-list -e utf-8 tdict.txt
+				   DEPENDS data/tdict.txt data/thbrk.abm)
+add_custom_command(OUTPUT share/libthai/thbrk.tri
+                   COMMAND ${CMAKE_COMMAND} -E rm -rf share/libthai
+				   COMMAND ${CMAKE_COMMAND} -E copy data/thbrk.tri share/libthai/thbrk.tri
+				   DEPENDS data/thbrk.tri)
+add_custom_target(TRI ALL DEPENDS share/libthai/thbrk.tri)
+install(FILES share/libthai/thbrk.tri DESTINATION bin/share/libthai)
+
 # For pkgconfig
 # We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
 set(prefix      "\${pcfiledir}/..")
@@ -78,3 +99,25 @@ set(VERSION     ${THAI_VERSION})
 # Make sure we replace them by current settings
 CONFIGURE_FILE("libthai.pc.in" "libthai.pc" @ONLY)
 install(FILES libthai.pc DESTINATION pkgconfig)
+
+# Tests
+enable_testing()
+Include(FindIconv)
+if(NOT ICONV_FOUND)
+  message(FATAL_ERROR "Iconv not found")
+endif()
+message(STATUS: "Iconv_INCLUDE_DIRS: ${Iconv_INCLUDE_DIRS}")
+message(STATUS: "Iconv_LIBRARIES   : ${Iconv_LIBRARIES}")
+message(STATUS: "Iconv_VERSION     : ${Iconv_VERSION}")
+message(STATUS: "Iconv_INCLUDE_DIR : ${Iconv_INCLUDE_DIR}")
+message(STATUS: "Iconv_LIBRARY     : ${Iconv_LIBRARY}")
+foreach(_testsrc test_thctype test_thcell test_thinp test_thrend test_thstr thsort test_thbrk test_thwchar test_thwbrk)
+  add_executable(${_testsrc} tests/${_testsrc}.c)
+  add_dependencies(${_testsrc} TRI)
+  target_compile_definitions(${_testsrc} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
+  target_include_directories(${_testsrc} PRIVATE include ${Iconv_INCLUDE_DIRS})
+  target_link_directories(${_testsrc} PRIVATE ${DATRIE_LIBRARY_DIRS})
+  target_link_libraries(${_testsrc} thai ${Iconv_LIBRARIES} ${DATRIE_LIBRARIES})
+  add_test(NAME do_${_testsrc} COMMAND ${_testsrc})
+endforeach()
+
