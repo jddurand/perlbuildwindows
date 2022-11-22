@@ -125,7 +125,7 @@ set(prefix      "\${pcfiledir}/..")
 set(exec_prefix "\${prefix}")
 set(libdir      "\${exec_prefix}/lib")
 set(includedir  "\${prefix}/include")
-set(VERSION     ${THAI_VERSION})
+set(VERSION     ${PROJECT_VERSION})
 # freebidi.pc assumes that compiler/linker uses -L, -l and -I.
 # Make sure we replace them by current settings
 CONFIGURE_FILE("libthai.pc.in" "libthai.pc" @ONLY)
