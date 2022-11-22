@@ -1,0 +1,16 @@
+diff -Naur aom.old/aom/aom_integer.h aom.new/aom/aom_integer.h
+--- aom.old/aom/aom_integer.h	2022-11-22 08:55:31.000000000 +0100
++++ aom.new/aom/aom_integer.h	2022-11-22 09:43:16.460359900 +0100
+@@ -15,10 +15,10 @@
+ #include <stddef.h>
+ 
+ #if defined(_MSC_VER)
+-#define AOM_FORCE_INLINE __forceinline
++#define AOM_FORCE_INLINE __inline
+ #define AOM_INLINE __inline
+ #else
+-#define AOM_FORCE_INLINE __inline__ __attribute__((always_inline))
++#define AOM_FORCE_INLINE inline
+ #define AOM_INLINE inline
+ #endif
+ 

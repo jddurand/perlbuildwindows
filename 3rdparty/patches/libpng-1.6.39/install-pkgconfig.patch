@@ -1,0 +1,44 @@
+diff -Naur libpng.old/CMakeLists.txt libpng.new/CMakeLists.txt
+--- libpng.old/CMakeLists.txt	2022-11-20 22:53:23.000000000 +0100
++++ libpng.new/CMakeLists.txt	2022-11-22 12:26:59.274594100 +0100
+@@ -947,6 +947,24 @@
+                  ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}-config
+                  @ONLY)
+   create_symlink(libpng-config FILE ${PNGLIB_NAME}-config)
++elseif(WIN32)
++  set(prefix      ${CMAKE_INSTALL_PREFIX})
++  set(exec_prefix ${CMAKE_INSTALL_PREFIX})
++  set(libdir      ${CMAKE_INSTALL_FULL_LIBDIR})
++  set(includedir  ${CMAKE_INSTALL_FULL_INCLUDEDIR})
++  set(LIBS        "-lz")
++  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libpng.pc.in
++                 ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}.pc
++                 @ONLY)
++  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libpng.pc.in
++                 ${CMAKE_CURRENT_BINARY_DIR}/libpng.pc
++                 @ONLY)
++  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libpng-config.in
++                 ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}-config
++                 @ONLY)
++  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libpng-config.in
++                 ${CMAKE_CURRENT_BINARY_DIR}/libpng-config
++                 @ONLY)
+ endif()
+ 
+ # Set up links.
+@@ -1021,6 +1039,15 @@
+     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpng.pc
+             DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/libpng-config
++            DESTINATION ${CMAKE_INSTALL_BINDIR})
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}.pc
++            DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
++    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}-config
++            DESTINATION ${CMAKE_INSTALL_BINDIR})
++  elseif(WIN32)
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpng.pc
++            DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
++    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/libpng-config
+             DESTINATION ${CMAKE_INSTALL_BINDIR})
+     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PNGLIB_NAME}.pc
+             DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

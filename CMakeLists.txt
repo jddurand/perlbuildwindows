@@ -90,21 +90,37 @@ set (FREEIMAGE_VERSION_DEFAULT             3.18.0)
 set (THAI_VERSION_DEFAULT                  0.1.29)
 set (DATRIE_VERSION_DEFAULT                0.2.13)
 set (LIBICONV_VERSION_DEFAULT              1.17)
+set (LIBHEIF_VERSION_DEFAULT               1.13.0)
+set (LIBDE265_VERSION_DEFAULT              1.0.9)
+set (SDL2_VERSION_DEFAULT                  2.26.0)
+set (SDL12_COMPAT_VERSION_DEFAULT          1.2.60)
+set (X265_VERSION_DEFAULT                  3.4)
+set (AOM_VERSION_DEFAULT                   3.5.0)
+set (LIBJPEG_TURBO_VERSION_DEFAULT         2.1.4)
+set (LIBPNG_VERSION_DEFAULT                1.6.39)
 
-set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "Perl installation drive")
-set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "Perl version")
-set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACHE STRING "Openssl version")
-set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "Nasm version")
-set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "Specific Net::SSLeay version")
-set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "Specific Win32::GUI version")
-set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "Zlib version")
-set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACHE STRING "Expat version")
-set (FRIBIDI_VERSION               ${FRIBIDI_VERSION_DEFAULT}               CACHE STRING "Fribidi version")
-set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "Giflib version")
-set (FREEIMAGE_VERSION             ${FREEIMAGE_VERSION_DEFAULT}             CACHE STRING "Freeimage version")
-set (THAI_VERSION                  ${THAI_VERSION_DEFAULT}                  CACHE STRING "Thai version")
-set (DATRIE_VERSION                ${DATRIE_VERSION_DEFAULT}                CACHE STRING "Datrie version")
-set (LIBICONV_VERSION              ${LIBICONV_VERSION_DEFAULT}              CACHE STRING "Libiconv version")
+set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
+set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
+set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACHE STRING "openssl version")
+set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "nasm version")
+set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "specific Net::SSLeay version")
+set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "specific Win32::GUI version")
+set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "zlib version")
+set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACHE STRING "expat version")
+set (FRIBIDI_VERSION               ${FRIBIDI_VERSION_DEFAULT}               CACHE STRING "fribidi version")
+set (GIFLIB_VERSION                ${GIFLIB_VERSION_DEFAULT}                CACHE STRING "giflib version")
+set (FREEIMAGE_VERSION             ${FREEIMAGE_VERSION_DEFAULT}             CACHE STRING "freeimage version")
+set (THAI_VERSION                  ${THAI_VERSION_DEFAULT}                  CACHE STRING "thai version")
+set (DATRIE_VERSION                ${DATRIE_VERSION_DEFAULT}                CACHE STRING "datrie version")
+set (LIBICONV_VERSION              ${LIBICONV_VERSION_DEFAULT}              CACHE STRING "libiconv version")
+set (LIBHEIF_VERSION               ${LIBHEIF_VERSION_DEFAULT}               CACHE STRING "libheif version")
+set (LIBDE265_VERSION              ${LIBDE265_VERSION_DEFAULT}              CACHE STRING "libde265 version")
+set (SDL2_VERSION                  ${SDL2_VERSION_DEFAULT}                  CACHE STRING "SDL2 version")
+set (SDL12_COMPAT_VERSION          ${SDL12_COMPAT_VERSION_DEFAULT}          CACHE STRING "sdl1.2-compat version")
+set (X265_VERSION                  ${X265_VERSION_DEFAULT}                  CACHE STRING "x265 version")
+set (AOM_VERSION                   ${AOM_VERSION_DEFAULT}                   CACHE STRING "aom version")
+set (LIBJPEG_TURBO_VERSION         ${LIBJPEG_TURBO_VERSION_DEFAULT}         CACHE STRING "libjpeg-turbo version")
+set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACHE STRING "libpng version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -120,22 +136,37 @@ set_property (CACHE FREEIMAGE_VERSION             PROPERTY STRINGS ${FREEIMAGE_V
 set_property (CACHE THAI_VERSION                  PROPERTY STRINGS ${THAI_VERSION_DEFAULT})
 set_property (CACHE DATRIE_VERSION                PROPERTY STRINGS ${DATRIE_VERSION_DEFAULT})
 set_property (CACHE LIBICONV_VERSION              PROPERTY STRINGS ${LIBICONV_VERSION_DEFAULT})
+set_property (CACHE LIBHEIF_VERSION               PROPERTY STRINGS ${LIBHEIF_VERSION_DEFAULT})
+set_property (CACHE LIBDE265_VERSION              PROPERTY STRINGS ${LIBDE265_VERSION_DEFAULT})
+set_property (CACHE SDL2_VERSION                  PROPERTY STRINGS ${SDL2_VERSION_DEFAULT})
+set_property (CACHE SDL12_COMPAT_VERSION          PROPERTY STRINGS ${SDL12_COMPAT_VERSION_DEFAULT})
+set_property (CACHE X265_VERSION                  PROPERTY STRINGS ${X265_VERSION_DEFAULT})
+set_property (CACHE LIBJPEG_TURBO_VERSION         PROPERTY STRINGS ${LIBJPEG_TURBO_VERSION_DEFAULT})
+set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
 message (STATUS "===================================")
-message (STATUS "Version of Nasm                   : ${NASM_VERSION}")
+message (STATUS "Version of nasm                   : ${NASM_VERSION}")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
-message (STATUS "Version of Openssl                : ${OPENSSL_VERSION}")
+message (STATUS "Version of openssl                : ${OPENSSL_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
-message (STATUS "Version of Zlib                   : ${ZLIB_VERSION}")
-message (STATUS "Version of Expat                  : ${EXPAT_VERSION}")
-message (STATUS "Version of Fribidi                : ${FRIBIDI_VERSION}")
-message (STATUS "Version of Giflib                 : ${GIFLIB_VERSION}")
-message (STATUS "Version of Freeimage              : ${FREEIMAGE_VERSION}")
-message (STATUS "Version of Thai                   : ${THAI_VERSION}")
-message (STATUS "Version of Datrie                 : ${DATRIE_VERSION}")
-message (STATUS "Version of Libiconv               : ${LIBICONV_VERSION}")
+message (STATUS "Version of zlib                   : ${ZLIB_VERSION}")
+message (STATUS "Version of expat                  : ${EXPAT_VERSION}")
+message (STATUS "Version of fribidi                : ${FRIBIDI_VERSION}")
+message (STATUS "Version of giflib                 : ${GIFLIB_VERSION}")
+message (STATUS "Version of freeimage              : ${FREEIMAGE_VERSION}")
+message (STATUS "Version of thai                   : ${THAI_VERSION}")
+message (STATUS "Version of datrie                 : ${DATRIE_VERSION}")
+message (STATUS "Version of libiconv               : ${LIBICONV_VERSION}")
+message (STATUS "Version of libheif                : ${LIBHEIF_VERSION}")
+message (STATUS "Version of libde265               : ${LIBDE265_VERSION}")
+message (STATUS "Version of SDL2                   : ${SDL2_VERSION}")
+message (STATUS "Version of sdl2-compat            : ${SDL12_COMPAT_VERSION}")
+message (STATUS "Version of x265                   : ${X265_VERSION}")
+message (STATUS "Version of aom                    : ${AOM_VERSION}")
+message (STATUS "Version of libjpeg-turbo          : ${LIBJPEG_TURBO_VERSION}")
+message (STATUS "Version of libpng                 : ${LIBPNG_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -269,6 +300,10 @@ REM For PkgConfig
 REM
 SET PERL_PKG_CONFIG_SCRIPTS=ppkg-config,pkg-config
 SET PKG_CONFIG_PATH=${PERL_C_PKGCONFIG_INST_DIR}
+REM
+REM Painful but libjpeg-turbo, libheif, etc... decide to install its pc files under lib
+REM
+SET PKG_CONFIG_PATH=%PKG_CONFIG_PATH%;${PERL_C_LIB_INST_DIR_DOS}\\pkgconfig
 
 REM
 REM For runtime of the above packages, we absolutely want perl to be before
@@ -624,9 +659,132 @@ ExternalProject_Add(giflib
 					BUILD_IN_SOURCE        TRUE
 					)
 
+# ===========================================================
+# External project SDL2
+# ===========================================================
+ExternalProject_Add(SDL2
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/SDL2-${SDL2_VERSION}.tar.gz
+					#
+					# No test target
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# Hey SDL2 CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        FALSE)
+
+# ===========================================================
+# External project sdl12-compat
+# ===========================================================
+ExternalProject_Add(sdl12-compat
+					DEPENDS                SDL2
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/sdl12-compat-${SDL12_COMPAT_VERSION}.tar.gz
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libde265
+# ===========================================================
+ExternalProject_Add(libde265
+					DEPENDS                sdl12-compat
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libde265-${LIBDE265_VERSION}.tar.gz
+					#
+					# No test target
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project x265
+# ===========================================================
+ExternalProject_Add(x265
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					SOURCE_SUBDIR          source
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/x265-${X265_VERSION}.tar.gz
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project aom
+# ===========================================================
+ExternalProject_Add(aom
+					DEPENDS                nasm
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/aom-${AOM_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/aom-${AOM_VERSION}/no-force-inline.patch
+					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON ${CMAKE_CURRENT_BINARY_DIR}/aom-prefix/src/aom
+					#
+					# No test target
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        FALSE)
+
+# ===========================================================
+# External project libjpeg-turbo
+# ===========================================================
+ExternalProject_Add(libjpeg-turbo
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libheif
+# ===========================================================
+ExternalProject_Add(libheif
+					DEPENDS                libde265 x265 aom libjpeg-turbo
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libheif-${LIBHEIF_VERSION}.tar.gz
+					#
+					# No test target
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libpng
+# ===========================================================
+ExternalProject_Add(libpng
+					DEPENDS                zlib
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libpng-${LIBPNG_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpng-${LIBPNG_VERSION}/install-pkgconfig.patch
+					#
+					# Test suite will require access to zlib
+					#
+					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        TRUE)
+
+
 add_custom_target(perl-pkgconfig
 				  DEPENDS                  perl-core
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl PkgConfig
+				  )
+add_custom_target(perl-prima
+				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng
+				  # COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
 				  )
 
 # ====================================================================================================================================
