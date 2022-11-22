@@ -68,14 +68,45 @@ set_target_properties(thai
 install(TARGETS thai PUBLIC_HEADER DESTINATION include/thai)
 
 # thbrk.tri
+find_program(PERL perl)
+if(NOT PERL)
+  message(FATAL_ERROR "No perl in path")
+endif()
 find_program(TRIETOOL trietool)
 if(NOT TRIETOOL)
   message(FATAL_ERROR "No trietool in path")
 endif()
 file(GLOB TDICT_SRC data/*.txt)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/binconcat.pl [=[#!env perl
+use strict;
+use diagnostics;
+
+my $output = shift(@ARGV);
+
+print "Binary concat to $output\n";
+
+open(OUTPUT, '>', $output) || die "Cannot open $output, $!";
+binmode OUTPUT;
+my $total = 0;
+
+foreach my $input (@ARGV) {
+  open(INPUT, '<', $input) || die "Cannot open $input, $!";
+  binmode INPUT;
+  my $content = do { local $/; <INPUT> };
+  close(INPUT) || warn "Cannot close $input, $!";
+  my $length = length($content);
+  printf STDOUT "..... %s : %d bytes\n", $input, $length;
+  print OUTPUT $content;
+  $total += $length;
+}
+printf STDOUT "Total %s : %d bytes\n", $output, $total;
+
+close(OUTPUT) || warn "Cannot close $output, $!";
+
+exit(0);
+]=])
 add_custom_command(OUTPUT data/tdict.txt
-                   WORKING_DIRECTORY data
-                   COMMAND ${CMAKE_COMMAND} -E cat ${TDICT_SRC} > tdict.txt
+                   COMMAND ${PERL} ${CMAKE_CURRENT_BINARY_DIR}/binconcat.pl data/tdict.txt ${TDICT_SRC}
 				   DEPENDS ${TDICT_SRC})
 add_custom_command(OUTPUT data/thbrk.tri
                    WORKING_DIRECTORY data
