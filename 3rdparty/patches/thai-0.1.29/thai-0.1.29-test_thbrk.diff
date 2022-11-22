@@ -98,3 +98,23 @@ diff -Naur thai.old/tests/test_thbrk.c thai.new/tests/test_thbrk.c
  };
  
  iconv_t utf8_to_tis_iconv;
+diff -Naur thai.old/tests/thsort.c thai.new/tests/thsort.c
+--- thai.old/tests/thsort.c	2021-12-20 20:07:41.000000000 +0100
++++ thai.new/tests/thsort.c	2022-11-22 04:56:06.343259900 +0100
+@@ -86,14 +86,14 @@
+         return 1;
+     }
+ 
+-    dataFile = fopen(DataFileName, "rt");
++    dataFile = fopen(DataFileName, "rb");
+     if (dataFile == NULL) {
+         fprintf(stderr, "Can't open file %s\n", DataFileName);
+         perror("fopen");
+         return 1;
+     }
+ 
+-    outFile = fopen(OutFileName, "wt");
++    outFile = fopen(OutFileName, "wb");
+     if (outFile == NULL) {
+         fprintf(stderr, "Can't open file %s for write\n", OutFileName);
+         perror("fopen");
