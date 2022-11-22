@@ -9,35 +9,35 @@ diff -Naur '--exclude=gif_lib.h.orig' giflib.orig/CMakeLists.txt giflib.new/CMak
 +#
 +# Library
 +#
-+add_library(giflib
++add_library(gif
 +            SHARED
 +            dgif_lib.c
-+			egif_lib.c
-+			gifalloc.c
-+			gif_err.c
-+			gif_font.c
-+			gif_hash.c
-+			openbsd-reallocarray.c)
-+set_target_properties(giflib
++			 egif_lib.c
++			 gifalloc.c
++			 gif_err.c
++			 gif_font.c
++			 gif_hash.c
++			 openbsd-reallocarray.c)
++set_target_properties(gif
 +  PROPERTIES
-+  COMPILE_FLAGS "-Dgiflib_EXPORTS"
++  COMPILE_FLAGS "-Dgif_EXPORTS"
 +  VERSION       "${giflib_VERSION}"
 +  SOVERSION     "${giflib_VERSION_MAJOR}"
 +)
 +IF (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
-+  target_compile_definitions(giflib PRIVATE "-DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE")
++  target_compile_definitions(gif PRIVATE "-DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE")
 +ENDIF ()
 +
 +#
 +# Generated export header
 +#
 +include(GenerateExportHeader)
-+generate_export_header(giflib
++generate_export_header(gif
 +  BASE_NAME giflib
 +  EXPORT_MACRO_NAME giflib_EXPORT
 +  EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/giflib/export.h
 +  STATIC_DEFINE giflib_STATIC)
-+target_include_directories(giflib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
++target_include_directories(gif PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 +install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/giflib/export.h DESTINATION include/giflib)
 +
 +#
@@ -45,7 +45,7 @@ diff -Naur '--exclude=gif_lib.h.orig' giflib.orig/CMakeLists.txt giflib.new/CMak
 +#
 +install(FILES gif_lib.h DESTINATION include)
 + 
-+install(TARGETS giflib)
++install(TARGETS gif)
 diff -Naur '--exclude=gif_lib.h.orig' giflib.orig/gif_font.c giflib.new/gif_font.c
 --- giflib.orig/gif_font.c	2019-06-24 09:27:04.000000000 +0200
 +++ giflib.new/gif_font.c	2022-11-19 07:47:16.162416600 +0100
