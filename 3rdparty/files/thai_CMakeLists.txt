@@ -142,6 +142,30 @@ message(STATUS: "Iconv_LIBRARIES   : ${Iconv_LIBRARIES}")
 message(STATUS: "Iconv_VERSION     : ${Iconv_VERSION}")
 message(STATUS: "Iconv_INCLUDE_DIR : ${Iconv_INCLUDE_DIR}")
 message(STATUS: "Iconv_LIBRARY     : ${Iconv_LIBRARY}")
+#
+# thsort is different
+#
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bindiff.pl [=[#!env perl
+use strict;
+use diagnostics;
+
+my ($a, $b) = @ARGV;
+
+print "Binary comparison of $a and $b\n";
+
+open(A, '<', $a) || die "Cannot open $a, $!";
+binmode A;
+my $ca = do { local $/; <A> };
+close(A) || warn "Cannot close $a, $!";
+
+open(B, '<', $b) || die "Cannot open $b, $!";
+binmode B;
+my $cb = do { local $/; <B> };
+close(B) || warn "Cannot close $b, $!";
+
+exit($a cmp $b ? 0 : 1);
+]=])
+
 foreach(_testsrc test_thctype test_thcell test_thinp test_thrend test_thstr thsort test_thbrk test_thwchar test_thwbrk)
   add_executable(${_testsrc} tests/${_testsrc}.c)
   add_dependencies(${_testsrc} TRI)
@@ -149,6 +173,16 @@ foreach(_testsrc test_thctype test_thcell test_thinp test_thrend test_thstr thso
   target_include_directories(${_testsrc} PRIVATE include ${Iconv_INCLUDE_DIRS})
   target_link_directories(${_testsrc} PRIVATE ${DATRIE_LIBRARY_DIRS})
   target_link_libraries(${_testsrc} thai ${Iconv_LIBRARIES} ${DATRIE_LIBRARIES})
-  add_test(NAME do_${_testsrc} COMMAND ${_testsrc})
+  #
+  # thsort test is different, we split it to twos:
+  # 1. Call of thsort itself
+  # 2. Binary comparison of tshort output with expected output
+  #
+  if(${_testsrc} STREQUAL "thsort")
+    add_test(NAME do_${_testsrc}        COMMAND $<TARGET_FILE:${_testsrc}>                     tests/sorttest.txt ${CMAKE_CURRENT_BINARY_DIR}/out.txt)
+    add_test(NAME do_${_testsrc}_verify COMMAND ${PERL} ${CMAKE_CURRENT_BINARY_DIR}/bindiff.pl tests/sorttest.txt ${CMAKE_CURRENT_BINARY_DIR}/out.txt)
+	set_tests_properties(do_${_testsrc}_verify PROPERTIES DEPENDS do_${_testsrc})
+  else()
+    add_test(NAME do_${_testsrc} COMMAND ${_testsrc})
+  endif()
 endforeach()
-
