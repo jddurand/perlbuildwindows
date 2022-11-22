@@ -1,0 +1,26 @@
+From 19db1d316bf959de10df7491b7b78a256811b6e4 Mon Sep 17 00:00:00 2001
+From: Even Rouault <even.rouault@spatialys.com>
+Date: Sun, 22 May 2022 11:01:54 +0200
+Subject: [PATCH] html/Makefile.am: add v4.4.0.html to docfiles
+
+---
+ html/Makefile.am | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/html/Makefile.am b/html/Makefile.am
+index 2b41f03c..cd1483bd 100644
+--- a/html/Makefile.am
++++ b/html/Makefile.am
+@@ -90,7 +90,8 @@ docfiles = \
+ 	v4.0.10.html \
+ 	v4.1.0.html \
+ 	v4.2.0.html \
+-	v4.3.0.html
++	v4.3.0.html \
++	v4.4.0.html
+ 
+ dist_doc_DATA = $(docfiles)
+ 
+-- 
+GitLab
+

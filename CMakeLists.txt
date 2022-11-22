@@ -98,6 +98,8 @@ set (X265_VERSION_DEFAULT                  3.4)
 set (AOM_VERSION_DEFAULT                   3.5.0)
 set (LIBJPEG_TURBO_VERSION_DEFAULT         2.1.4)
 set (LIBPNG_VERSION_DEFAULT                1.6.39)
+set (TIFF_VERSION_DEFAULT                  4.4.0)
+set (LIBDEFLATE_VERSION_DEFAULT            1.14)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -121,6 +123,8 @@ set (X265_VERSION                  ${X265_VERSION_DEFAULT}                  CACH
 set (AOM_VERSION                   ${AOM_VERSION_DEFAULT}                   CACHE STRING "aom version")
 set (LIBJPEG_TURBO_VERSION         ${LIBJPEG_TURBO_VERSION_DEFAULT}         CACHE STRING "libjpeg-turbo version")
 set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACHE STRING "libpng version")
+set (TIFF_VERSION                  ${TIFF_VERSION_DEFAULT}                  CACHE STRING "tiff version")
+set (LIBDEFLATE_VERSION            ${LIBDEFLATE_VERSION_DEFAULT}            CACHE STRING "libdeflateversion")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -143,6 +147,8 @@ set_property (CACHE SDL12_COMPAT_VERSION          PROPERTY STRINGS ${SDL12_COMPA
 set_property (CACHE X265_VERSION                  PROPERTY STRINGS ${X265_VERSION_DEFAULT})
 set_property (CACHE LIBJPEG_TURBO_VERSION         PROPERTY STRINGS ${LIBJPEG_TURBO_VERSION_DEFAULT})
 set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERSION_DEFAULT})
+set_property (CACHE TIFF_VERSION                  PROPERTY STRINGS ${TIFF_VERSION_DEFAULT})
+set_property (CACHE LIBDEFLATE_VERSION            PROPERTY STRINGS ${LIBDEFLATE_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -167,6 +173,8 @@ message (STATUS "Version of x265                   : ${X265_VERSION}")
 message (STATUS "Version of aom                    : ${AOM_VERSION}")
 message (STATUS "Version of libjpeg-turbo          : ${LIBJPEG_TURBO_VERSION}")
 message (STATUS "Version of libpng                 : ${LIBPNG_VERSION}")
+message (STATUS "Version of tiff                   : ${TIFF_VERSION}")
+message (STATUS "Version of libdeflate             : ${LIBDEFLATE_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -777,13 +785,56 @@ ExternalProject_Add(libpng
 					#
 					BUILD_IN_SOURCE        TRUE)
 
+# ===========================================================
+# External project libdeflate
+# ===========================================================
+ExternalProject_Add(libdeflate
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libdeflate-${LIBDEFLATE_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libdeflate_CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libdeflate-config.cmake.in libdeflate-config.cmake.in
+					#
+					# Test suite will require access to zlib
+					#
+					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project tiff
+# ===========================================================
+ExternalProject_Add(tiff
+					DEPENDS                zlib libjpeg-turbo # libdeflate
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-2056_CVE-2022-2057_CVE-2022-2058.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-34526.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3597_CVE-2022-3626_CVE-2022-3627.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3570.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3599.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3598.patch
+					#
+					# Test suite will require access to zlib
+					#
+					# TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        TRUE)
 
 add_custom_target(perl-pkgconfig
 				  DEPENDS                  perl-core
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl PkgConfig
 				  )
 add_custom_target(perl-prima
-				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng
+				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng tiff
 				  # COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
 				  )
 
