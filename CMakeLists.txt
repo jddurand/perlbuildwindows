@@ -104,6 +104,7 @@ set (JBIGKIT_VERSION_DEFAULT               2.1)
 set (LERC_VERSION_DEFAULT                  4.0.0)
 set (XZ_VERSION_DEFAULT                    5.2.8)
 set (ZSTD_VERSION_DEFAULT                  1.5.2)
+set (LIBWEBP_VERSION_DEFAULT               1.2.4)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -133,6 +134,7 @@ set (JBIGKIT_VERSION               ${JBIGKIT_VERSION_DEFAULT}               CACH
 set (LERC_VERSION                  ${LERC_VERSION_DEFAULT}                  CACHE STRING "lerc version")
 set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACHE STRING "xz version")
 set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "zstd version")
+set (LIBWEBP_VERSION               ${LIBWEBP_VERSION_DEFAULT}               CACHE STRING "libwepb version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -161,6 +163,7 @@ set_property (CACHE JBIGKIT_VERSION               PROPERTY STRINGS ${JBIGKIT_VER
 set_property (CACHE LERC_VERSION                  PROPERTY STRINGS ${LERC_VERSION_DEFAULT})
 set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_DEFAULT})
 set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
+set_property (CACHE LIBWEBP_VERSION               PROPERTY STRINGS ${LIBWEBP_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -191,6 +194,7 @@ message (STATUS "Version of jbigkit                : ${JBIGKIT_VERSION}")
 message (STATUS "Version of lerc                   : ${LERC_VERSION}")
 message (STATUS "Version of xz                     : ${XZ_VERSION}")
 message (STATUS "Version of zstd                   : ${ZSTD_VERSION}")
+message (STATUS "Version of libwebp                : ${LIBWEBP_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -875,19 +879,39 @@ ExternalProject_Add(zstd
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
+# External project libwebp
+# ===========================================================
+ExternalProject_Add(libwebp
+                    DEPENDS                zlib libpng libjpeg-turbo giflib sdl12-compat
+					#
+					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
+					#
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=OFF
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libwebp-${LIBWEBP_VERSION}.tar.gz
+					#
+					# No test target ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
 # External project tiff
 # ===========================================================
 ExternalProject_Add(tiff
-					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd
-                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
+					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -Dlzma=ON
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
+					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}"
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-2056_CVE-2022-2057_CVE-2022-2058.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-34526.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3597_CVE-2022-3626_CVE-2022-3627.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3570.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3599.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3598.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/libtiff.def.patch
 					#
 					# Test suite will require access to zlib
 					#
