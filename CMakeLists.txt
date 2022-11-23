@@ -5,8 +5,9 @@
 # 5.36 - this is fixed since 5.37.4, therefore building a 5.37.4 version at
 # least is recommended.
 #
-# We use distproprefs that will require patch.exe and git.
-# The easiest way to get it is to install "Git For Windows" (https://gitforwindows.org/) and do:
+# We use distproprefs that will require patch.exe. We use find_package(Patch) that
+# normally detect that you have GIT installed and gets patch.exe from it.
+# It is highty not recommended to do:
 #
 # SET PATH=%PATH%;C:\Program Files\Git\bin;C:\Program Files\Git\usr\bin
 #
@@ -56,28 +57,7 @@ else ()
   set (PERL_INST_DRV_DEFAULT OFF)
 endif ()
 
-#
-# Get list of perl versions
-#
-file(DOWNLOAD https://raw.githubusercontent.com/skaji/perl-releases/main/perl-releases.v1.csv
-     TIMEOUT  30
-	 "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv")
-# file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_relases REGEX ",stable,")
-file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/perl-releases.v1.csv" perl_relases)
-set(PERL_VERSIONS)
-foreach(perl_release ${perl_relases})
-  string(REPLACE "," ";" perl_release ${perl_release})
-  list(GET perl_release 2 perl_release_version)
-  list(APPEND PERL_VERSIONS ${perl_release_version})
-endforeach()
-
-list(LENGTH PERL_VERSIONS PERL_VERSIONS_length)
-if (PERL_VERSIONS_length GREATER 0)
-  list(GET PERL_VERSIONS 0 PERL_VERSION_DEFAULT)
-else ()
-  set (PERL_VERSION_DEFAULT OFF)
-endif ()
-
+set (PERL_VERSION_DEFAULT                  5.37.5)
 set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
@@ -440,8 +420,8 @@ ExternalProject_Add(perl-core
 # Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
 ExternalProject_Add(nasm
-                    CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DEPENDS                perl-core
+                    CMAKE_ARGS             -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/nasm-${NASM_VERSION}.tar.gz
 					#
 					# Mkfiles/msvc.mak bug, c.f. https://forum.nasm.us/index.php?topic=2746.msg12335#msg12335
@@ -466,8 +446,8 @@ ExternalProject_Add(nasm
 					COMMAND                ${CMAKE_COMMAND} -E copy rdoff/rdfdump.exe  ${PERL_INST_DIR}/c/bin
 					COMMAND                ${CMAKE_COMMAND} -E copy rdoff/rdflib.exe   ${PERL_INST_DIR}/c/bin
 					COMMAND                ${CMAKE_COMMAND} -E copy rdoff/rdx.exe      ${PERL_INST_DIR}/c/bin
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/nasm
-					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/nasm
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/nasm
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/licenses/nasm
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/man/man1
 					COMMAND                ${CMAKE_COMMAND} -E copy nasm.1             ${PERL_INST_DIR}/c/man/man1
 					COMMAND                ${CMAKE_COMMAND} -E copy ndisasm.1          ${PERL_INST_DIR}/c/man/man1
@@ -497,8 +477,8 @@ ExternalProject_Add(zlib
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/zlib-${ZLIB_VERSION}.tar.gz
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/zlib
-					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/license/zlib
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/zlib
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/licenses/zlib
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
@@ -519,8 +499,8 @@ ExternalProject_Add(openssl
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL --with-zlib-include=${PERL_C_INCLUDE_INST_DIR_DOS} --with-zlib-lib=${PERL_C_LIB_INST_DIR_DOS}\\zlibstatic.lib zlib enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/openssl
-					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/license/openssl
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/openssl
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/licenses/openssl
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
@@ -568,8 +548,8 @@ ExternalProject_Add(expat
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/expat-${EXPAT_VERSION}.tar.gz
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/expat
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/expat
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/expat
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/expat
 					#
 					# XML::Expat want expat.lib and expat.dll, not libexpat.lib or libexpat.dll
 					#
@@ -594,8 +574,8 @@ ExternalProject_Add(fribidi
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/fribidi_CMakeLists.txt CMakeLists.txt
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/fribidi
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/fribidi
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/fribidi
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/fribidi
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
@@ -611,8 +591,8 @@ ExternalProject_Add(libiconv
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libiconv-${LIBICONV_VERSION}/libiconv-${LIBICONV_VERSION}.patch
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/libiconv
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/libiconv
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/libiconv
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/libiconv
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -626,8 +606,8 @@ ExternalProject_Add(datrie
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/datrie-${DATRIE_VERSION}/datrie-${DATRIE_VERSION}.diff
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/datrie
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/datrie
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/datrie
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/datrie
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -635,7 +615,7 @@ ExternalProject_Add(datrie
 # ===========================================================
 ExternalProject_Add(thai
 					# Even if we know that datrie already depends on iconv I add it explicitly to show that the thai tests rely on it
-					DEPENDS                datrie libiconv
+					DEPENDS                datrie libiconv perl-core
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/thai-${THAI_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/thai_CMakeLists.txt CMakeLists.txt
@@ -647,8 +627,8 @@ ExternalProject_Add(thai
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/license/thai
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/license/thai
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/thai
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/thai
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					# We need perl environment for the path
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
@@ -681,8 +661,8 @@ ExternalProject_Add(giflib
 					# Continue...
 					#
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/license/giflib
-					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/license/giflib
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/giflib
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/giflib
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE
 					)
@@ -743,7 +723,7 @@ ExternalProject_Add(x265
 # External project aom
 # ===========================================================
 ExternalProject_Add(aom
-					DEPENDS                nasm
+					DEPENDS                nasm perl-core
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/aom-${AOM_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/aom-${AOM_VERSION}/no-force-inline.patch
@@ -899,7 +879,7 @@ ExternalProject_Add(libwebp
 # External project tiff
 # ===========================================================
 ExternalProject_Add(tiff
-					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp
+					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp perl-core
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -Dlzma=ON
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
