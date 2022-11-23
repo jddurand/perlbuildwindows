@@ -101,6 +101,7 @@ set (LIBPNG_VERSION_DEFAULT                1.6.39)
 set (TIFF_VERSION_DEFAULT                  4.4.0)
 set (LIBDEFLATE_VERSION_DEFAULT            1.14)
 set (JBIGKIT_VERSION_DEFAULT               2.1)
+set (LERC_VERSION_DEFAULT                  4.0.0)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -127,6 +128,7 @@ set (LIBPNG_VERSION                ${LIBPNG_VERSION_DEFAULT}                CACH
 set (TIFF_VERSION                  ${TIFF_VERSION_DEFAULT}                  CACHE STRING "tiff version")
 set (LIBDEFLATE_VERSION            ${LIBDEFLATE_VERSION_DEFAULT}            CACHE STRING "libdeflate version")
 set (JBIGKIT_VERSION               ${JBIGKIT_VERSION_DEFAULT}               CACHE STRING "jbigkit version")
+set (LERC_VERSION                  ${LERC_VERSION_DEFAULT}                  CACHE STRING "lerc version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -152,6 +154,7 @@ set_property (CACHE LIBPNG_VERSION                PROPERTY STRINGS ${LIBPNG_VERS
 set_property (CACHE TIFF_VERSION                  PROPERTY STRINGS ${TIFF_VERSION_DEFAULT})
 set_property (CACHE LIBDEFLATE_VERSION            PROPERTY STRINGS ${LIBDEFLATE_VERSION_DEFAULT})
 set_property (CACHE JBIGKIT_VERSION               PROPERTY STRINGS ${JBIGKIT_VERSION_DEFAULT})
+set_property (CACHE LERC_VERSION                  PROPERTY STRINGS ${LERC_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -179,6 +182,7 @@ message (STATUS "Version of libpng                 : ${LIBPNG_VERSION}")
 message (STATUS "Version of tiff                   : ${TIFF_VERSION}")
 message (STATUS "Version of libdeflate             : ${LIBDEFLATE_VERSION}")
 message (STATUS "Version of jbigkit                : ${JBIGKIT_VERSION}")
+message (STATUS "Version of lerc                   : ${LERC_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -819,10 +823,23 @@ ExternalProject_Add(jbigkit
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
+# External project lerc
+# ===========================================================
+ExternalProject_Add(lerc
+                    CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=ON
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/lerc-${LERC_VERSION}.tar.gz
+					#
+					# No test target
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
 # External project tiff
 # ===========================================================
 ExternalProject_Add(tiff
-					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit
+					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc
                     CMAKE_ARGS             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
