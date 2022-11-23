@@ -439,7 +439,7 @@ add_custom_target(perl-win32-api
 # Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
 ExternalProject_Add(nasm
-					DEPENDS                perl-font-ttf perl-sort-versions
+					DEPENDS                perl-core perl-font-ttf perl-sort-versions
 					CONFIGURE_COMMAND      ""
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/nasm-${NASM_VERSION}.tar.gz
 					#
@@ -485,6 +485,7 @@ ExternalProject_Add(nasm
 					BUILD_IN_SOURCE        TRUE)
 
 ExternalProject_Add(zlib
+					DEPENDS                perl-core
 					#
 					# We need to set RelWithDebInfo so that the library name is predictable: zlibstatic.lib instead of zlibstaticd.lib
 					#
@@ -507,7 +508,7 @@ else ()
 endif ()
 
 ExternalProject_Add(openssl
-					DEPENDS                nasm perl-win32-api zlib
+					DEPENDS                nasm perl-core perl-win32-api zlib
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/openssl-${OPENSSL_VERSION}.tar.gz
 					PATCH_COMMAND          ${OPENSLL_PATCH_COMMAND}
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E env LDFLAGS=${OPENSSL_LDFLAGS} ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl Configure --prefix=${PERL_C_INST_DIR_DOS} --openssldir=${PERL_C_INST_DIR_DOS}\\SSL --with-zlib-include=${PERL_C_INCLUDE_INST_DIR_DOS} --with-zlib-lib=${PERL_C_LIB_INST_DIR_DOS}\\zlibstatic.lib zlib enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 enable-fips enable-weak-ssl-ciphers ${OPENSSL_VC}
@@ -540,6 +541,7 @@ add_custom_target(perl-io-socket-ssl
 # Win32::GUI: needs freeimage + post-installation of freeimage library near Win32::GUI
 # ====================================================================================================================================
 ExternalProject_Add(freeimage
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-${FREEIMAGE_VERSION}.tar.gz
 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/FreeImage_CMakeLists.txt freeimage/CMakeLists.txt
@@ -561,6 +563,7 @@ add_custom_target(perl-win32-gui
 set (EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION})
 string(REGEX REPLACE "\\." "_" EXPAT_VERSION_UNDERSCORE ${EXPAT_VERSION_UNDERSCORE})
 ExternalProject_Add(expat
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/expat-${EXPAT_VERSION}.tar.gz
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
@@ -585,6 +588,7 @@ add_custom_target(perl-xml-parser
 # External project fribidi
 # ===========================================================
 ExternalProject_Add(fribidi
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/fribidi-${FRIBIDI_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/fribidi_CMakeLists.txt CMakeLists.txt
@@ -601,6 +605,7 @@ ExternalProject_Add(fribidi
 # External project libiconv
 # ===========================================================
 ExternalProject_Add(libiconv
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libiconv-${LIBICONV_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libiconv_CMakeLists.txt CMakeLists.txt
@@ -615,7 +620,7 @@ ExternalProject_Add(libiconv
 # External project datrie
 # ===========================================================
 ExternalProject_Add(datrie
-					DEPENDS libiconv
+					DEPENDS                perl-core libiconv
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/datrie-${DATRIE_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/datrie_CMakeLists.txt CMakeLists.txt
@@ -631,7 +636,7 @@ ExternalProject_Add(datrie
 # ===========================================================
 ExternalProject_Add(thai
 					# Even if we know that datrie already depends on iconv I add it explicitly to show that the thai tests rely on it
-					DEPENDS                datrie libiconv perl-pkgconfig
+					DEPENDS                perl-core datrie libiconv perl-pkgconfig
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/thai-${THAI_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/thai_CMakeLists.txt CMakeLists.txt
@@ -655,6 +660,7 @@ ExternalProject_Add(thai
 # External project Giflib
 # ===========================================================
 ExternalProject_Add(giflib
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/giflib-${GIFLIB_VERSION}.tar.gz
 					#
@@ -687,7 +693,8 @@ ExternalProject_Add(giflib
 # External project SDL2
 # ===========================================================
 ExternalProject_Add(SDL2
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+                    DEPENDS                perl-core
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" ../SDL2
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/SDL2-${SDL2_VERSION}.tar.gz
 					#
 					# No test target
@@ -703,7 +710,7 @@ ExternalProject_Add(SDL2
 # External project sdl12-compat
 # ===========================================================
 ExternalProject_Add(sdl12-compat
-					DEPENDS                SDL2
+					DEPENDS                perl-core SDL2
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/sdl12-compat-${SDL12_COMPAT_VERSION}.tar.gz
 					TEST_EXCLUDE_FROM_MAIN FALSE
@@ -714,7 +721,7 @@ ExternalProject_Add(sdl12-compat
 # External project libde265
 # ===========================================================
 ExternalProject_Add(libde265
-					DEPENDS                sdl12-compat
+					DEPENDS                perl-core sdl12-compat
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libde265-${LIBDE265_VERSION}.tar.gz
 					#
@@ -728,6 +735,7 @@ ExternalProject_Add(libde265
 # External project x265
 # ===========================================================
 ExternalProject_Add(x265
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					SOURCE_SUBDIR          source
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/x265-${X265_VERSION}.tar.gz
@@ -739,12 +747,10 @@ ExternalProject_Add(x265
 # External project aom
 # ===========================================================
 ExternalProject_Add(aom
-					DEPENDS                nasm perl-pkgconfig
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					DEPENDS                perl-core nasm perl-pkgconfig
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON ../aom
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/aom-${AOM_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/aom-${AOM_VERSION}/no-force-inline.patch
-					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON ../aom-prefix/src/aom
 					#
 					# No test target
 					#
@@ -759,7 +765,7 @@ ExternalProject_Add(aom
 # External project libjpeg-turbo
 # ===========================================================
 ExternalProject_Add(libjpeg-turbo
-					DEPENDS                nasm
+					DEPENDS                perl-core nasm
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					# We need perl environment for nasm
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}  -G "${CMAKE_GENERATOR}" .
@@ -775,7 +781,7 @@ ExternalProject_Add(libjpeg-turbo
 # External project libheif
 # ===========================================================
 ExternalProject_Add(libheif
-					DEPENDS                libde265 x265 aom libjpeg-turbo
+					DEPENDS                perl-core libde265 x265 aom libjpeg-turbo
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libheif-${LIBHEIF_VERSION}.tar.gz
 					#
@@ -789,7 +795,7 @@ ExternalProject_Add(libheif
 # External project libpng
 # ===========================================================
 ExternalProject_Add(libpng
-					DEPENDS                zlib perl-pkgconfig
+					DEPENDS                perl-core zlib perl-pkgconfig
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libpng-${LIBPNG_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpng-${LIBPNG_VERSION}/install-pkgconfig.patch
@@ -808,6 +814,7 @@ ExternalProject_Add(libpng
 # External project libdeflate
 # ===========================================================
 ExternalProject_Add(libdeflate
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libdeflate-${LIBDEFLATE_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libdeflate_CMakeLists.txt CMakeLists.txt
@@ -822,6 +829,7 @@ ExternalProject_Add(libdeflate
 # External project jbigkit
 # ===========================================================
 ExternalProject_Add(jbigkit
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/jbigkit-${JBIGKIT_VERSION}.tar.gz
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/jbigkit_CMakeLists.txt CMakeLists.txt
@@ -837,6 +845,7 @@ ExternalProject_Add(jbigkit
 # External project lerc
 # ===========================================================
 ExternalProject_Add(lerc
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/lerc-${LERC_VERSION}.tar.gz
 					#
@@ -850,6 +859,7 @@ ExternalProject_Add(lerc
 # External project xz
 # ===========================================================
 ExternalProject_Add(xz
+                    DEPENDS                perl-core
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/xz-${XZ_VERSION}.tar.gz
 					#
@@ -863,6 +873,7 @@ ExternalProject_Add(xz
 # External project zstd
 # ===========================================================
 ExternalProject_Add(zstd
+                    DEPENDS                perl-core
 					#
 					# There IS a test target but it far too long... in addition tests's CMakeLists.txt is wrong
 					#
@@ -881,7 +892,7 @@ ExternalProject_Add(zstd
 # External project libwebp
 # ===========================================================
 ExternalProject_Add(libwebp
-                    DEPENDS                zlib libpng libjpeg-turbo giflib sdl12-compat
+                    DEPENDS                perl-core zlib libpng libjpeg-turbo giflib sdl12-compat
 					#
 					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
 					#
@@ -898,7 +909,7 @@ ExternalProject_Add(libwebp
 # External project tiff
 # ===========================================================
 ExternalProject_Add(tiff
-					DEPENDS                zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp perl-pkgconfig
+					DEPENDS                perl-core zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp perl-pkgconfig
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -Dlzma=ON .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
