@@ -1,0 +1,148 @@
+diff -Naur jbigkit.old/libjbig/jbig.h jbigkit.new/libjbig/jbig.h
+--- jbigkit.old/libjbig/jbig.h	2014-03-27 19:47:15.000000000 +0100
++++ jbigkit.new/libjbig/jbig.h	2022-11-23 06:37:24.117339900 +0100
+@@ -191,43 +191,43 @@
+ 
+ /* function prototypes */
+ 
+-void jbg_enc_init(struct jbg_enc_state *s, unsigned long x, unsigned long y,
++JBIGKITEXPORT void jbg_enc_init(struct jbg_enc_state *s, unsigned long x, unsigned long y,
+ 		  int planes, unsigned char **p,
+ 		  void (*data_out)(unsigned char *start, size_t len,
+ 				   void *file),
+ 		  void *file);
+-int jbg_enc_lrlmax(struct jbg_enc_state *s, unsigned long mwidth,
++JBIGKITEXPORT int jbg_enc_lrlmax(struct jbg_enc_state *s, unsigned long mwidth,
+ 		   unsigned long mheight);
+-void jbg_enc_layers(struct jbg_enc_state *s, int d);
+-int  jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh);
+-void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
++JBIGKITEXPORT void jbg_enc_layers(struct jbg_enc_state *s, int d);
++JBIGKITEXPORT int  jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh);
++JBIGKITEXPORT void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
+ 		     unsigned long l0, int mx, int my);
+-void jbg_enc_out(struct jbg_enc_state *s);
+-void jbg_enc_free(struct jbg_enc_state *s);
++JBIGKITEXPORT void jbg_enc_out(struct jbg_enc_state *s);
++JBIGKITEXPORT void jbg_enc_free(struct jbg_enc_state *s);
+ 
+-void jbg_dec_init(struct jbg_dec_state *s);
+-void jbg_dec_maxsize(struct jbg_dec_state *s, unsigned long xmax,
++JBIGKITEXPORT void jbg_dec_init(struct jbg_dec_state *s);
++JBIGKITEXPORT void jbg_dec_maxsize(struct jbg_dec_state *s, unsigned long xmax,
+ 		     unsigned long ymax);
+-int  jbg_dec_in(struct jbg_dec_state *s, unsigned char *data, size_t len,
++JBIGKITEXPORT int  jbg_dec_in(struct jbg_dec_state *s, unsigned char *data, size_t len,
+ 		size_t *cnt);
+-unsigned long jbg_dec_getwidth(const struct jbg_dec_state *s);
+-unsigned long jbg_dec_getheight(const struct jbg_dec_state *s);
+-unsigned char *jbg_dec_getimage(const struct jbg_dec_state *s, int plane);
+-unsigned long jbg_dec_getsize(const struct jbg_dec_state *s);
+-void jbg_dec_merge_planes(const struct jbg_dec_state *s, int use_graycode,
++JBIGKITEXPORT unsigned long jbg_dec_getwidth(const struct jbg_dec_state *s);
++JBIGKITEXPORT unsigned long jbg_dec_getheight(const struct jbg_dec_state *s);
++JBIGKITEXPORT unsigned char *jbg_dec_getimage(const struct jbg_dec_state *s, int plane);
++JBIGKITEXPORT unsigned long jbg_dec_getsize(const struct jbg_dec_state *s);
++JBIGKITEXPORT void jbg_dec_merge_planes(const struct jbg_dec_state *s, int use_graycode,
+ 			  void (*data_out)(unsigned char *start, size_t len,
+ 					   void *file), void *file);
+-unsigned long jbg_dec_getsize_merged(const struct jbg_dec_state *s);
+-void jbg_dec_free(struct jbg_dec_state *s);
++JBIGKITEXPORT unsigned long jbg_dec_getsize_merged(const struct jbg_dec_state *s);
++JBIGKITEXPORT void jbg_dec_free(struct jbg_dec_state *s);
+ 
+-const char *jbg_strerror(int errnum);
+-void jbg_int2dppriv(unsigned char *dptable, const char *internal);
+-void jbg_dppriv2int(char *internal, const unsigned char *dptable);
+-unsigned long jbg_ceil_half(unsigned long x, int n);
+-void jbg_split_planes(unsigned long x, unsigned long y, int has_planes,
++JBIGKITEXPORT const char *jbg_strerror(int errnum);
++JBIGKITEXPORT void jbg_int2dppriv(unsigned char *dptable, const char *internal);
++JBIGKITEXPORT void jbg_dppriv2int(char *internal, const unsigned char *dptable);
++JBIGKITEXPORT unsigned long jbg_ceil_half(unsigned long x, int n);
++JBIGKITEXPORT void jbg_split_planes(unsigned long x, unsigned long y, int has_planes,
+ 		      int encode_planes,
+ 		      const unsigned char *src, unsigned char **dest,
+ 		      int use_graycode);
+-int jbg_newlen(unsigned char *bie, size_t len);
++JBIGKITEXPORT int jbg_newlen(unsigned char *bie, size_t len);
+ 
+ #endif /* JBG_H */
+diff -Naur jbigkit.old/libjbig/jbig85.h jbigkit.new/libjbig/jbig85.h
+--- jbigkit.old/libjbig/jbig85.h	2014-03-27 19:47:15.000000000 +0100
++++ jbigkit.new/libjbig/jbig85.h	2022-11-23 06:37:51.304001500 +0100
+@@ -135,28 +135,28 @@
+ 
+ /* function prototypes */
+ 
+-void jbg85_enc_init(struct jbg85_enc_state *s,
++JBIGKITEXPORT void jbg85_enc_init(struct jbg85_enc_state *s,
+ 		    unsigned long x0, unsigned long y0,
+ 		    void (*data_out)(unsigned char *start, size_t len,
+ 				     void *file),
+ 		    void *file);
+-void jbg85_enc_options(struct jbg85_enc_state *s, int options,
++JBIGKITEXPORT void jbg85_enc_options(struct jbg85_enc_state *s, int options,
+ 		       unsigned long l0, int mx);
+-void jbg85_enc_lineout(struct jbg85_enc_state *s, unsigned char *line,
++JBIGKITEXPORT void jbg85_enc_lineout(struct jbg85_enc_state *s, unsigned char *line,
+ 		       unsigned char *prevline, unsigned char *prevprevline);
+-void jbg85_enc_newlen(struct jbg85_enc_state *s, unsigned long y0);
+-void jbg85_enc_abort(struct jbg85_enc_state *s);
++JBIGKITEXPORT void jbg85_enc_newlen(struct jbg85_enc_state *s, unsigned long y0);
++JBIGKITEXPORT void jbg85_enc_abort(struct jbg85_enc_state *s);
+ 
+-void jbg85_dec_init(struct jbg85_dec_state *s,
++JBIGKITEXPORT void jbg85_dec_init(struct jbg85_dec_state *s,
+ 		    unsigned char *buf, size_t buflen,
+ 		    int (*line_out)(const struct jbg85_dec_state *s,
+ 				    unsigned char *start, size_t len,
+ 				    unsigned long y, void *file),
+ 		    void *file);
+-int  jbg85_dec_in(struct jbg85_dec_state *s, unsigned char *data, size_t len,
++JBIGKITEXPORT int  jbg85_dec_in(struct jbg85_dec_state *s, unsigned char *data, size_t len,
+ 		  size_t *cnt);
+-int  jbg85_dec_end(struct jbg85_dec_state *s);
+-const char *jbg85_strerror(int errnum);
++JBIGKITEXPORT int  jbg85_dec_end(struct jbg85_dec_state *s);
++JBIGKITEXPORT const char *jbg85_strerror(int errnum);
+ 
+ /* some macros for examining decoder state */
+ 
+diff -Naur jbigkit.old/libjbig/jbig_ar.h jbigkit.new/libjbig/jbig_ar.h
+--- jbigkit.old/libjbig/jbig_ar.h	2014-03-27 19:47:15.000000000 +0100
++++ jbigkit.new/libjbig/jbig_ar.h	2022-11-23 06:36:30.613133400 +0100
+@@ -8,6 +8,17 @@
+ #ifndef JBG_AR_H
+ #define JBG_AR_H
+ 
++#ifdef JBIGKIT_DLL
++#  ifdef BUILDING_JBIGKIT
++#    define JBIGKITEXPORT	__declspec(dllexport)
++#  elif defined(_WIN32) || defined(__CYGWIN__)
++#    define JBIGKITEXPORT	__declspec(dllimport)
++#  endif
++#endif
++#ifndef JBIGKITEXPORT
++#  define JBIGKITEXPORT
++#endif
++
+ /*
+  * Status of arithmetic encoder
+  */
+@@ -44,10 +55,10 @@
+ 			 * place */
+ };
+ 
+-void arith_encode_init(struct jbg_arenc_state *s, int reuse_st);
+-void arith_encode_flush(struct jbg_arenc_state *s);
+-void arith_encode(struct jbg_arenc_state *s, int cx, int pix);
+-void arith_decode_init(struct jbg_ardec_state *s, int reuse_st);
+-int  arith_decode(struct jbg_ardec_state *s, int cx);
++JBIGKITEXPORT void arith_encode_init(struct jbg_arenc_state *s, int reuse_st);
++JBIGKITEXPORT void arith_encode_flush(struct jbg_arenc_state *s);
++JBIGKITEXPORT void arith_encode(struct jbg_arenc_state *s, int cx, int pix);
++JBIGKITEXPORT void arith_decode_init(struct jbg_ardec_state *s, int reuse_st);
++JBIGKITEXPORT int  arith_decode(struct jbg_ardec_state *s, int cx);
+ 
+ #endif /* JBG_AR_H */
