@@ -41,9 +41,9 @@ install(TARGETS libdeflate gzip gunzip PUBLIC_HEADER DESTINATION include)
 
 # For pkgconfig
 # We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
-set(PREFIX      "\${pcfiledir}/..")
+set(PREFIX      "\${pcfiledir}/../..")
 set(exec_prefix "\${prefix}")
 set(LIBDIR      "\${exec_prefix}/lib")
 set(INCDIR      "\${prefix}/include")
 CONFIGURE_FILE(libdeflate.pc.in libdeflate.pc @ONLY)
-install(FILES libdeflate.pc DESTINATION pkgconfig)
+install(FILES libdeflate.pc DESTINATION lib/pkgconfig)

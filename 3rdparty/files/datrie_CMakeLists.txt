@@ -81,9 +81,9 @@ install(TARGETS datrie trietool PUBLIC_HEADER DESTINATION include/datrie)
 
 # For pkgconfig
 # We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
-set(prefix      "\${pcfiledir}/..")
+set(prefix      "\${pcfiledir}/../..")
 set(exec_prefix "\${prefix}")
 set(libdir      "\${exec_prefix}/lib")
 set(includedir  "\${prefix}/include")
 CONFIGURE_FILE("datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc.in" "datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc" @ONLY)
-install(FILES "datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc" DESTINATION pkgconfig)
+install(FILES "datrie-${MAJOR_VERSION}.${MINOR_VERSION}.pc" DESTINATION lib/pkgconfig)

@@ -121,7 +121,7 @@ install(FILES share/libthai/thbrk.tri DESTINATION bin/share/libthai)
 
 # For pkgconfig
 # We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
-set(prefix      "\${pcfiledir}/..")
+set(prefix      "\${pcfiledir}/../..")
 set(exec_prefix "\${prefix}")
 set(libdir      "\${exec_prefix}/lib")
 set(includedir  "\${prefix}/include")
@@ -129,7 +129,7 @@ set(VERSION     ${PROJECT_VERSION})
 # freebidi.pc assumes that compiler/linker uses -L, -l and -I.
 # Make sure we replace them by current settings
 CONFIGURE_FILE("libthai.pc.in" "libthai.pc" @ONLY)
-install(FILES libthai.pc DESTINATION pkgconfig)
+install(FILES libthai.pc DESTINATION lib/pkgconfig)
 
 # Tests
 enable_testing()
