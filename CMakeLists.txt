@@ -85,6 +85,7 @@ set (LERC_VERSION_DEFAULT                  4.0.0)
 set (XZ_VERSION_DEFAULT                    5.2.8)
 set (ZSTD_VERSION_DEFAULT                  1.5.2)
 set (LIBWEBP_VERSION_DEFAULT               1.2.4)
+set (GDIPLUS_VERSION_DEFAULT               prima)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -115,6 +116,7 @@ set (LERC_VERSION                  ${LERC_VERSION_DEFAULT}                  CACH
 set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACHE STRING "xz version")
 set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "zstd version")
 set (LIBWEBP_VERSION               ${LIBWEBP_VERSION_DEFAULT}               CACHE STRING "libwebp version")
+set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACHE STRING "gdiplus version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -144,6 +146,7 @@ set_property (CACHE LERC_VERSION                  PROPERTY STRINGS ${LERC_VERSIO
 set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_DEFAULT})
 set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
 set_property (CACHE LIBWEBP_VERSION               PROPERTY STRINGS ${LIBWEBP_VERSION_DEFAULT})
+set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -175,6 +178,7 @@ message (STATUS "Version of lerc                   : ${LERC_VERSION}")
 message (STATUS "Version of xz                     : ${XZ_VERSION}")
 message (STATUS "Version of zstd                   : ${ZSTD_VERSION}")
 message (STATUS "Version of libwebp                : ${LIBWEBP_VERSION}")
+message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -893,6 +897,21 @@ ExternalProject_Add(libwebp
 					#
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=OFF .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libwebp-${LIBWEBP_VERSION}.tar.gz
+					#
+					# No test target ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project gdiplus
+# ===========================================================
+ExternalProject_Add(gdiplus
+                    DEPENDS                perl-core
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/gdiplus-${GDIPLUS_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/gdiplus/CMakeLists.txt CMakeLists.txt
 					#
 					# No test target ?
 					#
