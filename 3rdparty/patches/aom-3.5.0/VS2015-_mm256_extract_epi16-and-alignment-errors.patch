@@ -1,0 +1,52 @@
+diff -Naur aom.old/aom_dsp/x86/highbd_quantize_intrin_avx2.c aom.new/aom_dsp/x86/highbd_quantize_intrin_avx2.c
+--- aom.old/aom_dsp/x86/highbd_quantize_intrin_avx2.c	2022-11-22 08:55:31.000000000 +0100
++++ aom.new/aom_dsp/x86/highbd_quantize_intrin_avx2.c	2022-11-24 11:42:49.282116300 +0100
+@@ -15,6 +15,25 @@
+ 
+ #include "aom/aom_integer.h"
+ 
++/*
++// From https://github.com/tensorflow/tensorflow/pull/13525/files
++// Note:
++// _mm256_insert_epi16 intrinsics is available from vs2017.
++// We define this macro for vs2015 and earlier. The
++// intrinsics used here are in vs2015 document:
++// https://msdn.microsoft.com/en-us/library/hh977022.aspx
++// Input parameters:
++// a: __m256i,
++// d: int16_t,
++// indx: imm8 (0 - 15)
++//#if _MSC_VER <= 1900
++*/
++#if defined(_MSC_VER) && _MSC_VER < 1910
++static AOM_FORCE_INLINE int32_t _mm256_extract_epi16(__m256i a, const int32_t i) {
++    return a.m256i_i16[i & 15];
++}
++#endif
++
+ static INLINE void init_one_qp(const __m128i *p, __m256i *qp) {
+   const __m128i sign = _mm_srai_epi16(*p, 15);
+   const __m128i dc = _mm_unpacklo_epi16(*p, sign);
+diff -Naur aom.old/aom_dsp/x86/variance_avx2.c aom.new/aom_dsp/x86/variance_avx2.c
+--- aom.old/aom_dsp/x86/variance_avx2.c	2022-11-22 08:55:31.000000000 +0100
++++ aom.new/aom_dsp/x86/variance_avx2.c	2022-11-24 11:44:07.848151400 +0100
+@@ -645,7 +645,7 @@
+   }
+ }
+ 
+-static INLINE void sum_final_256bit_avx2(__m256i sum_8x16[2], int *const sum) {
++static INLINE void sum_final_256bit_avx2(__m256i *const sum_8x16, int *const sum) {
+   const __m256i sum_result_0 = _mm256_hadd_epi16(sum_8x16[0], sum_8x16[1]);
+   const __m256i sum_result_1 =
+       _mm256_add_epi16(_mm256_srli_si256(sum_result_0, 4), sum_result_0);
+@@ -663,8 +663,8 @@
+ 
+ static INLINE void calc_sum_sse_for_8x32_block_avx2(const uint8_t *src,
+                                                     const uint8_t *ref,
+-                                                    __m256i sse_8x16[2],
+-                                                    __m256i sum_8x16[2]) {
++                                                    __m256i *const sse_8x16,
++                                                    __m256i *const sum_8x16) {
+   const __m256i s0_256 =
+       _mm256_cvtepu8_epi16(_mm_loadu_si128((const __m128i *)src));
+   const __m256i r0_256 =
