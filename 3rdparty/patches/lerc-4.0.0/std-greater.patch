@@ -1,0 +1,11 @@
+diff -Naur lerc.old/src/LercLib/Lerc.cpp lerc.new/src/LercLib/Lerc.cpp
+--- lerc.old/src/LercLib/Lerc.cpp	2022-07-15 20:25:29.000000000 +0200
++++ lerc.new/src/LercLib/Lerc.cpp	2022-11-24 14:19:10.287759900 +0100
+@@ -26,6 +26,7 @@
+ #include "Lerc2.h"
+ #include <typeinfo>
+ #include <limits>
++#include <functional>
+ 
+ #ifdef HAVE_LERC1_DECODE
+   #include "Lerc1Decode/CntZImage.h"
