@@ -1,0 +1,22 @@
+diff -Naur lerc.old/src/LercLib/fpl_EsriHuffman.cpp lerc.new/src/LercLib/fpl_EsriHuffman.cpp
+--- lerc.old/src/LercLib/fpl_EsriHuffman.cpp	2022-07-15 20:25:29.000000000 +0200
++++ lerc.new/src/LercLib/fpl_EsriHuffman.cpp	2022-11-24 14:52:16.900190600 +0100
+@@ -28,6 +28,7 @@
+ #include <cstdlib>
+ #include <stdint.h>
+ #include <limits>
++#include <algorithm>
+ 
+ USING_NAMESPACE_LERC
+ 
+diff -Naur lerc.old/src/LercLib/fpl_Lerc2Ext.cpp lerc.new/src/LercLib/fpl_Lerc2Ext.cpp
+--- lerc.old/src/LercLib/fpl_Lerc2Ext.cpp	2022-07-15 20:25:29.000000000 +0200
++++ lerc.new/src/LercLib/fpl_Lerc2Ext.cpp	2022-11-24 14:52:28.775678800 +0100
+@@ -28,6 +28,7 @@
+ #include <cmath>
+ #include <cstring>
+ #include <stdint.h>
++#include <algorithm>
+ 
+ USING_NAMESPACE_LERC
+ 
