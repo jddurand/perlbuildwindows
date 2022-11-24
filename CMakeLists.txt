@@ -790,7 +790,7 @@ ExternalProject_Add(libpng
 					DEPENDS                perl-core zlib perl-pkgconfig
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libpng-${LIBPNG_VERSION}.tar.gz
-					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpng-${LIBPNG_VERSION}/install-pkgconfig.patch
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpng-${LIBPNG_VERSION}/install-pkgconfig-and-cmake.patch
 					#
 					# Test suite will require access to zlib
 					#
