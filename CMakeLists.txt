@@ -275,7 +275,7 @@ cmake_path(CONVERT "${PERL_C_BIN_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_BIN_INST_
 set (CPAN_PATCHES_DIR "${CMAKE_CURRENT_BINARY_DIR}/.cpan/patches")
 cmake_path(CONVERT "${CPAN_PATCHES_DIR}" TO_NATIVE_PATH_LIST CPAN_PATCHES_DIR_DOS)
 
-set (PERL_C_PKGCONFIG_INST_DIR "${PERL_INST_DIR}/c/pkgconfig")
+set (PERL_C_PKGCONFIG_INST_DIR "${PERL_INST_DIR}/c/lib/pkgconfig")
 cmake_path(CONVERT "${PERL_C_PKGCONFIG_INST_DIR}" TO_NATIVE_PATH_LIST PERL_C_PKGCONFIG_INST_DIR)
 
 # =======================================================
@@ -308,10 +308,6 @@ REM For PkgConfig
 REM
 SET PERL_PKG_CONFIG_SCRIPTS=ppkg-config,pkg-config
 SET PKG_CONFIG_PATH=${PERL_C_PKGCONFIG_INST_DIR}
-REM
-REM Painful but libjpeg-turbo, libheif, etc... decide to install its pc files under lib
-REM
-SET PKG_CONFIG_PATH=%PKG_CONFIG_PATH%;${PERL_C_LIB_INST_DIR_DOS}\\pkgconfig
 
 REM
 REM For runtime of the above packages, we absolutely want perl to be before
@@ -644,8 +640,6 @@ ExternalProject_Add(thai
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}-fanc999.diff
 					# Utf-8 test file: portable source using bytes + portability fix
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/thai-${THAI_VERSION}/thai-${THAI_VERSION}-test_thbrk.diff
-					# We need perl environment for our pkgconfig - we intentionally say cmake and not ${CMAKE_PROGRAM}
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					BUILD_COMMAND          ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/thai
@@ -767,8 +761,6 @@ ExternalProject_Add(aom
 ExternalProject_Add(libjpeg-turbo
 					DEPENDS                perl-core nasm
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
-					# We need perl environment for nasm
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS}  -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
