@@ -415,7 +415,7 @@ ExternalProject_Add(perl-core
 					#
 					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API
 					#
-					# Active sitecustomize
+					# Activate sitecustomize
 					#
 					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/sitecustomize.pl ${PERL_INST_DIR}/site/lib/sitecustomize.pl
 					TEST_COMMAND           ${CMAKE_MAKE_PROGRAM} test
