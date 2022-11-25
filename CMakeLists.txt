@@ -410,6 +410,14 @@ ExternalProject_Add(perl-core
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
 					BUILD_COMMAND          ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					#
+					# Install immediately Win32::API because our sitecustomize will depend on it
+					#
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API
+					#
+					# Active sitecustomize
+					#
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/sitecustomize.pl ${PERL_INST_DIR}/site/lib/sitecustomize.pl
 					TEST_COMMAND           ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE

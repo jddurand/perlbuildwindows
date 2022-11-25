@@ -1,57 +1,112 @@
 #!env perl
 use strict;
 use diagnostics;
+use Config;
 use Encode;
 use Errno qw/ERROR_INSUFFICIENT_BUFFER/;
+use File::Basename qw/dirname/;
 use File::Spec;
 use Win32::API qw/SafeReadWideCString/;
-use Config;
+
+#
+# Paranoid protection
+#
+return if $ENV{PERL_DISABLE_SIZECUSTOMIZE};
 
 #
 # Perl is smart enough to not use the installation path
 # to find sitecustomize.pl. This is how we make our perl
 # portable.
 
-#
-# Paranoid protection
-#
-return if defined($ENV{PERL_DISABLE_SIZECUSTOMIZE});
+_sitecustomize_change_config();
+_sitecustomize_setup_env();
 
 #
-# Get current perl full path
+# Cleanup the namespace
 #
-my $executable = WideStringToPerlString(_GetExecutableFullPathW());
-print "\$executable : " . ($executable // '<undef>') . "\n" if ($ENV{PERL_SIZECUSTOMIZE_DEBUG});
+map { undef $main::{$_} } qw/_sitecustomize_change_config
+                              _sitecustomize_setup_env
+                              _sitecustomize_GetExecutableFullPathW
+							  _sitecustomize_WideStringToPerlString
+							  _sitecustomize_GetModuleFileNameW
+							  _sitecustomize_GetFullPathNameW
+							  _sitecustomize_GetLongPathNameW
+							  /;
 
-#
-# Make our perl "portable" by modifying %Config
-#
-{
-	no warnings 'redefine';
-	
-	my $origStore = \&Config::STORE;
-	*Config::STORE = sub {
-		my ($self, $this, $value) = @_;
-		$self->{$this} = $value,
-	};
-	# $Config{lddlflags} = 'x';
-	*Config::STORE = $origStore;
+sub _sitecustomize_change_config {
+	#
+	# Get current perl full path
+	#
+	my $executable = _sitecustomize_WideStringToPerlString(_sitecustomize_GetExecutableFullPathW());
+	print "[sitecustomize] \$executable : " . ($executable // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+
+	#
+	# We are by definition there: XXX\bin\perl.exe
+	#
+	my $newinstallprefix = dirname(dirname($executable));
+	print "[sitecustomize] \$newinstallprefix : " . ($newinstallprefix // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+
+	#
+	# Recuperate the old install prefix
+	#
+	my $oldinstallprefix = $Config{installprefix};
+	print "[sitecustomize] \$oldinstallprefix : " . ($oldinstallprefix // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+
+	#
+	# We are not going to play with case insitivity - if strings are the same find, else do the replace
+	#
+	return if $newinstallprefix eq $oldinstallprefix;
+
+	#
+	# Make our perl "portable" by modifying %Config
+	#
+	{
+		no warnings 'redefine';
+
+		my $oldinstallprefix_length = length($oldinstallprefix);
+		my $origStore = \&Config::STORE;
+		*Config::STORE = sub {
+			my ($self, $this, $value) = @_;
+			$self->{$this} = $value,
+		};
+		#
+		# We inspect all values of $Config and rewrite $oldinstallprefix to $newinstallprefix
+		# No need for a regex here, values all start with $oldinstallprefix or not.
+		#
+		foreach my $key (keys %Config) {
+			my $value = $Config{$key} // '';
+			if (index($value, $oldinstallprefix) == 0) {
+				substr($value, 0, $oldinstallprefix_length, $newinstallprefix);
+				print "[sitecustomize] \$Config{$key} = $Config{$key} -> $value\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+				$Config{$key} = $value;
+			}
+		}
+
+		*Config::STORE = $origStore;
+	}
 }
 
-sub _GetExecutableFullPathW {
+sub _sitecustomize_setup_env {
+	#
+	# Always set PKG_CONFIG_PATH to $Config{installprefix}/c/lib/pkgconfig
+	#
+	$ENV{PKG_CONFIG_PATH} = File::Spec->catdir($Config{installprefix}, 'c', 'lib', 'pkgconfig');
+}
+
+sub _sitecustomize_GetExecutableFullPathW {
 	my $executableFullPathW;
 
-	my $moduleFileNameW = _GetModuleFileNameW();
-	print "\$moduleFileNameW : " . (WideStringToPerlString($moduleFileNameW) // '<undef>') . "\n" if ($ENV{PERL_SIZECUSTOMIZE_DEBUG});
+	my $moduleFileNameW = _sitecustomize_GetModuleFileNameW();
+	print "[sitecustomize] \$moduleFileNameW : " . (_sitecustomize_WideStringToPerlString($moduleFileNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 	return unless defined($moduleFileNameW);
 
-	my $fullPathNameW = _GetFullPathNameW($moduleFileNameW);
-	print "\$fullPathNameW : " . (WideStringToPerlString($fullPathNameW) // '<undef>') . "\n" if ($ENV{PERL_SIZECUSTOMIZE_DEBUG});
+	my $fullPathNameW = _sitecustomize_GetFullPathNameW($moduleFileNameW);
+	print "[sitecustomize] \$fullPathNameW : " . (_sitecustomize_WideStringToPerlString($fullPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 	return unless defined($fullPathNameW);
 
-	my ($supported, $longPathNameW) = _GetLongPathNameW($fullPathNameW);
+	my ($supported, $longPathNameW) = _sitecustomize_GetLongPathNameW($fullPathNameW);
 	if ($supported) {
-		print "\$longPathNameW : " . (WideStringToPerlString($longPathNameW) // '<undef>') . "\n" if ($ENV{PERL_SIZECUSTOMIZE_DEBUG});
+		print "[sitecustomize] \$longPathNameW : " . (_sitecustomize_WideStringToPerlString($longPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 		return unless defined($longPathNameW);
 		$executableFullPathW = $longPathNameW;
 	} else {
@@ -61,7 +116,7 @@ sub _GetExecutableFullPathW {
 	return $executableFullPathW;
 }
 
-sub WideStringToPerlString {
+sub _sitecustomize_WideStringToPerlString {
 	my ($source) = @_;
 	
 	return undef unless defined($source);
@@ -69,7 +124,7 @@ sub WideStringToPerlString {
 	return SafeReadWideCString(unpack('J',pack('p', $source)));
 }
 
-sub _GetModuleFileNameW {
+sub _sitecustomize_GetModuleFileNameW {
 	my $function = Win32::API::More->new(
 		'kernel32', 'DWORD GetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)'
 	);
@@ -94,7 +149,7 @@ sub _GetModuleFileNameW {
 	return $lpFilename;
 }
 
-sub _GetFullPathNameW {
+sub _sitecustomize_GetFullPathNameW {
 	my ($lpFileName) = @_;
 
 	my $function = Win32::API::More->new(
@@ -121,7 +176,7 @@ sub _GetFullPathNameW {
 	return $lpBuffer;
 }
 
-sub _GetLongPathNameW {
+sub _sitecustomize_GetLongPathNameW {
 	my ($lpszShortPath) = @_;
 
 	# LPCWSTR is const LPWSTR
@@ -129,7 +184,7 @@ sub _GetLongPathNameW {
 		'kernel32', 'DWORD GetLongPathNameW(LPWSTR lpszShortPath, LPWSTR lpszLongPath, DWORD cchBuffer)' # LPCWSTR is a const LPWSTR, unknown to Win32::API
 	);
 	if (! defined($function)) {
-		print "GetLongPathNameW is not supported\n" if ($ENV{PERL_SIZECUSTOMIZE_DEBUG});
+		print "[sitecustomize] GetLongPathNameW is not supported\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 		return (0, undef);
 	}
 
