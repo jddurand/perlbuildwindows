@@ -557,6 +557,11 @@ ExternalProject_Add(freeimage
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/FreeImage-${FREEIMAGE_VERSION}.tar.gz
 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/FreeImage/CMakeLists.txt freeimage/CMakeLists.txt
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/FreeImage
+					COMMAND                ${CMAKE_COMMAND} -E copy license-fi.txt     ${PERL_INST_DIR}/c/licenses/FreeImage
+					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv2.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
+					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv3.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
