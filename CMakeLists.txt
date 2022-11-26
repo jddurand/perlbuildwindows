@@ -490,6 +490,7 @@ ExternalProject_Add(nasm
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/lib
 					COMMAND                ${CMAKE_COMMAND} -E copy libnasm.lib        ${PERL_INST_DIR}/c/lib
 					COMMAND                ${CMAKE_COMMAND} -E copy rdoff/librdoff.lib ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target in nasm makefile
 					#
@@ -506,6 +507,7 @@ ExternalProject_Add(zlib
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/zlib
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/licenses/zlib
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
@@ -528,6 +530,7 @@ ExternalProject_Add(openssl
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/openssl
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt        ${PERL_INST_DIR}/c/licenses/openssl
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
@@ -562,6 +565,7 @@ ExternalProject_Add(freeimage
 					COMMAND                ${CMAKE_COMMAND} -E copy license-fi.txt     ${PERL_INST_DIR}/c/licenses/FreeImage
 					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv2.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
 					COMMAND                ${CMAKE_COMMAND} -E copy license-gplv3.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE)
 
@@ -586,6 +590,7 @@ ExternalProject_Add(expat
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/expat
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/expat
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# XML::Expat want expat.lib and expat.dll, not libexpat.lib or libexpat.dll
 					#
@@ -613,6 +618,7 @@ ExternalProject_Add(fribidi
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/fribidi
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/fribidi
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
@@ -631,6 +637,7 @@ ExternalProject_Add(libiconv
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/libiconv
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/libiconv
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -646,6 +653,7 @@ ExternalProject_Add(datrie
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/datrie
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/datrie
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -665,6 +673,7 @@ ExternalProject_Add(thai
 					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/thai
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/thai
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					# We need perl environment for the path
 					TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
@@ -700,6 +709,7 @@ ExternalProject_Add(giflib
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/giflib
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/giflib
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					BUILD_IN_SOURCE        TRUE
 					)
@@ -714,6 +724,7 @@ ExternalProject_Add(SDL2
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/SDL2
 					COMMAND                ${CMAKE_COMMAND} -E copy ../SDL2/LICENSE.txt  ${PERL_INST_DIR}/c/licenses/SDL2
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -734,6 +745,7 @@ ExternalProject_Add(sdl12-compat
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/sdl12-compat
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt          ${PERL_INST_DIR}/c/licenses/sdl12-compat
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
@@ -748,6 +760,7 @@ ExternalProject_Add(libde265
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libde265
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libde265
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -766,6 +779,7 @@ ExternalProject_Add(x265
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/x265
 					COMMAND                ${CMAKE_COMMAND} -E copy ../COPYING           ${PERL_INST_DIR}/c/licenses/x265
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
@@ -782,6 +796,7 @@ ExternalProject_Add(aom
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/aom
 					COMMAND                ${CMAKE_COMMAND} -E copy ../aom/LICENSE       ${PERL_INST_DIR}/c/licenses/aom
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -802,6 +817,7 @@ ExternalProject_Add(libjpeg-turbo
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libjpeg-turbo
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.md           ${PERL_INST_DIR}/c/licenses/libjpeg-turbo
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					#
@@ -819,6 +835,7 @@ ExternalProject_Add(libheif
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libheif
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libheif
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -837,6 +854,7 @@ ExternalProject_Add(libpng
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libpng
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE              ${PERL_INST_DIR}/c/licenses/libpng
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# Test suite will require access to zlib
 					#
@@ -859,6 +877,7 @@ ExternalProject_Add(libdeflate
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libdeflate
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libdeflate
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -878,6 +897,7 @@ ExternalProject_Add(jbigkit
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/jbigkit
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/jbigkit
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -897,6 +917,7 @@ ExternalProject_Add(lerc
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/lerc
 					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE              ${PERL_INST_DIR}/c/licenses/lerc
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -917,6 +938,7 @@ ExternalProject_Add(xz
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING.GPLv2        ${PERL_INST_DIR}/c/licenses/xz
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING.GPLv3        ${PERL_INST_DIR}/c/licenses/xz
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING.LGPLv2.1     ${PERL_INST_DIR}/c/licenses/xz
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target
 					#
@@ -940,6 +962,7 @@ ExternalProject_Add(zstd
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/zstd
 					COMMAND                ${CMAKE_COMMAND} -E copy ../../COPYING        ${PERL_INST_DIR}/c/licenses/zstd
 					COMMAND                ${CMAKE_COMMAND} -E copy ../../LICENSE        ${PERL_INST_DIR}/c/licenses/zstd
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# There IS a test target but it far too long
 					#
@@ -960,6 +983,7 @@ ExternalProject_Add(libwebp
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libwebp
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libwebp
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# No test target ?
 					#
@@ -1000,6 +1024,7 @@ ExternalProject_Add(tiff
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/tiff
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYRIGHT            ${PERL_INST_DIR}/c/licenses/tiff
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					# Test suite will require access to zlib
 					#

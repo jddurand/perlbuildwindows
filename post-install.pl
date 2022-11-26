@@ -180,13 +180,20 @@ sub process_pkgconfig {
 		}
 	}
 			
-	# In case .pc was using \r\n, revisit the content
-	$oldcontent = join("\n", @old) . "\n";
-	my $newcontent = join("\n", @new) . "\n";
-	
 	if (! $status) {
+		# In case .pc was using \r\n, revisit the content
+		$oldcontent = join("\n", @old) . "\n";
+		my $newcontent = join("\n", @new) . "\n";
+
 		my $warnline = "Changing $file_path !!";
 		my $pretty = '-' x length($warnline);
 		print "$pretty\n$warnline\n$pretty\n$newcontent\n";
+
+		if (! open(PC, '>', $file_path)) {
+			print STDERR "Cannot open $file_path, $!";
+			return;
+		}
+		print PC $newcontent;
+		close(PC) || print STDERR "Cannot close $file_path, $!";
 	}
 }
