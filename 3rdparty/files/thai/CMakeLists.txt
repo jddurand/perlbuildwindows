@@ -117,7 +117,7 @@ add_custom_command(OUTPUT share/libthai/thbrk.tri
 				   COMMAND ${CMAKE_COMMAND} -E copy data/thbrk.tri share/libthai/thbrk.tri
 				   DEPENDS data/thbrk.tri)
 add_custom_target(TRI ALL DEPENDS share/libthai/thbrk.tri)
-install(FILES share/libthai/thbrk.tri DESTINATION bin/share/libthai)
+install(FILES share/libthai/thbrk.tri DESTINATION share/libthai)
 
 # For pkgconfig
 # We follow debian convention i.e. pkgconfig directory is sibbling to lib, dir and include directories
