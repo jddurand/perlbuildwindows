@@ -454,6 +454,13 @@ add_custom_target(perl-win32-api
                   DEPENDS                  perl-pkgconfig
 				  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Win32::API)
 
+#
+# URI is very central and I observed that some modules depends on it but CPAN do not see this
+#
+add_custom_target(perl-uri
+                  DEPENDS                  perl-pkgconfig
+				  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl URI)
+
 # ====================================================================================================================================
 # Net::SSLeay: needs openssl that needs nasm + zlib + post-installation of openssl libraries near Net::SSLeay
 # Also openssl test suite can use Win32::API, so we depend on it
@@ -1079,7 +1086,7 @@ add_custom_target(perl-prima
 # XML::Parser
 # Prima
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima perl-uri)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
