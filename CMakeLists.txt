@@ -318,6 +318,11 @@ SET PERL_PKG_CONFIG_SCRIPTS=ppkg-config,pkg-config
 SET PKG_CONFIG_PATH=${PERL_C_PKGCONFIG_INST_DIR}
 
 REM
+REM For Prima
+REM
+SET PRIMA_EXTRA_CCFLAGS=-I${PERL_C_INCLUDE_INST_DIR_DOS}
+
+REM
 REM For runtime of the above packages, we absolutely want perl to be before
 REM
 SET PATH=${PERL_BIN_INST_DIR_DOS};${PERL_C_BIN_INST_DIR_DOS};%PATH%
@@ -1065,7 +1070,7 @@ ExternalProject_Add(libXpm
 
 add_custom_target(perl-prima
 				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng tiff gdiplus libXpm
-				  # COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
 				  )
 
 # ====================================================================================================================================
@@ -1075,7 +1080,7 @@ add_custom_target(perl-prima
 # XML::Parser
 # Win32::Prima
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
