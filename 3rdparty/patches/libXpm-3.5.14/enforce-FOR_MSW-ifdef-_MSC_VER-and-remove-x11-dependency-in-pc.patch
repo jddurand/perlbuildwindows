@@ -1,0 +1,28 @@
+diff -Naur libXpm.old/include/X11/xpm.h libXpm.new/include/X11/xpm.h
+--- libXpm.old/include/X11/xpm.h	2022-11-19 21:39:03.000000000 +0100
++++ libXpm.new/include/X11/xpm.h	2022-11-27 09:54:47.012487200 +0100
+@@ -64,6 +64,11 @@
+ 
+ #ifndef XPM_NUMBERS
+ 
++#ifdef _MSC_VER
++#  undef FOR_MSW
++#  define FOR_MSW
++#endif
++
+ #ifdef FOR_MSW
+ # define SYSV			/* uses memcpy string.h etc. */
+ # include <malloc.h>
+diff -Naur libXpm.old/xpm.pc.in libXpm.new/xpm.pc.in
+--- libXpm.old/xpm.pc.in	2022-11-19 21:39:03.000000000 +0100
++++ libXpm.new/xpm.pc.in	2022-11-27 09:46:50.298994500 +0100
+@@ -6,7 +6,7 @@
+ Name: Xpm
+ Description: X Pixmap Library
+ Version: @PACKAGE_VERSION@
+-Requires: x11
+-Requires.private: x11
++# Requires: x11
++# Requires.private: x11
+ Cflags: -I${includedir}
+ Libs: -L${libdir} -lXpm

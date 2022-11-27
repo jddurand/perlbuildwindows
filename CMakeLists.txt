@@ -86,6 +86,7 @@ set (XZ_VERSION_DEFAULT                    5.2.8)
 set (ZSTD_VERSION_DEFAULT                  1.5.2)
 set (LIBWEBP_VERSION_DEFAULT               1.2.4)
 set (GDIPLUS_VERSION_DEFAULT               prima)
+set (LIBXPM_VERSION_DEFAULT                3.5.14)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -117,6 +118,7 @@ set (XZ_VERSION                    ${XZ_VERSION_DEFAULT}                    CACH
 set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACHE STRING "zstd version")
 set (LIBWEBP_VERSION               ${LIBWEBP_VERSION_DEFAULT}               CACHE STRING "libwebp version")
 set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACHE STRING "gdiplus version")
+set (LIBXPM_VERSION                ${LIBXPM_VERSION_DEFAULT}                CACHE STRING "libXpm version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -147,6 +149,7 @@ set_property (CACHE XZ_VERSION                    PROPERTY STRINGS ${XZ_VERSION_
 set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSION_DEFAULT})
 set_property (CACHE LIBWEBP_VERSION               PROPERTY STRINGS ${LIBWEBP_VERSION_DEFAULT})
 set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VERSION_DEFAULT})
+set_property (CACHE LIBXPM_VERSION                PROPERTY STRINGS ${LIBXPM_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -179,6 +182,7 @@ message (STATUS "Version of xz                     : ${XZ_VERSION}")
 message (STATUS "Version of zstd                   : ${ZSTD_VERSION}")
 message (STATUS "Version of libwebp                : ${LIBWEBP_VERSION}")
 message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
+message (STATUS "Version of libXpm                 : ${LIBXPM_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1036,8 +1040,31 @@ ExternalProject_Add(tiff
 					#
 					BUILD_IN_SOURCE        TRUE)
 
+# ===========================================================
+# External project libXpm
+# ===========================================================
+ExternalProject_Add(libXpm
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libXpm-${LIBXPM_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libXpm/CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libXpm/Xpm.def Xpm.def
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libXpm-${LIBXPM_VERSION}/enforce-FOR_MSW-ifdef-_MSC_VER-and-remove-x11-dependency-in-pc.patch
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libXpm
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libXpm
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# No test suite
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# Hey aom CMakeLists.txt is checking that we build in source or not
+					#
+					BUILD_IN_SOURCE        TRUE)
+
 add_custom_target(perl-prima
-				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng tiff gdiplus
+				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng tiff gdiplus libXpm
 				  # COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
 				  )
 
