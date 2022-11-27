@@ -315,7 +315,6 @@ REM
 REM For PkgConfig
 REM
 SET PERL_PKG_CONFIG_SCRIPTS=ppkg-config,pkg-config
-SET PKG_CONFIG_PATH=${PERL_C_PKGCONFIG_INST_DIR}
 
 REM
 REM For Prima
@@ -434,7 +433,7 @@ ExternalProject_Add(perl-core
 
 add_custom_target(perl-pkgconfig
 				  DEPENDS                  perl-core
-				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl PkgConfig
+				  COMMAND                  ${CMAKE_COMMAND} -E env PERL_PKGCONFIG_BOOTSTRAP=1 ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl PkgConfig
 				  )
 
 #
