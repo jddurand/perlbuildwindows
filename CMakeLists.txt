@@ -613,7 +613,7 @@ ExternalProject_Add(expat
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 add_custom_target(perl-xml-parser
-				  DEPENDS                  perl-pkgconfig expat
+				  DEPENDS                  perl-pkgconfig expat perl-uri
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl XML::Parser
 				  #
 				  # Post-install: copy openssl libraries near Net::SSLeay
@@ -1086,7 +1086,7 @@ add_custom_target(perl-prima
 # XML::Parser
 # Prima
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima perl-uri)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
