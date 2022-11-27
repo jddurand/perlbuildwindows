@@ -1078,7 +1078,7 @@ add_custom_target(perl-prima
 # Net::SSleay
 # Win32::GUI
 # XML::Parser
-# Win32::Prima
+# Prima
 # ====================================================================================================================================
 add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima)
 
@@ -1171,8 +1171,9 @@ SET (PACKAGES
 	Win32::EventLog
 	# Win32::FileTime       # Unmaintained and not useful IMHO
 	# Win32::FindFile       # Unmaintained and not useful IMHO
-	# Win32::GUIRobot       TO DO DEPENDENCY ON PRIMA BUT PRIMA FAILURE
+	Win32::GUIRobot
 )
+
 foreach(package ${PACKAGES})
   # Transform package to a rule like perl-xxx
   SET(rule "perl-${package}")
