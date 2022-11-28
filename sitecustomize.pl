@@ -5,15 +5,10 @@
 # Disable this script by setting the environment PERL_DISABLE_SIZECUSTOMIZE to any value.
 # Setting the environment variable PERL_SIZECUSTOMIZE_DEBUG will print debug statements.
 #
-my $have_Config        = eval { my $class = 'Config';         require $class; 1 };
-my $have_File_Basename = eval { my $class = 'File::Basename'; require $class; 1 };
-my $have_File_Spec     = eval { my $class = 'File::Spec';     require $class; 1 };
-my $have_WiN32_API     = eval { my $class = 'Win32::API';     require $class; 1 };
-
 _sitecustomize();
 
 #
-# Cleanup the namespace
+# Cleanup the main namespace
 #
 map { undef $main::{$_} } qw/_sitecustomize
                              _sitecustomize_change_config
@@ -26,6 +21,10 @@ map { undef $main::{$_} } qw/_sitecustomize
                             /;
 
 sub _sitecustomize {
+	my $have_Config        = eval { my $class = 'Config';         require $class; 1 };
+	my $have_File_Basename = eval { my $class = 'File::Basename'; require $class; 1 };
+	my $have_File_Spec     = eval { my $class = 'File::Spec';     require $class; 1 };
+	my $have_WiN32_API     = eval { my $class = 'Win32::API';     require $class; 1 };
 	#
 	# Set the environment variable to PERL_DISABLE_SIZECUSTOMIZE to stop this script
 	#
