@@ -1,33 +1,22 @@
 #!env perl
-require "Config.pm";
-require "File/Basename.pm";
-require "File/Spec.pm";
-require "Win32/API.pm";
+#
+# Site customization.
+#
+# Disable this script by setting the environment PERL_DISABLE_SIZECUSTOMIZE to any value.
+# Setting the environment variable PERL_SIZECUSTOMIZE_DEBUG will print debug statements.
+#
+my $have_Config        = eval { my $class = 'Config';         require $class; 1 };
+my $have_File_Basename = eval { my $class = 'File::Basename'; require $class; 1 };
+my $have_File_Spec     = eval { my $class = 'File::Spec';     require $class; 1 };
+my $have_WiN32_API     = eval { my $class = 'Win32::API';     require $class; 1 };
 
-#
-# Paranoid protection
-#
-return if $ENV{PERL_DISABLE_SIZECUSTOMIZE};
-
-#
-# Perl is smart enough to not use the installation path
-# to find sitecustomize.pl. This is how we make our perl
-# portable.
-#
-eval {
-	#
-	# This can fail if e.g. we fail to get current executable name
-	#
-	_sitecustomize_change_config();
-};
-print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
-
-_sitecustomize_setup_env();
+_sitecustomize();
 
 #
 # Cleanup the namespace
 #
-map { undef $main::{$_} } qw/_sitecustomize_change_config
+map { undef $main::{$_} } qw/_sitecustomize
+                             _sitecustomize_change_config
                              _sitecustomize_setup_env
                              _sitecustomize_GetExecutableFullPathW
                              _sitecustomize_WideStringToPerlString
@@ -35,6 +24,31 @@ map { undef $main::{$_} } qw/_sitecustomize_change_config
                              _sitecustomize_GetFullPathNameW
                              _sitecustomize_GetLongPathNameW
 							/;
+
+sub _sitecustomize {
+	#
+	# Set the environment variable to PERL_DISABLE_SIZECUSTOMIZE to stop this script
+	#
+	return if $ENV{PERL_DISABLE_SIZECUSTOMIZE};
+	#
+	# Paranoid protection
+	#
+	return unless $have_Config && $have_File_Basename && $have_File_Spec && $have_WiN32_API;
+	#
+	# Perl is smart enough to not use the installation path
+	# to find sitecustomize.pl. This is how we make our perl
+	# portable.
+	#
+	eval {
+		#
+		# This can fail if e.g. we fail to get current executable name
+		#
+		_sitecustomize_change_config();
+	};
+	print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+
+	_sitecustomize_setup_env();
+}
 
 sub _sitecustomize_change_config {
 	#
