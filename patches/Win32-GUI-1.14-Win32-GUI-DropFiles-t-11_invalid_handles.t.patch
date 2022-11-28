@@ -1,0 +1,12 @@
+diff -Naur Win32-GUI-1.14.old/Win32-GUI_DropFiles/t/11_invalid_handles.t Win32-GUI-1.14.new/Win32-GUI_DropFiles/t/11_invalid_handles.t
+--- Win32-GUI-1.14.old/Win32-GUI_DropFiles/t/11_invalid_handles.t	2017-06-01 14:31:49.000000000 +0200
++++ Win32-GUI-1.14.new/Win32-GUI_DropFiles/t/11_invalid_handles.t	2022-11-28 07:05:52.412355400 +0100
+@@ -15,7 +15,7 @@
+ use Test::More;
+ use Win32::GUI::DropFiles;
+ 
+-my @handles = (0, int(rand(2**32)),);
++my @handles = (0, -1);
+ 
+ plan tests => 6 * scalar @handles;
+ 

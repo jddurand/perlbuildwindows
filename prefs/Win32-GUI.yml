@@ -10,4 +10,4 @@ patches:
   - Win32-GUI-1.14-GridCtrl.patch
   - Win32-GUI-1.14-Grid-Detect-MFC-Version.patch
   - Win32-GUI-1.14-Fix-build_tools-dependency.patch
-
+  - Win32-GUI-1.14-Win32-GUI-DropFiles-t-11_invalid_handles.t.patch
