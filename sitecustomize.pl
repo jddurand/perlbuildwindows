@@ -93,7 +93,7 @@ sub _sitecustomize_setup_env {
 	#
 	# Always set PKG_CONFIG_PATH to $Config{installprefix}/c/lib/pkgconfig
 	# Note that this is a bit vicious but the test suite of PkgConfig requires
-	# that this is variable is not set ;)
+	# that this variable is not set ;)
 	#
 	$ENV{PKG_CONFIG_PATH} = File::Spec->catdir($Config::Config{installprefix}, 'c', 'lib', 'pkgconfig') unless defined $ENV{PERL_PKGCONFIG_BOOTSTRAP};
 }
