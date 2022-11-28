@@ -23,7 +23,7 @@ map { undef $main::{$_} } qw/_sitecustomize
                              _sitecustomize_GetModuleFileNameW
                              _sitecustomize_GetFullPathNameW
                              _sitecustomize_GetLongPathNameW
-							/;
+                            /;
 
 sub _sitecustomize {
 	#
