@@ -1,10 +1,8 @@
 #!env perl
 use strict;
-use Config;
-use Encode;
-use Errno qw/ERROR_INSUFFICIENT_BUFFER/;
+use Config qw//;
 use File::Basename qw/dirname/;
-use File::Spec;
+use File::Spec qw//;
 use Win32::API qw/SafeReadWideCString/;
 
 #
