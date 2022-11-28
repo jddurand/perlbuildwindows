@@ -34,6 +34,7 @@ my %PC = (
 	'docdir' => sub { q|${datarootdir}/doc/| . shift },
 	'infodir' => q|${datarootdir}/info|,
 	'libdir' => q|${exec_prefix}/lib|,
+	'sharedlibdir' => q|${exec_prefix}/lib|,
 	'localedir' => q|${datarootdir}/locale|,
 	'mandir' => q|${datarootdir}/man|,
 	'man1dir' => q|${mandir}/man1|,
