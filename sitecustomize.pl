@@ -13,9 +13,10 @@ return if $ENV{PERL_DISABLE_SIZECUSTOMIZE};
 # Perl is smart enough to not use the installation path
 # to find sitecustomize.pl. This is how we make our perl
 # portable.
+#
 eval {
 	#
-	# This can fail if e.g. we find to get current executable name
+	# This can fail if e.g. we fail to get current executable name
 	#
 	_sitecustomize_change_config();
 };
