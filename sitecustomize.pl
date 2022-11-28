@@ -1,9 +1,8 @@
 #!env perl
-use strict;
-use Config qw//;
-use File::Basename qw/dirname/;
-use File::Spec qw//;
-use Win32::API qw/SafeReadWideCString/;
+require "Config.pm";
+require "File/Basename.pm";
+require "File/Spec.pm";
+require "Win32/API.pm";
 
 #
 # Paranoid protection
@@ -28,13 +27,13 @@ _sitecustomize_setup_env();
 # Cleanup the namespace
 #
 map { undef $main::{$_} } qw/_sitecustomize_change_config
-                              _sitecustomize_setup_env
-                              _sitecustomize_GetExecutableFullPathW
-							  _sitecustomize_WideStringToPerlString
-							  _sitecustomize_GetModuleFileNameW
-							  _sitecustomize_GetFullPathNameW
-							  _sitecustomize_GetLongPathNameW
-							  /;
+                             _sitecustomize_setup_env
+                             _sitecustomize_GetExecutableFullPathW
+                             _sitecustomize_WideStringToPerlString
+                             _sitecustomize_GetModuleFileNameW
+                             _sitecustomize_GetFullPathNameW
+                             _sitecustomize_GetLongPathNameW
+							/;
 
 sub _sitecustomize_change_config {
 	#
@@ -46,13 +45,13 @@ sub _sitecustomize_change_config {
 	#
 	# We are by definition there: XXX\bin\perl.exe
 	#
-	my $newinstallprefix = dirname(dirname($executable));
+	my $newinstallprefix = File::Basename::dirname(File::Basename::dirname($executable));
 	print "[sitecustomize] \$newinstallprefix : " . ($newinstallprefix // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 
 	#
 	# Recuperate the old install prefix
 	#
-	my $oldinstallprefix = $Config{installprefix};
+	my $oldinstallprefix = $Config::Config{installprefix};
 	print "[sitecustomize] \$oldinstallprefix : " . ($oldinstallprefix // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 
 	#
@@ -73,15 +72,15 @@ sub _sitecustomize_change_config {
 			$self->{$this} = $value,
 		};
 		#
-		# We inspect all values of $Config and rewrite $oldinstallprefix to $newinstallprefix
+		# We inspect all values of %Config and rewrite $oldinstallprefix to $newinstallprefix
 		# No need for a regex here, values all start with $oldinstallprefix or not.
 		#
-		foreach my $key (keys %Config) {
-			my $value = $Config{$key} // '';
+		foreach my $key (keys %Config::Config) {
+			my $value = $Config::Config{$key} // '';
 			if (index($value, $oldinstallprefix) == 0) {
 				substr($value, 0, $oldinstallprefix_length, $newinstallprefix);
-				print "[sitecustomize] \$Config{$key} = $Config{$key} -> $value\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
-				$Config{$key} = $value;
+				print "[sitecustomize] \$Config::Config{$key} = $Config::Config{$key} -> $value\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+				$Config::Config{$key} = $value;
 			}
 		}
 
@@ -95,7 +94,7 @@ sub _sitecustomize_setup_env {
 	# Note that this is a bit vicious but the test suite of PkgConfig requires
 	# that this is variable is not set ;)
 	#
-	$ENV{PKG_CONFIG_PATH} = File::Spec->catdir($Config{installprefix}, 'c', 'lib', 'pkgconfig') unless defined $ENV{PERL_PKGCONFIG_BOOTSTRAP};
+	$ENV{PKG_CONFIG_PATH} = File::Spec->catdir($Config::Config{installprefix}, 'c', 'lib', 'pkgconfig') unless defined $ENV{PERL_PKGCONFIG_BOOTSTRAP};
 }
 
 sub _sitecustomize_GetExecutableFullPathW {
@@ -126,7 +125,7 @@ sub _sitecustomize_WideStringToPerlString {
 	
 	return undef unless defined($source);
 
-	return SafeReadWideCString(unpack('J',pack('p', $source)));
+	return Win32::API::SafeReadWideCString(unpack('J',pack('p', $source)));
 }
 
 sub _sitecustomize_GetModuleFileNameW {
@@ -149,7 +148,10 @@ sub _sitecustomize_GetModuleFileNameW {
 		# Truncation ?
 	} while ($rc == $nSize);
 	
-	$lpFilename = bytes::substr($lpFilename, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	{
+		use bytes;
+		$lpFilename = bytes::substr($lpFilename, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	}
 	
 	return $lpFilename;
 }
@@ -176,7 +178,10 @@ sub _sitecustomize_GetFullPathNameW {
 		# Not enough room ?
 	} while ($rc > $nSize);
 	
-	$lpBuffer = bytes::substr($lpBuffer, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	{
+		use bytes;
+		$lpBuffer = bytes::substr($lpBuffer, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	}
 	
 	return $lpBuffer;
 }
@@ -207,7 +212,10 @@ sub _sitecustomize_GetLongPathNameW {
 		# Not enough room ?
 	} while ($rc > $cchBuffer);
 	
-	$lpszLongPath = bytes::substr($lpszLongPath, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	{
+		use bytes;
+		$lpszLongPath = bytes::substr($lpszLongPath, 0, ($rc + 1) * 2); # $rc is the number of TCHAR minus the null character that is in the buffer
+	}
 	
 	return (1, $lpszLongPath);
 }
