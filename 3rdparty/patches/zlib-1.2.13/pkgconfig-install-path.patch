@@ -1,0 +1,12 @@
+diff -Naur zlib.old/CMakeLists.txt zlib.new/CMakeLists.txt
+--- zlib.old/CMakeLists.txt	2022-10-13 07:06:55.000000000 +0200
++++ zlib.new/CMakeLists.txt	2022-11-28 18:10:31.205131500 +0100
+@@ -9,7 +9,7 @@
+ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
+ set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
+ set(INSTALL_MAN_DIR "${CMAKE_INSTALL_PREFIX}/share/man" CACHE PATH "Installation directory for manual pages")
+-set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
++set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
+ 
+ include(CheckTypeSize)
+ include(CheckFunctionExists)
