@@ -1,6 +1,5 @@
 #!env perl
 use strict;
-use diagnostics;
 use Config;
 use Encode;
 use Errno qw/ERROR_INSUFFICIENT_BUFFER/;
