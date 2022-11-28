@@ -21,14 +21,17 @@ map { undef $main::{$_} } qw/_sitecustomize
                             /;
 
 sub _sitecustomize {
-	my $have_Config        = eval { my $class = 'Config';         require $class; 1 };
-	my $have_File_Basename = eval { my $class = 'File::Basename'; require $class; 1 };
-	my $have_File_Spec     = eval { my $class = 'File::Spec';     require $class; 1 };
-	my $have_WiN32_API     = eval { my $class = 'Win32::API';     require $class; 1 };
 	#
 	# Set the environment variable to PERL_DISABLE_SIZECUSTOMIZE to stop this script
 	#
 	return if $ENV{PERL_DISABLE_SIZECUSTOMIZE};
+	#
+	# Check if we can proceed
+	#
+	my $have_Config        = eval { require 'Config.pm';        1 }; print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	my $have_File_Basename = eval { require 'File/Basename.pm'; 1 }; print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	my $have_File_Spec     = eval { require 'File/Spec.pm';     1 }; print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	my $have_WiN32_API     = eval { require 'Win32/API.pm';     1 }; print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 	#
 	# Paranoid protection
 	#
