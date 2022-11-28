@@ -787,7 +787,7 @@ ExternalProject_Add(libde265
 # External project x265
 # ===========================================================
 ExternalProject_Add(x265
-                    DEPENDS                perl-pkgconfig
+                    DEPENDS                perl-pkgconfig nasm
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					SOURCE_SUBDIR          source
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/x265-${X265_VERSION}.tar.gz
