@@ -1,3 +1,4 @@
+@ECHO OFF
 REM
 REM We patch only the Makefile
 REM %1: ${REPLACE_VBS_DOS}
