@@ -1,0 +1,12 @@
+diff -Naur libwebp.old/CMakeLists.txt libwebp.new/CMakeLists.txt
+--- libwebp.old/CMakeLists.txt	2022-08-06 01:49:26.000000000 +0200
++++ libwebp.new/CMakeLists.txt	2022-11-29 14:17:20.101685700 +0100
+@@ -723,7 +723,7 @@
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+-set(ConfigPackageLocation ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/cmake/)
++set(ConfigPackageLocation ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/)
+ install(EXPORT ${PROJECT_NAME}Targets
+         NAMESPACE ${PROJECT_NAME}::
+         DESTINATION ${ConfigPackageLocation})
