@@ -22,7 +22,8 @@ diff -Naur libXpm.old/xpm.pc.in libXpm.new/xpm.pc.in
  Version: @PACKAGE_VERSION@
 -Requires: x11
 -Requires.private: x11
+-Cflags: -I${includedir}
 +# Requires: x11
 +# Requires.private: x11
- Cflags: -I${includedir}
++Cflags: -I${includedir}/X11
  Libs: -L${libdir} -lXpm

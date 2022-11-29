@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 
 project(libXpm VERSION 3.5.11 LANGUAGES C)
 
+set(public_headers
+	include/X11/xpm.h
+	src/simx.h
+)
+
 add_library(Xpm SHARED
 	src/Attrib.c
 	src/CrBufFrI.c
@@ -38,15 +43,11 @@ add_library(Xpm SHARED
 	src/simx.c
 	src/simx.h
 	Xpm.def
+	${public_headers}
 	)
 
 target_compile_definitions(Xpm PRIVATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DFOR_MSW)
 target_include_directories(Xpm PUBLIC include/X11)
-
-set(public_headers
-	include/X11/xpm.h
-	src/simx.h
-)
 
 set_target_properties(Xpm
     PROPERTIES
@@ -54,7 +55,7 @@ set_target_properties(Xpm
     SOVERSION     "${XPM_MAJOR_VERSION}"
 	PUBLIC_HEADER "${public_headers}"
     )
-install(TARGETS Xpm)
+install(TARGETS Xpm PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/X11)
 
 
 # For pkgconfig
