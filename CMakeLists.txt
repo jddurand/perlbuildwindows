@@ -87,6 +87,7 @@ set (ZSTD_VERSION_DEFAULT                  1.5.2)
 set (LIBWEBP_VERSION_DEFAULT               1.2.4)
 set (GDIPLUS_VERSION_DEFAULT               prima)
 set (LIBXPM_VERSION_DEFAULT                3.5.14)
+set (FREEGLUT_VERSION_DEFAULT              3.4.0)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -119,6 +120,7 @@ set (ZSTD_VERSION                  ${ZSTD_VERSION_DEFAULT}                  CACH
 set (LIBWEBP_VERSION               ${LIBWEBP_VERSION_DEFAULT}               CACHE STRING "libwebp version")
 set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACHE STRING "gdiplus version")
 set (LIBXPM_VERSION                ${LIBXPM_VERSION_DEFAULT}                CACHE STRING "libXpm version")
+set (FREEGLUT_VERSION              ${FREEGLUT_VERSION_DEFAULT}              CACHE STRING "freeglut version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -150,6 +152,7 @@ set_property (CACHE ZSTD_VERSION                  PROPERTY STRINGS ${ZSTD_VERSIO
 set_property (CACHE LIBWEBP_VERSION               PROPERTY STRINGS ${LIBWEBP_VERSION_DEFAULT})
 set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VERSION_DEFAULT})
 set_property (CACHE LIBXPM_VERSION                PROPERTY STRINGS ${LIBXPM_VERSION_DEFAULT})
+set_property (CACHE FREEGLUT_VERSION              PROPERTY STRINGS ${FREEGLUT_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -183,6 +186,7 @@ message (STATUS "Version of zstd                   : ${ZSTD_VERSION}")
 message (STATUS "Version of libwebp                : ${LIBWEBP_VERSION}")
 message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
 message (STATUS "Version of libXpm                 : ${LIBXPM_VERSION}")
+message (STATUS "Version of freeglut               : ${FREEGLUT_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1023,10 +1027,32 @@ ExternalProject_Add(gdiplus
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
+# External project freeglut
+# ===========================================================
+ExternalProject_Add(freeglut
+                    DEPENDS                perl-pkgconfig
+					#
+					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
+					#
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/freeglut-${FREEGLUT_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/freeglut-${FREEGLUT_VERSION}/fix-pc.patch
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/freeglut
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/freeglut
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# No test target ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
 # External project tiff
 # ===========================================================
 ExternalProject_Add(tiff
-					DEPENDS                perl-pkgconfig zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp
+					DEPENDS                perl-pkgconfig zlib libjpeg-turbo libdeflate jbigkit lerc xz zstd libwebp freeglut
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -Dlzma=ON .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/tiff-${TIFF_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/add_v4.4.0.html_to_docfiles.patch
@@ -1037,6 +1063,7 @@ ExternalProject_Add(tiff
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3599.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/CVE-2022-3598.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/libtiff.def.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/tiff-${TIFF_VERSION}/use-freeglut-instead-of-glut.patch
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/tiff
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYRIGHT            ${PERL_INST_DIR}/c/licenses/tiff

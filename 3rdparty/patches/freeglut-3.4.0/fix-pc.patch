@@ -1,0 +1,13 @@
+diff -Naur freeglut.old/CMakeLists.txt freeglut.new/CMakeLists.txt
+--- freeglut.old/freeglut.pc.in 2022-10-07 18:12:51.000000000 +0200
++++ freeglut.new/freeglut.pc.in 2022-11-28 09:38:09.871412100 +0100
+@@ -1,5 +1,6 @@
+-prefix=@CMAKE_INSTALL_PREFIX@
+-libdir=@CMAKE_INSTALL_FULL_LIBDIR@
++prefix=${pcfiledir}/../..
++exec_prefix=${prefix}
++libdir=${exec_prefix}/lib
+ includedir=${prefix}/include
+
+ Name: glut
+

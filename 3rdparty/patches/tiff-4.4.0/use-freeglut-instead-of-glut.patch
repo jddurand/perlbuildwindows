@@ -1,0 +1,86 @@
+diff -Naur tiff.old/cmake/OpenGLChecks.cmake tiff.new/cmake/OpenGLChecks.cmake
+--- tiff.old/cmake/OpenGLChecks.cmake	2022-02-19 16:33:54.000000000 +0100
++++ tiff.new/cmake/OpenGLChecks.cmake	2022-11-29 05:12:02.593882300 +0100
+@@ -27,17 +27,24 @@
+ set(OpenGL_GL_PREFERENCE LEGACY)
+ 
+ find_package(OpenGL COMPONENTS OpenGL)
+-find_package(GLUT)
++find_package(FreeGLUT)
++if (NOT FreeGLUT_FOUND)
++  find_package(GLUT)
++endif()
+ 
+ set(HAVE_OPENGL FALSE)
+-if(OPENGL_FOUND AND OPENGL_GLU_FOUND AND GLUT_FOUND)
++if(OPENGL_FOUND AND OPENGL_GLU_FOUND AND (FreeGLUT_FOUND OR GLUT_FOUND))
+     set(HAVE_OPENGL TRUE)
+ endif()
+ 
+ # Purely to satisfy the generated headers:
+-check_include_file(GL/gl.h HAVE_GL_GL_H)
+-check_include_file(GL/glu.h HAVE_GL_GLU_H)
+-check_include_file(GL/glut.h HAVE_GL_GLUT_H)
+-check_include_file(GLUT/glut.h HAVE_GLUT_GLUT_H)
+-check_include_file(OpenGL/gl.h HAVE_OPENGL_GL_H)
+-check_include_file(OpenGL/glu.h HAVE_OPENGL_GLU_H)
++if (FreeGLUT_FOUND)
++    SET(HAVE_GL_FREEGLUT_H TRUE)
++else()
++	check_include_file(GL/gl.h HAVE_GL_GL_H)
++	check_include_file(GL/glu.h HAVE_GL_GLU_H)
++	check_include_file(GL/glut.h HAVE_GL_GLUT_H)
++	check_include_file(GLUT/glut.h HAVE_GLUT_GLUT_H)
++	check_include_file(OpenGL/gl.h HAVE_OPENGL_GL_H)
++	check_include_file(OpenGL/glu.h HAVE_OPENGL_GLU_H)
++endif()
+diff -Naur tiff.old/libtiff/tif_config.h.cmake.in tiff.new/libtiff/tif_config.h.cmake.in
+--- tiff.old/libtiff/tif_config.h.cmake.in	2022-02-19 16:33:54.000000000 +0100
++++ tiff.new/libtiff/tif_config.h.cmake.in	2022-11-29 05:09:22.620887100 +0100
+@@ -34,6 +34,9 @@
+ /* Define to 1 if you have the `getopt' function. */
+ #cmakedefine HAVE_GETOPT 1
+ 
++/* Define to 1 if you have the <GL/freeglut.h> header file. */
++#cmakedefine HAVE_GL_FREEGLUT_H 1
++
+ /* Define to 1 if you have the <GLUT/glut.h> header file. */
+ #cmakedefine HAVE_GLUT_GLUT_H 1
+ 
+diff -Naur tiff.old/tools/CMakeLists.txt tiff.new/tools/CMakeLists.txt
+--- tiff.old/tools/CMakeLists.txt	2022-04-22 18:51:48.000000000 +0200
++++ tiff.new/tools/CMakeLists.txt	2022-11-29 05:13:41.876925300 +0100
+@@ -128,7 +128,11 @@
+   add_executable(tiffgt ../placeholder.h)
+   target_sources(tiffgt PRIVATE tiffgt.c)
+   target_link_libraries(tiffgt PRIVATE tiff port)
+-  target_link_libraries(tiffgt PRIVATE OpenGL::GL GLUT::GLUT)
++  if (FreeGLUT_FOUND)
++    target_link_libraries(tiffgt PRIVATE OpenGL::GL FreeGLUT::freeglut)
++  else()
++    target_link_libraries(tiffgt PRIVATE OpenGL::GL GLUT::GLUT)
++  endif()
+ 
+   install(TARGETS tiffgt
+           RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+diff -Naur tiff.old/tools/tiffgt.c tiff.new/tools/tiffgt.c
+--- tiff.old/tools/tiffgt.c	2022-02-19 16:33:55.000000000 +0100
++++ tiff.new/tools/tiffgt.c	2022-11-29 05:10:18.531708500 +0100
+@@ -41,10 +41,14 @@
+ # endif
+ # include <GL/gl.h>
+ #endif
+-#ifdef HAVE_GLUT_GLUT_H
+-# include <GLUT/glut.h>
++#ifdef HAVE_GL_FREEGLUT_H
++# include <GL/freeglut.h>
+ #else
+-# include <GL/glut.h>
++# ifdef HAVE_GLUT_GLUT_H
++#  include <GLUT/glut.h>
++# else
++#  include <GL/glut.h>
++# endif
+ #endif
+ 
+ #include "tiffio.h"
