@@ -111,7 +111,17 @@ sub _sitecustomize_setup_env {
 	# Note that this is a bit vicious but the test suite of PkgConfig requires
 	# that this variable is not set ;)
 	#
-	$ENV{PKG_CONFIG_PATH} = File::Spec->catdir($Config::Config{installprefix}, 'c', 'lib', 'pkgconfig') unless defined $ENV{PERL_PKGCONFIG_BOOTSTRAP};
+	if (! defined($ENV{PERL_PKGCONFIG_BOOTSTRAP})) {
+		my $perl_pkgconfig_path = File::Spec->catdir($Config::Config{installprefix}, 'c', 'lib', 'pkgconfig');
+		if (defined($ENV{PKG_CONFIG_PATH})) {
+			#
+			# We preprend our PKG_CONFIG_PATH
+			#
+			$ENV{PKG_CONFIG_PATH} = join(';', $perl_pkgconfig_path, $ENV{PKG_CONFIG_PATH});
+		} else {
+			$ENV{PKG_CONFIG_PATH} = $perl_pkgconfig_path;
+		}
+	}
 }
 
 sub _sitecustomize_GetExecutableFullPathW {
