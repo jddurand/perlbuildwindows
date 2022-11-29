@@ -1,0 +1,12 @@
+diff -Naur SDL2.old/CMakeLists.txt SDL2.new/CMakeLists.txt
+--- SDL2.old/CMakeLists.txt	2022-11-22 01:19:33.000000000 +0100
++++ SDL2.new/CMakeLists.txt	2022-11-29 06:40:54.601397100 +0100
+@@ -3422,7 +3422,7 @@
+ 
+   ##### Export files #####
+   if (WINDOWS AND NOT MINGW)
+-    set(SDL_INSTALL_CMAKEDIR_DEFAULT "cmake")
++    set(SDL_INSTALL_CMAKEDIR_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2")
+     set(LICENSES_PREFIX "licenses/SDL2")
+   else ()
+     set(SDL_INSTALL_CMAKEDIR_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2")
