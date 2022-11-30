@@ -1147,7 +1147,7 @@ SET (PACKAGES
 	# Win32::RASE             Too old, too hacky, not needed IMHO
 	Win32::SDDL
 	Win32::Scsv
-	# Win32::Wlan             Systematic crash (?)
+	Win32::Wlan
 	# Win32::Fmode            Too old, too hacky, not needed IMHO
 	# Win32::Netsh            Tests too buggy
 	# Win32::SAPI4            Test fail I do not really understand - has to do the registry ?
