@@ -33,7 +33,7 @@ I would have in mind only few questions that would knock in my head if I would i
 
 Currently only x86.
 
-* It proposes to install to C:\cl-perl-<VERSION>-<ARCH>bits - may I use another installation directory ?
+* It proposes to install to C:\cl-perl-VERSION-ARCHbits - may I use another installation directory ?
 
 I've done the best as I can to make it relocatable, using what perl is calling "sitecustomize.pl" (c.f. https://perldoc.perl.org/perlrun). This is experimental and sensible code, though it seems to work fine for me.
 
