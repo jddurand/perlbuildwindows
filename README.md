@@ -41,10 +41,11 @@ I've done the best as I can to make it relocatable, using what perl is calling "
 
 Well, you can open an issue on this github project, I'll be glad to help/try to understand. All in all if this can improve this personal project or Perl, that's good.
 
-## Main changes with main stream perl packages
+## The most important things to know about this package
 
 * Win32::GUI is patched to work with latest freeimage
-* tiff is patched to compile with freeglut
+* Also experimental, perl executable in this package is aimed to be relocatable
+* Relocatable pkgconfig files as well, with a "perl" version of pkgconfig that is taking precedence in %PATH%
 
 ## Current Perl and external projects versions
 
