@@ -46,7 +46,7 @@ Well, you can open an issue on this github project, I'll be glad to help/try to 
 * Win32::GUI is patched to work with latest freeimage
 * tiff is patched to compile with freeglut
 
-## Current perl version and external projects
+## Current Perl and external projects versions
 
 Copied verbatim from the generation of Makefile:
 
