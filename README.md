@@ -95,6 +95,8 @@ Copied verbatim from the generation of Makefile:
 -- ===================================
 ```
 
+What I mean by forced versions for some Perl packages, is that I did patch them is a sensible way, so that IMHO only these versions are guaranteed to be ok. So I force them in the script.
+
 # Do it yourself
 
 ## Prerequisites
