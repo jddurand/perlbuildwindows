@@ -128,3 +128,11 @@ cmake -G "NMake Makefiles" ..\perlbuildwindows
 nmake
 nmake package
 ```
+
+Some words on testing before installing:
+* Perl tests must be ok
+* openssl tests must be ok
+* External projects tests are executed if available
+	* Some external projects have know defects and known fixes, or I simply had to patch them to have installation paths that fit my installation tree, c.f. the 3rdpaty/patches directory in this project
+* Perl packages tests via CPAN must be ok (there is no "force install" anywhere in my script)
+	* Some CPAN packages have know defects and know fixes, c.f. the patches directory in this project
