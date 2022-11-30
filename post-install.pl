@@ -59,13 +59,19 @@ sub process_pkgconfig {
 		return;
 	}
 
-	my $file_path = File::Spec->catfile($ENV{PKG_CONFIG_PATH}, "$package.pc");
-	if (! open(PC, '<', $file_path)) {
-		print STDERR "Cannot open $file_path, $!";
+	my $oldcontent = undef;
+	my $file_path = undef;
+	foreach (split(';', $ENV{PKG_CONFIG_PATH})) {
+		$file_path = File::Spec->catfile($_, "$package.pc");
+		next unless open(PC, '<', $file_path);
+		$oldcontent = do { local $/; <PC> };
+		close(PC) || print STDERR "Cannot close $file_path, $!";
+		last;
+	}
+	if (! defined($oldcontent)) {
+		print STDERR "Failed to find $package.pc in $ENV{PKG_CONFIG_PATH}\n";
 		return;
 	}
-	my $oldcontent = do { local $/; <PC> };
-	close(PC) || print STDERR "Cannot close $file_path, $!";
 
 	my @old = split(/\R/, $oldcontent);
 	my @new;
