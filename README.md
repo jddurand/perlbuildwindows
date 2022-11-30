@@ -37,9 +37,9 @@ Currently only x86.
 
 I've done the best as I can to make it relocatable, using what perl is calling "sitecustomize.pl" (c.f. https://perldoc.perl.org/perlrun). This is experimental and sensible code, though it seems to work fine for me.
 
-* What it something is not working for me ?
+* What if something is not working for me ?
 
-Well, you can open an issue on this github page, I'll be glad to help/try to understand. All in all if this can improve this personal project, that's good.
+Well, you can open an issue on this github project, I'll be glad to help/try to understand. All in all if this can improve this personal project or Perl, that's good.
 
 ## Main changes with main stream perl packages
 
