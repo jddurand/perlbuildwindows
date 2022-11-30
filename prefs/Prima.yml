@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QPrima-1.67.tar.gz\E'
+patches:
+  - Prima-1.67-fix-semistatic.patch
