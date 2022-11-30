@@ -1,6 +1,13 @@
 # Perl build on Windows
 
-This is a CMake script that will compile Perl and all extensions on Windows using Microsoft Visual Studio `cl`. A big package is finally created.
+This is a CMake script that will compile Perl on Windows using Microsoft Visual Studio `cl`. A big package is finally created.
+
+_Everything_ is compiled from scratch.
+
+## Main changes with main stream packages
+
+* Win32::GUI is patched to work with latest freeimage
+* tiff is patched to compile with freeglut
 
 ## Current perl version and external projects
 
