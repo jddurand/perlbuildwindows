@@ -24,8 +24,8 @@ diff -Naur Win32-MMF.old/Makefile.PL Win32-MMF.new/Makefile.PL
      'INC'		    => '',
 diff -Naur Win32-MMF.old/t/04_private_swap.t Win32-MMF.new/t/04_private_swap.t
 --- Win32-MMF.old/t/04_private_swap.t	2004-05-29 11:05:58.000000000 +0200
-+++ Win32-MMF.new/t/04_private_swap.t	2022-11-29 16:54:50.407649800 +0100
-@@ -1,7 +1,13 @@
++++ Win32-MMF.new/t/04_private_swap.t	2022-11-30 06:52:22.794345600 +0100
+@@ -1,7 +1,7 @@
  use strict;
  use warnings;
 +use File::Spec;
@@ -33,12 +33,7 @@ diff -Naur Win32-MMF.old/t/04_private_swap.t Win32-MMF.new/t/04_private_swap.t
 -use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=>"C:/private.swp", size=>1024*1024 };
 -
 -is( (-s "C:/private.swp"), 1024*1024, "Private swap OK" );
+-
 +my $swapfile;
-+BEGIN {
-+  $swapfile = File::Spec->catfile(File::Spec->tmpdir(), "private.swp");
-+  print STDERR "\$swapfile = $swapfile\n";
-+}
-+use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=> $swapfile, size=>1024*1024, debug => 1 };
- 
-+system('dir $swapfile');
++use Win32::MMF::Shareable { namespace=>"MySwapfile", swapfile=> do { $swapfile = File::Spec->catfile(File::Spec->tmpdir(), "private.swp") }, size=>1024*1024 };
 +is( (-s $swapfile), 1024*1024, "Private swap OK" );
