@@ -89,13 +89,13 @@ index fedb1bf..7a261b6 100644
 +      return NULL;
 +
 +    length = wcslen(wc_fn);
-+    filename = (char *)malloc (sizeof(char) * (length * 2 + 1));
++    filename = (char *)calloc (1, sizeof(char) * (length * 2 + 1));
 +    wcstombs_s(&converted, filename, length * 2, wc_fn, _TRUNCATE);
 +
 +    if ((p = strrchr (filename, '\\')) != NULL)
 +        *p = '\0';
 +
-+    retval = (char *)malloc (sizeof(char) * (length * 2 + 1));
++    retval = (char *)calloc (1, sizeof(char) * (length * 2 + 1));
 +	memcpy (retval, filename, strlen(filename));
 +
 +    do
@@ -139,7 +139,7 @@ index fedb1bf..7a261b6 100644
 +        char *basedir = libthai_get_installdir (libthai_dll);
 +        const char *sharedir = "share\\libthai\\" DICT_NAME ".tri";
 +        size_t total_len = strlen (basedir) + strlen (sharedir) + 1; /* '+ 1' for the '\\' that we are using below */
-+        char *filepath = (char *) malloc (sizeof (char) * (total_len + 1));
++        char *filepath = (char *) calloc (1, sizeof (char) * (total_len + 1));
 +        sprintf (filepath, "%s\\%s", basedir, sharedir);
 +        dict_trie = trie_new_from_file (filepath);
 +        free (filepath);
