@@ -20,7 +20,7 @@ Back to Windows case, I use cl. So I want _everything_ to be cl based. Full poin
 
 Back to Perl case:
 * Strawberry Perl distribution switched to gcc toolchain few years ago, so I abandonned it. This is not a critiscm, Strawberry Perl is just awesome. But does not fit my technical prerequesites.
-* ActiveState perl have a pure cl version as far as I understood, never tried, you might, well I'd recommend to, want to use it instead
+* ActiveState perl have a pure cl version as far as I understood, never tried, you might, well I'd recommend, want to use it instead
 * I do not know if there are other _cl_ based Perl distributions
 
 Finally this project is for my personal fun, I like the idea to be able to help Perl language robustness and portability by doing this exercise.
