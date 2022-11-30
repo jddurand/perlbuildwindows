@@ -19,7 +19,7 @@ In general, as a software developer, I personnally _want_ to have all my depende
 Back to Windows case, I use cl. So I want _everything_ to be cl based. Full point.
 
 Back to Perl case:
-* Strawberry distribution switched to gcc toochain few years ago, so I abandonned it.
+* Strawberry Perl distribution switched to gcc toolchain few years ago, so I abandonned it. This is not a critiscm, Strawberry Perl is just awesome. But does not fit my technical prerequesites.
 * ActiveState perl have a pure cl version as far as I understood, never tried, you might, well I'd recommend to, want to use it instead
 * I do not know if there are other _cl_ based Perl distributions
 
