@@ -4,7 +4,44 @@ This is a CMake script that will compile Perl on Windows using Microsoft Visual 
 
 _Everything_ is compiled from scratch.
 
-## Main changes with main stream packages
+## Why ?
+
+Every software gains in robustness if it can compile and work natively on different platforms. So a _pure_ Windows version of Perl can only benefit to the later.
+
+In general, as a software developer, I personnally _want_ to have all my dependencies built using the _same_ compiler that I use to develop my personal projects, whatever it is:
+* gcc
+* clang
+* CC (Sun/Solaris)
+* xlc (AIX)
+* cl/bcc
+* etc...
+
+Back to Windows case, I use cl. So I want _everything_ to be cl based. Full point.
+
+Back to Perl case:
+* Strawberry distribution switched to gcc toochain few years ago, so I abandonned it.
+* ActiveState perl have a pure cl version as far as I understood, never tried, you might, well I'd recommend to, want to use it instead
+* I do not know if there are other _cl_ based Perl distributions
+
+Finally this project is for my personal fun, I like the idea to be able to help Perl language robustness and portability by doing this exercise.
+
+## A little FAQ
+
+I would have in mind only few questions that would knock in my head if I would install perl from this page:
+
+* What architecture ?
+
+Currently only x86.
+
+* It proposes to install to C:\cl-perl-<VERSION>-<ARCH>bits - may I use another installation directory ?
+
+I've done the best as I can to make it relocatable, using what perl is calling "sitecustomize.pl" (c.f. https://perldoc.perl.org/perlrun). This is experimental and sensible code, though it seems to work fine for me.
+
+* What it something is not working for me ?
+
+Well, you can open an issue on this github page, I'll be glad to help/try to understand. All in all if this can improve this personal project, that's good.
+
+## Main changes with main stream perl packages
 
 * Win32::GUI is patched to work with latest freeimage
 * tiff is patched to compile with freeglut
