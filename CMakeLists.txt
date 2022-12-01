@@ -1188,7 +1188,7 @@ SET (PACKAGES
 	Win32::Console
 	# Win32::Setupsup        # Buggy
 	# Win32::CtrlGUI         # Depends on Win32::Setupsup
-	Win32::DirSize
+	# Win32::DirSize         # Too badly package, c.f. https://rt.cpan.org/Ticket/Display.html?id=93796
 	# Win32::Elevate         # Test fails, too dangerous, etc.
 	Win32::Getppid
 	Win32::GuiTest           # TAKE CARE Popup notepad windows
