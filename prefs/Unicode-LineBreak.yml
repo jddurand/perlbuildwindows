@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QUnicode-LineBreak-2019.001.tar.gz\E'
+patches:
+  - Unicode-LineBreak-2019.001-sombok.patch
