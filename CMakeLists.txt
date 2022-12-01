@@ -1163,7 +1163,7 @@ SET (PACKAGES
 	Win32::Sound
 	Win32::Vcpkg
 	# Win32::Watir            Test fail I do not really understand
-	Win32::pwent 
+	# Win32::pwent            Works only on non-DC, contains a "die" etc...
 	# Win32::Snarl            !?
 	Config::Win32
 	# Win32::ActAcc           !?
