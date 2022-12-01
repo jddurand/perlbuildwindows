@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-Wlan-0.06.tar.gz\E'
+patches:
+  - Win32-Wlan-0.06-API-here-but-service-not-here.patch

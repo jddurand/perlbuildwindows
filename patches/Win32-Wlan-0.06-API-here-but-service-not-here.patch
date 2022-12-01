@@ -1,0 +1,299 @@
+diff --git a/lib/Win32/Wlan.pm b/lib/Win32/Wlan.pm
+index 6b7b42b..36ff203 100644
+--- a/lib/Win32/Wlan.pm
++++ b/lib/Win32/Wlan.pm
+@@ -65,19 +65,29 @@ sub new {
+     my ($class,%args) = @_;
+     
+     if ($args{ available } or !exists $args{ available }) {
+-        $args{available} ||= $wlan_available;
+-        $args{handle} ||= WlanOpenHandle();
+-        if (! $args{ interface }) {
+-            my @interfaces = WlanEnumInterfaces($args{handle});
+-            if (@interfaces > 1) {
+-                warn "More than one Wlan interface found. Using first.";
+-            };
+-            $args{interface} = $interfaces[0];
+-        };
+-    };
++        if (! $args{handle}) {
++            $args{handle} = eval { WlanOpenHandle() };
++            $args{available} = $wlan_available;
++        } else {
++            #
++            # User gave a handle, so assume availibility is true
++            #
++            $args{available} = 1;
++        }
++        if ($args{available}) {
++            if (! $args{ interface }) {
++                my @interfaces = WlanEnumInterfaces($args{handle});
++                if (@interfaces > 1) {
++                    warn "More than one Wlan interface found. Using first.";
++                }
++                $args{interface} = $interfaces[0];
++            }
++        }
++    }
+     bless \%args => $class;
+ };
+ 
++
+ sub DESTROY {
+     my ($self) = @_;
+     if ($self->handle and $self->available) {
+diff --git a/lib/Win32/Wlan/API.pm b/lib/Win32/Wlan/API.pm
+index f62048b..8014d6a 100644
+--- a/lib/Win32/Wlan/API.pm
++++ b/lib/Win32/Wlan/API.pm
+@@ -68,8 +68,11 @@ sub WlanOpenHandle {
+     croak "Wlan functions are not available" unless $wlan_available;
+     my $version = Zero;
+     my $handle = Zero;
+-    $API{ WlanOpenHandle }->Call(2,0,$version,$handle) == 0
+-        or croak $^E;
++    my $rc;
++    $wlan_available = 0; # Assume unavailibility
++    ($rc = $API{ WlanOpenHandle }->Call(2,0,$version,$handle)) == 0
++        or do { croak eval { require Win32; Win32::FormatMessage($rc) } || "Error $rc"; };
++    $wlan_available = 1; # Ok, finally
+     my $h = unpack "V", $handle;
+     $h
+ };
+diff --git a/t/02-open-close.t b/t/02-open-close.t
+index 088e651..3d3fa8e 100644
+--- a/t/02-open-close.t
++++ b/t/02-open-close.t
+@@ -5,22 +5,22 @@ BEGIN {
+     if ($^O !~ /Win32/i) {
+         plan skip_all => "Win32::Wlan only works on Win32";
+     } else {
+-        plan 'tests' => 5;
++        plan 'tests' => 3;
+     };
+ };
+ 
+ use Win32::Wlan::API;
+ 
+-my $handle;
+-ok eval {
+-    $handle = Win32::Wlan::API::WlanOpenHandle();
+-    1
+-};
+-is $@, '', "No error";
+-ok $handle, "We got a handle";
++my $handle = eval { Win32::Wlan::API::WlanOpenHandle() };
++
++SKIP: {
++    skip "WLAN not available", 3 unless $Win32::Wlan::API::wlan_available;
++
++    ok $handle, "We got a handle";
+ 
+-ok eval {
+-    Win32::Wlan::API::WlanCloseHandle($handle);
+-    1
+-}, "Released the handle";
+-is $@, '', "No error";
++    ok eval {
++        Win32::Wlan::API::WlanCloseHandle($handle);
++        1
++    }, "Released the handle";
++    is $@, '', "No error";
++}
+diff --git a/t/03-enum.t b/t/03-enum.t
+index 8ab85e5..55d3e67 100644
+--- a/t/03-enum.t
++++ b/t/03-enum.t
+@@ -5,24 +5,24 @@ BEGIN {
+     if ($^O !~ /Win32/i) {
+         plan skip_all => "Win32::Wlan only works on Win32";
+     } else {
+-        plan 'tests' => 5;
++        plan 'tests' => 3;
+     };
+ };
+ 
+ use Win32::Wlan::API;
+ 
+-my $handle;
+-ok eval {
+-    $handle = Win32::Wlan::API::WlanOpenHandle();
+-    1
+-};
+-is $@, '', "No error";
+-ok $handle, "We got a handle";
++my $handle = eval { Win32::Wlan::API::WlanOpenHandle() };
++
++SKIP: {
++    skip "WLAN not available", 3 unless $Win32::Wlan::API::wlan_available;
++
++    ok $handle, "We got a handle";
+ 
+-my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
++    my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
+ 
+-ok eval {
+-    Win32::Wlan::API::WlanCloseHandle($handle);
+-    1
+-}, "Released the handle";
+-is $@, '', "No error";
++    ok eval {
++        Win32::Wlan::API::WlanCloseHandle($handle);
++        1
++        }, "Released the handle";
++    is $@, '', "No error";
++}
+diff --git a/t/04-current-ssid.t b/t/04-current-ssid.t
+index a8c2b7a..b95b84f 100644
+--- a/t/04-current-ssid.t
++++ b/t/04-current-ssid.t
+@@ -5,35 +5,35 @@ BEGIN {
+     if ($^O !~ /Win32/i) {
+         plan skip_all => "Win32::Wlan only works on Win32";
+     } else {
+-        plan 'tests' => 5;
++        plan 'tests' => 3;
+     };
+ };
+ 
+ use Win32::Wlan::API;
+ use Data::Dumper;
+ 
+-my $handle;
+-ok eval {
+-    $handle = Win32::Wlan::API::WlanOpenHandle();
+-    1
+-};
+-is $@, '', "No error";
+-ok $handle, "We got a handle";
++my $handle = eval { Win32::Wlan::API::WlanOpenHandle() };
++
++SKIP: {
++    skip "WLAN not available", 3 unless $Win32::Wlan::API::wlan_available;
++
++    ok $handle, "We got a handle";
+ 
+-my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
++    my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
+ 
+-diag Dumper \@interfaces;
++    diag Dumper \@interfaces;
+ 
+-for my $i (@interfaces) {
+-    diag "Querying interface $i->{name}";
+-    my $ih = $i->{guuid};
+-    my %info = Win32::Wlan::API::WlanQueryCurrentConnection($handle,$ih);
++    for my $i (@interfaces) {
++        diag "Querying interface $i->{name}";
++        my $ih = $i->{guuid};
++        my %info = Win32::Wlan::API::WlanQueryCurrentConnection($handle,$ih);
+     
+-    diag Dumper \%info;
+-};
++        diag Dumper \%info;
++    };
+ 
+-ok eval {
+-    Win32::Wlan::API::WlanCloseHandle($handle);
+-    1
+-}, "Released the handle";
+-is $@, '', "No error";
++    ok eval {
++        Win32::Wlan::API::WlanCloseHandle($handle);
++        1
++    }, "Released the handle";
++    is $@, '', "No error";
++}
+diff --git a/t/05-enum-visible.t b/t/05-enum-visible.t
+index 60e1695..e4815ff 100644
+--- a/t/05-enum-visible.t
++++ b/t/05-enum-visible.t
+@@ -5,34 +5,34 @@ BEGIN {
+     if ($^O !~ /Win32/i) {
+         plan skip_all => "Win32::Wlan only works on Win32";
+     } else {
+-        plan 'tests' => 5;
++        plan 'tests' => 3;
+     };
+ }
+ 
+ use Win32::Wlan::API;
+ use Data::Dumper;
+ 
+-my $handle;
+-ok eval {
+-    $handle = Win32::Wlan::API::WlanOpenHandle();
+-    1
+-};
+-is $@, '', "No error";
+-ok $handle, "We got a handle";
++my $handle = eval { Win32::Wlan::API::WlanOpenHandle() };
+ 
+-my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
++SKIP: {
++    skip "WLAN not available", 3 unless $Win32::Wlan::API::wlan_available;
+ 
+-diag Dumper \@interfaces;
++    ok $handle, "We got a handle";
+ 
+-for my $i (@interfaces) {
+-    diag "Querying interface $i->{name}";
+-    my $ih = $i->{guuid};
++    my @interfaces = Win32::Wlan::API::WlanEnumInterfaces($handle);
++
++    diag Dumper \@interfaces;
++
++    for my $i (@interfaces) {
++        diag "Querying interface $i->{name}";
++        my $ih = $i->{guuid};
+     
+-    diag Dumper Win32::Wlan::API::WlanGetAvailableNetworkList($handle,$ih);
+-};
+-
+-ok eval {
+-    Win32::Wlan::API::WlanCloseHandle($handle);
+-    1
+-}, "Released the handle";
+-is $@, '', "No error";
++        diag Dumper Win32::Wlan::API::WlanGetAvailableNetworkList($handle,$ih);
++    };
++
++    ok eval {
++        Win32::Wlan::API::WlanCloseHandle($handle);
++        1
++    }, "Released the handle";
++    is $@, '', "No error";
++}
+diff --git a/t/06-synopsis-api.t b/t/06-synopsis-api.t
+index 5b2be5b..fc5730e 100644
+--- a/t/06-synopsis-api.t
++++ b/t/06-synopsis-api.t
+@@ -11,17 +11,18 @@ BEGIN {
+ 
+ use Win32::Wlan::API qw(WlanOpenHandle WlanEnumInterfaces WlanQueryCurrentConnection);
+ if ($Win32::Wlan::API::wlan_available) {
+-    my $handle = WlanOpenHandle();
+-    my @interfaces = WlanEnumInterfaces($handle);
+-    if (@interfaces) {
+-        my $ih = $interfaces[0]->{guuid};
+-        diag "Interface name '$interfaces[0]->{name}'";
+-        my %info = WlanQueryCurrentConnection($handle,$ih);
+-        diag "Connected to $info{ profile_name }\n";        
+-    };
+-
++    my $handle = eval { WlanOpenHandle() };
++    if ($Win32::Wlan::API::wlan_available) {
++        my @interfaces = WlanEnumInterfaces($handle);
++        if (@interfaces) {
++            my $ih = $interfaces[0]->{guuid};
++            diag "Interface name '$interfaces[0]->{name}'";
++            my %info = WlanQueryCurrentConnection($handle,$ih);
++            diag "Connected to $info{ profile_name }\n";        
++        }
++    }
+ } else {
+     diag "No Wlan detected (or switched off)\n";
+-};
++}
+ 
+ ok 1, "Synopsis does not crash";
