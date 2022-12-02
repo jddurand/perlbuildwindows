@@ -1,0 +1,11 @@
+diff -Naur Win32-LongPath-2.2.old/t/LongPath.t Win32-LongPath-2.2.new/t/LongPath.t
+--- Win32-LongPath-2.2.old/t/LongPath.t	2022-01-21 15:42:16.000000000 +0100
++++ Win32-LongPath-2.2.new/t/LongPath.t	2022-12-01 21:39:50.307650800 +0100
+@@ -545,6 +545,7 @@
+         {
+         ok (!$oOpen->{read} || $oOpen->{trunc},
+           $bSys ? 'sysread ()' : 'text read');
++        $oF1->clearerr;
+         }
+       else
+         {

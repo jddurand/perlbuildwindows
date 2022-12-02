@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-LongPath-2.2.tar.gz\E'
+patches:
+  - Win32-LongPath-2.2-readline-clearerr.patch
