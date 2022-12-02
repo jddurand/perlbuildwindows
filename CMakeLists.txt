@@ -1228,6 +1228,8 @@ SET (PACKAGES
 	Win32::Setupsup
 	# Win32::ShellExt       # Even perl Makefile.PL complains...
 	Win32::Shortcut         # Note: no test ;)
+	Win32::ShutDown         # Compiles ok, not really tested event if there is a test suite that intentionnaly will not shutdown of course
+	# Win32::SoundRec       # Depends on Win32::API::Prototype (...) + RT reports are not really enthusiastic
 )
 
 foreach(package ${PACKAGES})
