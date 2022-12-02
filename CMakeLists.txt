@@ -1224,6 +1224,10 @@ SET (PACKAGES
 	Win32::NetAdmin         # t/netadmin.t patched in case you run as admin
 	# Win32::PingICMP       # Not necessary IMHO very very old package
 	# Win32::PrintBox       # Depend on Win32::Console::ANSI that is well...
+	Win32::Registry         # Claimed deprecated but still seems ok, tests as administrator ok for me
+	Win32::Setupsup
+	# Win32::ShellExt       # Even perl Makefile.PL complains...
+	Win32::Shortcut         # Note: no test ;)
 )
 
 foreach(package ${PACKAGES})
