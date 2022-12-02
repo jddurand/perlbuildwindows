@@ -1221,6 +1221,7 @@ SET (PACKAGES
 	# Win32::IPHelper       # Useless and quite bad
 	# Win32::Internet       # Too old and useless given modern perl
 	Win32::LongPath
+	Win32::NetAdmin         # t/netadmin.t patched in case you run as admin
 )
 
 foreach(package ${PACKAGES})

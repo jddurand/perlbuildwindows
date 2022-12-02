@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-NetAdmin-0.13.tar.gz\E'
+patches:
+  - Win32-NetAdmin-0.13-password-test.patch
