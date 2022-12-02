@@ -1216,6 +1216,11 @@ SET (PACKAGES
 	# Win32::FileTime       # Unmaintained and not useful IMHO
 	# Win32::FindFile       # Unmaintained and not useful IMHO
 	Win32::GUIRobot
+	Win32::Hardlink
+	Win32::IPConfig
+	# Win32::IPHelper       # Useless and quite bad
+	# Win32::Internet       # Too old and useless given modern perl
+	Win32::LongPath
 )
 
 foreach(package ${PACKAGES})
