@@ -1223,7 +1223,7 @@ SET (PACKAGES
 	Win32::LongPath
 	Win32::NetAdmin         # t/netadmin.t patched in case you run as admin
 	# Win32::PingICMP       # Not necessary IMHO very very old package
-	
+	# Win32::PrintBox       # Depend on Win32::Console::ANSI that is well...
 )
 
 foreach(package ${PACKAGES})
