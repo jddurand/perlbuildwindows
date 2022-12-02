@@ -1,0 +1,12 @@
+diff --git a/t/10-registry.t b/t/10-registry.t
+index e41ae31..d48e3f4 100644
+--- a/t/10-registry.t
++++ b/t/10-registry.t
+@@ -22,6 +22,7 @@ BEGIN { use_ok('Win32::Setupsup') }
+ 
+ use Win32::TieRegistry ( Delimiter=>"/", ArrayValues=>0 );
+ 
++$Registry = $Registry->Open('', {Access => KEY_READ} ); # RT#102385
+ my $winReg = $Registry->{'LMachine/Software/Microsoft/Windows/CurrentVersion/'};
+ 
+ my $value;

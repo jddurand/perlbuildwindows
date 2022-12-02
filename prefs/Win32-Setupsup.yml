@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QWin32-Setupsup-1.12.tar.gz\E'
+patches:
+  - Win32-Setupsup-1.12-t-10-registry-t.patch
