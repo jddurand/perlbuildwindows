@@ -1230,6 +1230,11 @@ SET (PACKAGES
 	Win32::Shortcut         # Note: no test ;)
 	Win32::ShutDown         # Compiles ok, not really tested event if there is a test suite that intentionnaly will not shutdown of course
 	# Win32::SoundRec       # Depends on Win32::API::Prototype (...) + RT reports are not really enthusiastic
+	Win32::Symlinks
+	Win32::ToolHelp
+	# Win32::UrlCache       # Umaintained very old package that do not install
+	Win32::VBScript
+	Win32::ADRecurse
 )
 
 foreach(package ${PACKAGES})
