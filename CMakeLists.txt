@@ -1222,6 +1222,8 @@ SET (PACKAGES
 	# Win32::Internet       # Too old and useless given modern perl
 	Win32::LongPath
 	Win32::NetAdmin         # t/netadmin.t patched in case you run as admin
+	# Win32::PingICMP       # Not necessary IMHO very very old package
+	
 )
 
 foreach(package ${PACKAGES})

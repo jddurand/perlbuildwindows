@@ -115,9 +115,22 @@ sub _sitecustomize_setup_env {
 		my $perl_pkgconfig_path = File::Spec->catdir($Config::Config{installprefix}, 'c', 'lib', 'pkgconfig');
 		if (defined($ENV{PKG_CONFIG_PATH})) {
 			#
-			# We preprend our PKG_CONFIG_PATH
+			# We preprend our PKG_CONFIG_PATH unless it already start with the same thing
 			#
-			$ENV{PKG_CONFIG_PATH} = join(';', $perl_pkgconfig_path, $ENV{PKG_CONFIG_PATH});
+			my $first = File::Spec->canonpath((split(';', $ENV{PKG_CONFIG_PATH}))[0]);
+			my $want = File::Spec->canonpath($perl_pkgconfig_path);
+			if (File::Spec->case_tolerant()) {
+				$first = lc($first);
+				$want = lc($want);
+			}
+			#
+			# Just me sure directory separator is the same
+			#
+			$first =~ s/\\/\//g;
+			$want =~ s/\\/\//g;
+			if ($first ne $want) {
+				$ENV{PKG_CONFIG_PATH} = join(';', $perl_pkgconfig_path, $ENV{PKG_CONFIG_PATH});
+			}
 		} else {
 			$ENV{PKG_CONFIG_PATH} = $perl_pkgconfig_path;
 		}
