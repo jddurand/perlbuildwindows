@@ -135,6 +135,24 @@ sub _sitecustomize_setup_env {
 			$ENV{PKG_CONFIG_PATH} = $perl_pkgconfig_path;
 		}
 	}
+	#
+	# Prepend our bin and c/bin to PATH
+	#
+	my $perl_bin_path = File::Spec->catdir($Config::Config{installprefix}, 'bin');
+	my $perl_c_bin_path = File::Spec->catdir($Config::Config{installprefix}, 'c', 'bin');
+	#
+	# This will go directly to Windows path resolving, so be Windows compliant
+	#
+	$perl_bin_path =~ s/\//\\/g;
+	$perl_c_bin_path =~ s/\//\\/g;
+	if ($ENV{PATH}) {
+		$ENV{PATH} = join(';', $perl_bin_path, $perl_c_bin_path, $ENV{PATH});
+	} else {
+		#
+		# Should never happen
+		#
+		$ENV{PATH} = join(';', $perl_bin_path, $perl_c_bin_path);
+	}
 }
 
 sub _sitecustomize_GetExecutableFullPathW {
