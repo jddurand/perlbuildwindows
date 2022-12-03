@@ -88,6 +88,7 @@ set (LIBWEBP_VERSION_DEFAULT               1.2.4)
 set (GDIPLUS_VERSION_DEFAULT               prima)
 set (LIBXPM_VERSION_DEFAULT                3.5.14)
 set (FREEGLUT_VERSION_DEFAULT              3.4.0)
+set (LIBXML2_VERSION_DEFAULT               2.9.12)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -121,6 +122,7 @@ set (LIBWEBP_VERSION               ${LIBWEBP_VERSION_DEFAULT}               CACH
 set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACHE STRING "gdiplus version")
 set (LIBXPM_VERSION                ${LIBXPM_VERSION_DEFAULT}                CACHE STRING "libXpm version")
 set (FREEGLUT_VERSION              ${FREEGLUT_VERSION_DEFAULT}              CACHE STRING "freeglut version")
+set (LIBXML2_VERSION               ${LIBXML2_VERSION_DEFAULT}               CACHE STRING "libxml2 version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -153,6 +155,7 @@ set_property (CACHE LIBWEBP_VERSION               PROPERTY STRINGS ${LIBWEBP_VER
 set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VERSION_DEFAULT})
 set_property (CACHE LIBXPM_VERSION                PROPERTY STRINGS ${LIBXPM_VERSION_DEFAULT})
 set_property (CACHE FREEGLUT_VERSION              PROPERTY STRINGS ${FREEGLUT_VERSION_DEFAULT})
+set_property (CACHE LIBXML2_VERSION               PROPERTY STRINGS ${LIBXML2_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -195,6 +198,7 @@ message (STATUS "Version of libwebp                : ${LIBWEBP_VERSION}")
 message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
 message (STATUS "Version of libXpm                 : ${LIBXPM_VERSION}")
 message (STATUS "Version of freeglut               : ${FREEGLUT_VERSION}")
+message (STATUS "Version of libxml2                : ${LIBXML2_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -972,6 +976,7 @@ ExternalProject_Add(xz
                     DEPENDS                perl-pkgconfig
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON .
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/xz-${XZ_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/xz-${XZ_VERSION}/add-pc-install.patch
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/xz
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/xz
@@ -1095,9 +1100,6 @@ ExternalProject_Add(tiff
 					# TEST_COMMAND           ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} test
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
-					#
-					# Hey aom CMakeLists.txt is checking that we build in source or not
-					#
 					BUILD_IN_SOURCE        TRUE)
 
 # ===========================================================
@@ -1116,17 +1118,46 @@ ExternalProject_Add(libXpm
 					#
 					# No test suite
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					TEST_BEFORE_INSTALL    FALSE
-					#
-					# Hey aom CMakeLists.txt is checking that we build in source or not
-					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
 add_custom_target(perl-prima
 				  DEPENDS                  perl-pkgconfig fribidi thai giflib libheif libjpeg-turbo libpng tiff gdiplus libXpm
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl Prima
 				  )
+
+# ===========================================================
+# External project libxml2
+# ===========================================================
+ExternalProject_Add(libxml2
+                    DEPENDS                perl-pkgconfig
+					#
+					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
+					#
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libxml2-${LIBXML2_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DLIBXML2_WITH_PYTHON=OFF .
+					#
+					# Really, why this extra file is needed in their CMakeLists.txt ? In addition it is not there
+					#
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy include/libxml/xmlversion.h.in include/libxml/xmlwin32version.h.in
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					#
+					# libxml2 install an xml2-config and xml2Conf.sh that are a shell script! This will perturb very much Alien::Libxml2
+					#
+					COMMAND                ${CMAKE_COMMAND} -E echo                      "Removing ${PERL_INST_DIR}/c/bin/xml2-config"
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl -e "unlink shift" "${PERL_INST_DIR}/c/bin/xml2-config"
+					COMMAND                ${CMAKE_COMMAND} -E echo                      "Removing ${PERL_INST_DIR}/c/lib/xml2Conf.sh"
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl -e "unlink shift" "${PERL_INST_DIR}/c/lib/xml2Conf.sh"
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libxml2
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libxml2
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# No test target ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
