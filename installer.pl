@@ -3,14 +3,31 @@ use strict;
 use diagnostics;
 use CPAN;
 use CPAN::Version;
+use File::Spec;
 use POSIX qw/EXIT_SUCCESS EXIT_FAILURE/;
 
 my $ok = 1;
 foreach (@ARGV) {
+	my $cpanstamp = File::Spec->catfile(File::Spec->curdir(), "$_.cpanstamp");
+	$cpanstamp =~ s/::/-/g;
+	#
+	# In case we tried something like XX/YY-version.tar.gz
+	#
+	$cpanstamp =~ s/\\/\//g;
+	$cpanstamp =~ s/^.*\///;
+	$cpanstamp = 'perl-' . lc($cpanstamp);
+	if (-e $cpanstamp) {
+		print "$cpanstamp exist\n";
+		next;
+	}
 	if (! do_one($_)) {
 		$ok = 0;
 		last;
 	}
+	open(CPANSTAMP, '>', $cpanstamp) || die "Cannot open $cpanstamp, $!";
+	print CPANSTAMP "Done\n";
+	close(CPANSTAMP) || warn "Cannot close $cpanstamp, $!";
+	print "$cpanstamp created\n";
 }
 
 exit($ok ? EXIT_SUCCESS : EXIT_FAILURE);
