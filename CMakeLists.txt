@@ -1109,8 +1109,8 @@ ExternalProject_Add(libXpm
 					#
 					# No test suite
 					#
-					TEST_EXCLUDE_FROM_MAIN FALSE
-					TEST_BEFORE_INSTALL    TRUE
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
 					BUILD_IN_SOURCE        TRUE)
 
 add_custom_target(perl-prima
