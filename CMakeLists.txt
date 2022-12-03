@@ -62,6 +62,7 @@ set (OPENSSL_VERSION_DEFAULT               3.0.5)
 set (NASM_VERSION_DEFAULT                  2.15.05)
 set (PERL_NET_SSLEAY_VERSION_DEFAULT       1.93_01)
 set (PERL_WIN32_GUI_VERSION_DEFAULT        1.14)
+set (PERL_XML_LIBXML_VERSION_DEFAULT       2.0208)
 set (ZLIB_VERSION_DEFAULT                  1.2.13)
 set (EXPAT_VERSION_DEFAULT                 2.5.0)
 set (FRIBIDI_VERSION_DEFAULT               1.0.12)
@@ -96,6 +97,7 @@ set (OPENSSL_VERSION               ${OPENSSL_VERSION_DEFAULT}               CACH
 set (NASM_VERSION                  ${NASM_VERSION_DEFAULT}                  CACHE STRING "nasm version")
 set (PERL_NET_SSLEAY_VERSION       ${PERL_NET_SSLEAY_VERSION_DEFAULT}       CACHE STRING "specific Net::SSLeay version")
 set (PERL_WIN32_GUI_VERSION        ${PERL_WIN32_GUI_VERSION_DEFAULT}        CACHE STRING "specific Win32::GUI version")
+set (PERL_XML_LIBXML_VERSION       ${PERL_XML_LIBXML_VERSION_DEFAULT}       CACHE STRING "specific XML::LibXML version")
 set (ZLIB_VERSION                  ${ZLIB_VERSION_DEFAULT}                  CACHE STRING "zlib version")
 set (EXPAT_VERSION                 ${EXPAT_VERSION_DEFAULT}                 CACHE STRING "expat version")
 set (FRIBIDI_VERSION               ${FRIBIDI_VERSION_DEFAULT}               CACHE STRING "fribidi version")
@@ -130,6 +132,7 @@ set_property (CACHE OPENSSL_VERSION               PROPERTY STRINGS ${OPENSSL_VER
 set_property (CACHE NASM_VERSION                  PROPERTY STRINGS ${NASM_VERSION_DEFAULT})
 set_property (CACHE PERL_NET_SSLEAY_VERSION       PROPERTY STRINGS ${PERL_NET_SSLEAY_VERSION_DEFAULT})
 set_property (CACHE PERL_WIN32_GUI_VERSION        PROPERTY STRINGS ${PERL_WIN32_GUI_VERSION_DEFAULT})
+set_property (CACHE PERL_XML_LIBXML_VERSION       PROPERTY STRINGS ${PERL_XML_LIBXML_VERSION_DEFAULT})
 set_property (CACHE ZLIB_VERSION                  PROPERTY STRINGS ${ZLIB_VERSION_DEFAULT})
 set_property (CACHE EXPAT_VERSION                 PROPERTY STRINGS ${EXPAT_VERSION_DEFAULT})
 set_property (CACHE FRIBIDI_VERSION               PROPERTY STRINGS ${FRIBIDI_VERSION_DEFAULT})
@@ -166,6 +169,7 @@ message (STATUS "Perl packages forced versions      ")
 message (STATUS "===================================")
 message (STATUS "Version of Net::SSLeay            : ${PERL_NET_SSLEAY_VERSION}")
 message (STATUS "Version of Win32::GUI             : ${PERL_WIN32_GUI_VERSION}")
+message (STATUS "Version of XML::LibXML            : ${PERL_XML_LIBXML_VERSION}")
 message (STATUS "                                   ")
 message (STATUS "===================================")
 message (STATUS "External packages                  ")
@@ -319,6 +323,11 @@ REM
 SET WIN32_GUI_USE_FREEIMAGE_DLL=1
 SET WIN32_GUI_FREEIMAGE_EXTLIB=${PERL_C_LIB_INST_DIR_DOS}\\freeimage.lib
 SET WIN32_GUI_FREEIMAGE_INCDIR=${PERL_C_INCLUDE_INST_DIR_DOS}
+
+REM
+REM For XML::LibXML
+REM
+SET PERL_XML_LIBXML_CFLAGS=-I${PERL_C_INCLUDE_INST_DIR_DOS}
 
 REM
 REM For use XML::Parser
@@ -489,7 +498,7 @@ add_custom_target(perl-uri
 				  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl URI)
 
 # ====================================================================================================================================
-# Net::SSLeay: needs openssl that needs nasm + zlib + post-installation of openssl libraries near Net::SSLeay
+# Net::SSLeay: needs openssl
 # Also openssl test suite can use Win32::API, so we depend on it
 # ====================================================================================================================================
 ExternalProject_Add(nasm
@@ -582,13 +591,6 @@ ExternalProject_Add(openssl
 add_custom_target(perl-net-ssleay
 				  DEPENDS                  perl-pkgconfig openssl
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl CHRISN/Net-SSLeay-${PERL_NET_SSLEAY_VERSION}.tar.gz
-				  #
-				  # Post-install: copy openssl libraries near Net::SSLeay
-				  #
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libcrypto-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libcrypto-3.pdb ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.dll ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libssl-3.pdb ${PERL_INST_DIR}/site/lib/auto/Net/SSLeay
 				  )
 
 add_custom_target(perl-io-socket-ssl
@@ -615,10 +617,6 @@ ExternalProject_Add(freeimage
 add_custom_target(perl-win32-gui
 				  DEPENDS                  perl-pkgconfig freeimage
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl KMX/Win32-GUI-${PERL_WIN32_GUI_VERSION}.tar.gz
-				  #
-				  # Post-install: copy freeimage library near Win32::GUI::DIBitmap
-				  #
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/freeimage.dll ${PERL_INST_DIR}/site/lib/auto/Win32/GUI/DIBitmap
 				  )
 
 # ===========================================================
@@ -634,19 +632,12 @@ ExternalProject_Add(expat
 					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/expat
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/expat
 					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
-					#
-					# XML::Expat want expat.lib and expat.dll, not libexpat.lib or libexpat.dll
-					#
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 add_custom_target(perl-xml-parser
 				  DEPENDS                  perl-pkgconfig expat perl-uri
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl XML::Parser
-				  #
-				  # Post-install: copy openssl libraries near Net::SSLeay
-				  #
-				  COMMAND                  ${CMAKE_COMMAND} -E copy ${PERL_INST_DIR}/c/bin/libexpat.dll ${PERL_INST_DIR}/site/lib/auto/XML/Parser/Expat
 				  )
 
 # ===========================================================
@@ -1155,18 +1146,24 @@ ExternalProject_Add(libxml2
 					#
 					# No test target ?
 					#
-					TEST_EXCLUDE_FROM_MAIN TRUE
-					TEST_BEFORE_INSTALL    FALSE
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
+
+add_custom_target(perl-xml-libxml
+				  DEPENDS                  perl-pkgconfig libxml2
+				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl SHLOMIF/XML-LibXML-${PERL_XML_LIBXML_VERSION}.tar.gz
+				  )
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
 # Net::SSleay
 # Win32::GUI
 # XML::Parser
+# XML::LibXML
 # Prima
 # ====================================================================================================================================
-add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-prima)
+add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-xml-libxml perl-prima)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
