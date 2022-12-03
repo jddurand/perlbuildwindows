@@ -414,7 +414,18 @@ ECHO | cmd /C %*
 # ===========================================================
 # Install system files
 # ===========================================================
-include(InstallRequiredSystemLibraries)
+if (INSTALL_REQUIRED_SYSTEM_LIBRARIES)
+	#
+	# This will install MSCV runtime libraries, that we should not
+	# for license point of view
+	#
+	set (CMAKE_BUILD_TYPE "RelWithDebInfo")
+	set (CMAKE_INSTALL_PREFIX ${PERL_C_INST_DIR})
+	foreach (_what CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX)
+		message(STATUS "Forcing ${_what} to ${${_what}}")
+	endforeach ()
+	include(InstallRequiredSystemLibraries)
+endif ()
 
 # ===========================================================
 # External project perl-core
