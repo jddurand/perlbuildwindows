@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QXML-LibXML-2.0208.tar.gz\E'
+patches:
+  - XML-LibXML-2.0208-use-external-libxml2-without-Alien.patch

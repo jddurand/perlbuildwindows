@@ -1,0 +1,77 @@
+diff -Naur XML-LibXML-2.0208.old/META.json XML-LibXML-2.0208.new/META.json
+--- XML-LibXML-2.0208.old/META.json	2022-09-30 05:28:35.000000000 +0200
++++ XML-LibXML-2.0208.new/META.json	2022-12-03 09:29:56.011336100 +0100
+@@ -45,8 +45,7 @@
+       },
+       "configure" : {
+          "requires" : {
+-            "Alien::Base::Wrapper" : "0",
+-            "Alien::Libxml2" : "0.14",
++            "Pkgconfig" : "0",
+             "Config" : "0",
+             "ExtUtils::MakeMaker" : "0"
+          }
+diff -Naur XML-LibXML-2.0208.old/META.yml XML-LibXML-2.0208.new/META.yml
+--- XML-LibXML-2.0208.old/META.yml	2022-09-30 05:28:35.000000000 +0200
++++ XML-LibXML-2.0208.new/META.yml	2022-12-03 09:30:13.109717500 +0100
+@@ -14,8 +14,7 @@
+   locale: '0'
+   utf8: '0'
+ configure_requires:
+-  Alien::Base::Wrapper: '0'
+-  Alien::Libxml2: '0.14'
++  Pkgconfig: '0'
+   Config: '0'
+   ExtUtils::MakeMaker: '0'
+ dynamic_config: 0
+diff -Naur XML-LibXML-2.0208.old/Makefile.PL XML-LibXML-2.0208.new/Makefile.PL
+--- XML-LibXML-2.0208.old/Makefile.PL	2022-09-30 05:26:14.000000000 +0200
++++ XML-LibXML-2.0208.new/Makefile.PL	2022-12-03 09:12:00.937444600 +0100
+@@ -17,15 +17,17 @@
+ 
+ require 5.008001;
+ 
+-use Alien::Base::Wrapper qw( Alien::Libxml2 );
++# use Alien::Base::Wrapper qw( Alien::Libxml2 );
+ use ExtUtils::MakeMaker;
+ use Config;
++use Pkgconfig;
+ 
+ my $SKIP_SAX_INSTALL = $ENV{SKIP_SAX_INSTALL};
+ 
+ my %ConfigReqs = (
+-  "Alien::Libxml2" => '0.14',
+-  "Alien::Base::Wrapper" => 0,
++#   "Alien::Libxml2" => '0.14',
++#   "Alien::Base::Wrapper" => 0,
++  "Pkgconfig" => 0,
+   "Config" => 0,
+   "ExtUtils::MakeMaker" => 0,
+ );
+@@ -68,14 +70,21 @@
+   "warnings" => 0,
+ );
+ 
+-my %xsbuild_concat = (
++my $o = PkgConfig->find($ENV{PERL_XML_LIBXML_LIBXML2_PC} || 'libxml-2.0');
++die $o->errmsg if $o->errmsg;
++my %xsbuild = (
+   DEFINE  => '-DHAVE_UTF8',
+   OBJECT  => '$(O_FILES)',
++  CCFLAGS => join(' ', $Config::Config{ccflags}, $ENV{PERL_XML_LIBXML_CFLAGS} || '', $o->get_cflags),
++  dynamic_lib => {
++	  OTHERLDFLAGS => "" . $o->get_ldflags
++  }
+ );
+-my %xsbuild = Alien::Base::Wrapper->mm_args;  # Might contain a definition of DEFINE, must thus concatenate.
+-while (my ($k, $v) = each %xsbuild_concat) {
+-  my $base_val = $xsbuild{$k};
+-  $xsbuild{$k} = (defined($base_val) ? ($base_val . ' ' . $v) : $v);
++
++if ($Config{ccname} eq 'cl') {
++	$xsbuild{dynamic_lib}->{OTHERLDFLAGS} =~ s/\//\\/g;
++	$xsbuild{dynamic_lib}->{OTHERLDFLAGS} =~ s/\-L/\/LIBPATH:/g;
++	$xsbuild{dynamic_lib}->{OTHERLDFLAGS} =~ s/\-l([^\s]+)/$1.lib/g;
+ }
+ 
+ my %WriteMakefileArgs = (
