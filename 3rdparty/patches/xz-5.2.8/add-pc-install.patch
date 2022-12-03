@@ -1,0 +1,22 @@
+diff -Naur xz.old/CMakeLists.txt xz.new/CMakeLists.txt
+--- xz.old/CMakeLists.txt	2022-11-08 13:53:46.000000000 +0100
++++ xz.new/CMakeLists.txt	2022-12-03 08:06:29.238564300 +0100
+@@ -526,6 +526,18 @@
+         COMPONENT liblzma_Development)
+ 
+ 
++set(prefix      "\${pcfiledir}/../..")
++set(exec_prefix "\${prefix}")
++set(libdir      "\${exec_prefix}/lib")
++set(includedir  "\${prefix}/include")
++set(PACKAGE_URL https://tukaani.org/xz/)
++set(PACKAGE_VERSION ${XZ_VERSION})
++if(NOT CMAKE_USE_WIN32_THREADS_INIT)
++    set(PTHREAD_CFLAGS -pthread)
++endif()
++configure_file(src/liblzma/liblzma.pc.in lib/pkgconfig/liblzma.pc @ONLY)
++install(FILES lib/pkgconfig/liblzma.pc DESTINATION lib/pkgconfig)
++
+ #############################################################################
+ # getopt_long
+ #############################################################################
