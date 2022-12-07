@@ -90,6 +90,10 @@ set (GDIPLUS_VERSION_DEFAULT               prima)
 set (LIBXPM_VERSION_DEFAULT                3.5.14)
 set (FREEGLUT_VERSION_DEFAULT              3.4.0)
 set (LIBXML2_VERSION_DEFAULT               2.9.12)
+set (IMAGEMAGICK_VERSION_DEFAULT           7.1.0-53)
+set (BROTLI_VERSION_DEFAULT                1.0.9)
+set (BZIP2_VERSION_DEFAULT                 1.0.6)
+set (PIXMAN_VERSION_DEFAULT                0.42.2)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -125,6 +129,10 @@ set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACH
 set (LIBXPM_VERSION                ${LIBXPM_VERSION_DEFAULT}                CACHE STRING "libXpm version")
 set (FREEGLUT_VERSION              ${FREEGLUT_VERSION_DEFAULT}              CACHE STRING "freeglut version")
 set (LIBXML2_VERSION               ${LIBXML2_VERSION_DEFAULT}               CACHE STRING "libxml2 version")
+set (IMAGEMAGICK_VERSION           ${IMAGEMAGICK_VERSION_DEFAULT}           CACHE STRING "ImageMagick version")
+set (BROTLI_VERSION                ${BROTLI_VERSION_DEFAULT}                CACHE STRING "brotli version")
+set (BZIP2_VERSION                 ${BZIP2_VERSION_DEFAULT}                 CACHE STRING "bzip2 version")
+set (PIXMAN_VERSION                ${PIXMAN_VERSION_DEFAULT}                CACHE STRING "pixman version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -159,6 +167,10 @@ set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VER
 set_property (CACHE LIBXPM_VERSION                PROPERTY STRINGS ${LIBXPM_VERSION_DEFAULT})
 set_property (CACHE FREEGLUT_VERSION              PROPERTY STRINGS ${FREEGLUT_VERSION_DEFAULT})
 set_property (CACHE LIBXML2_VERSION               PROPERTY STRINGS ${LIBXML2_VERSION_DEFAULT})
+set_property (CACHE IMAGEMAGICK_VERSION           PROPERTY STRINGS ${IMAGEMAGICK_VERSION_DEFAULT})
+set_property (CACHE BROTLI_VERSION                PROPERTY STRINGS ${BROTLI_VERSION_DEFAULT})
+set_property (CACHE BZIP2_VERSION                 PROPERTY STRINGS ${BZIP2_VERSION_DEFAULT})
+set_property (CACHE PIXMAN_VERSION                PROPERTY STRINGS ${PIXMAN_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -203,6 +215,10 @@ message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
 message (STATUS "Version of libXpm                 : ${LIBXPM_VERSION}")
 message (STATUS "Version of freeglut               : ${FREEGLUT_VERSION}")
 message (STATUS "Version of libxml2                : ${LIBXML2_VERSION}")
+message (STATUS "Version of ImageMagick            : ${IMAGEMAGICK_VERSION}")
+message (STATUS "Version of brotli                 : ${BROTLI_VERSION}")
+message (STATUS "Version of bzip2                  : ${BZIP2_VERSION}")
+message (STATUS "Version of pixman                 : ${PIXMAN_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1164,6 +1180,84 @@ add_custom_target(perl-xml-libxml
 # Prima
 # ====================================================================================================================================
 add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui perl-xml-parser perl-xml-libxml perl-prima)
+
+# ===========================================================
+# External project brotli
+# ===========================================================
+ExternalProject_Add(brotli
+                    DEPENDS                perl-pkgconfig
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/brotli-${BROTLI_VERSION}.tar.gz
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/brotli
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE            ${PERL_INST_DIR}/c/licenses/brotli
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project bzip2
+# ===========================================================
+ExternalProject_Add(bzip2
+                    DEPENDS                perl-pkgconfig
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON .
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/bzip2-${BZIP2_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/bzip2/CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/bzip2/bzip2.pc.in bzip2.pc.in
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/bzip2-${BZIP2_VERSION}/fix-import-export-macros.patch
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/bzip2
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE           ${PERL_INST_DIR}/c/licenses/bzip2
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# No test target ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project pixman
+# ===========================================================
+ExternalProject_Add(pixman
+                    DEPENDS                perl-pkgconfig zlib libpng
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED=ON .
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/pixman-${PIXMAN_VERSION}.tar.gz
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/pixman/CMakeLists.txt pixman/CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/test/CMakeLists.txt test/CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/arch_configure.cmake   cmake/arch_configure.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/arch_detect.cmake      cmake/arch_detect.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/cmake_package.cmake    cmake/cmake_package.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/config_configure.cmake cmake/config_configure.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/config_source.cmake    cmake/config_source.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/pixman/cmake/PixmanConfig.cmake     cmake/PixmanConfig.cmake
+					INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/pixman
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING            ${PERL_INST_DIR}/c/licenses/pixman
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project ImageMagick
+# ===========================================================
+# TODO ExternalProject_Add(ImageMagick
+# TODO                     DEPENDS                perl-pkgconfig aom brotli bzip2
+# TODO 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+# TODO 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/ImageMagick-${IMAGEMAGICK_VERSION}.tar.gz
+# TODO 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/ImageMagick/CMakeLists.txt ImageMagick/CMakeLists.txt
+# TODO 					# INSTALL_COMMAND        ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat ${CMAKE_MAKE_PROGRAM} install
+# TODO 					# COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/licenses/FreeImage
+# TODO 					# COMMAND                ${CMAKE_COMMAND} -E copy license-fi.txt     ${PERL_INST_DIR}/c/licenses/FreeImage
+# TODO 					# COMMAND                ${CMAKE_COMMAND} -E copy license-gplv2.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
+# TODO 					# COMMAND                ${CMAKE_COMMAND} -E copy license-gplv3.txt  ${PERL_INST_DIR}/c/licenses/FreeImage
+# TODO 					# COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+# TODO 					TEST_EXCLUDE_FROM_MAIN TRUE
+# TODO 					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
 # From now on, we just create rules for all the extra packages
