@@ -6,6 +6,15 @@ use File::Spec;
 use POSIX qw/EXIT_SUCCESS/;
 use PkgConfig;
 
+my $c_bin = cleanup_path(File::Spec->catdir($Config{installprefix}, 'c', 'bin'));
+my $quotemeta_c_bin = quotemeta($c_bin);
+
+my $c_lib = cleanup_path(File::Spec->catdir($Config{installprefix}, 'c', 'lib'));
+my $quotemeta_c_lib = quotemeta($c_lib);
+
+my $c_include = cleanup_path(File::Spec->catdir($Config{installprefix}, 'c', 'include'));
+my $quotemeta_c_include = quotemeta($c_include);
+
 #
 # This script is doing "corrections". It is targetting:
 # - All .pc files
@@ -18,7 +27,8 @@ use PkgConfig;
 #   absolute path to prefix, expec_prefix, libddir, include_dir... No
 #   it always has to be relative and all the values are fixed.
 #   Unlisted variables will be signaled with a fatal error
-my %PC = (
+my %PC =
+(
 	'prefix' => q|${pcfiledir}/../..|,
 	'exec_prefix' => q|${prefix}|,
 	'bindir' => q|${exec_prefix}/bin|,
@@ -31,7 +41,11 @@ my %PC = (
 	'localstatedir' => q|${prefix}/var|,
 	'runstatedir' => q|${localstatedir}/run|,
 	'includedir' => q|${prefix}/include|,
-	'docdir' => sub { q|${datarootdir}/doc/| . shift },
+	'docdir' => sub
+	{
+		my ($package, $what, $oldvalue) = @_;
+		return q|${datarootdir}/doc/| . $package;
+	},
 	'infodir' => q|${datarootdir}/info|,
 	'libdir' => q|${exec_prefix}/lib|,
 	'sharedlibdir' => q|${exec_prefix}/lib|,
@@ -39,15 +53,57 @@ my %PC = (
 	'mandir' => q|${datarootdir}/man|,
 	'man1dir' => q|${mandir}/man1|,
 	'man2dir' => q|${mandir}/man2|,
-	);
+);
+
+my %DEF = (
+);
 
 post_install_pkgconfig();
+
+sub cleanup_path {
+	my ($path) = @_;
+
+	$path = File::Spec->canonpath($path);
+	$path =~ s/\\+/\//g;
+
+	return $path;
+}
 
 sub post_install_pkgconfig {
     my $o = PkgConfig->find([]);
     my @list = $o->get_list();
  
 	process_pkgconfig($_->[0]) for @list;
+}
+
+sub process_pkgconfig_type {
+	my ($package, $hash_ref, $new_ref, $status_ref, $line, $before, $what, $after, $oldvalue) = @_;
+
+	my $newvalue;
+	if (exists($hash_ref->{$what})) {
+		if (ref($hash_ref->{$what}) eq 'CODE') {
+			$newvalue = $hash_ref->{$what}->($package, $what, $oldvalue);
+		} else {
+			$newvalue = $hash_ref->{$what};
+		}
+	} else {
+		$newvalue = $oldvalue;
+	}
+
+	#
+	# In any case, revisit the variable by:
+	# - Replace all \ by /
+	# - Auto-detect installprefix
+	#
+	$newvalue =~ s/\\+/\//g;
+	$newvalue =~ s/$quotemeta_c_bin/\${bindir}/g;
+	$newvalue =~ s/$quotemeta_c_lib/\${libdir}/g;
+	$newvalue =~ s/$quotemeta_c_include/\${includedir}/g;
+
+	if ($newvalue ne $oldvalue) {
+		${$status_ref} = 0;
+		${$new_ref}    = "# Was: $line\n$before$what$after$newvalue";
+	}
 }
 
 sub process_pkgconfig {
@@ -79,32 +135,27 @@ sub process_pkgconfig {
     my $status = 1;	
 	foreach my $old (@old) {
 		my $new = $old;
-		
+
+		my ($before, $after, $what, $oldvalue);
+		#
+		# Variables
+		#
 		if ($old =~ /^(\s*)(\w+)(\s*=\s*)(.+)$/) {
 			#
 			# We do not want to use $o->get_var() because we want what is coded,
 			# not the interpretation.
 			#
-			my ($beforevar, $var, $aftervar, $oldvalue) = ($1, $2, $3, $4);
-
-			my $newvalue;
-			if (exists($PC{$var})) {
-				if (ref($PC{$var}) eq 'CODE') {
-					$newvalue = $PC{$var}->($package);
-				} else {
-					$newvalue = $PC{$var};
-				}
-			} else {
-				$newvalue = $oldvalue;
-			}
-		
-			if ($newvalue ne $oldvalue) {
-				$status = 0;
-				$new  = "# Was: $old\n";
-				$new .= "$beforevar$var$aftervar$newvalue";
-			}
+			($before, $what, $after, $oldvalue) = ($1, $2, $3, $4);
+			process_pkgconfig_type($package, \%PC, \$new, \$status, $old, $before, $what, $after, $oldvalue);
 		}
-			
+		#
+		# definitions
+		#
+		if ($old =~ /^(\s*)([\w.]+)(\s*:\s*)(.+)$/) {
+			my ($before, $what, $after, $oldvalue) = ($1, $2, $3, $4);
+			process_pkgconfig_type($package, \%DEF, \$new, \$status, $old, $before, $what, $after, $oldvalue);
+		}
+
 		push(@new, $new);
 	}
 
