@@ -460,6 +460,7 @@ ExternalProject_Add(perl-core
 					COMMAND                ${Patch_EXECUTABLE} win32/win32.h              ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.h.patch
 					COMMAND                ${Patch_EXECUTABLE} win32/win32sck.c           ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32sck.c.patch
 					COMMAND                ${Patch_EXECUTABLE} cpan/Win32API-File/File.pm ${PROJECT_SOURCE_DIR}/patches/Win32API-File-pr-15.patch
+					COMMAND                ${Patch_EXECUTABLE} t/porting/customized.dat   ${PROJECT_SOURCE_DIR}/patches/Win32API-File-pr-15-impact-on-customized-dat.patch
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
 					BUILD_COMMAND          ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
