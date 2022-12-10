@@ -90,6 +90,8 @@ set (GDIPLUS_VERSION_DEFAULT               prima)
 set (LIBXPM_VERSION_DEFAULT                3.5.14)
 set (FREEGLUT_VERSION_DEFAULT              3.4.0)
 set (LIBXML2_VERSION_DEFAULT               2.9.12)
+set (LIBPCAP_VERSION_DEFAULT               1.10.1)
+set (WINFLEXBISON_VERSION_DEFAULT          2.5.25)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -125,6 +127,8 @@ set (GDIPLUS_VERSION               ${GDIPLUS_VERSION_DEFAULT}               CACH
 set (LIBXPM_VERSION                ${LIBXPM_VERSION_DEFAULT}                CACHE STRING "libXpm version")
 set (FREEGLUT_VERSION              ${FREEGLUT_VERSION_DEFAULT}              CACHE STRING "freeglut version")
 set (LIBXML2_VERSION               ${LIBXML2_VERSION_DEFAULT}               CACHE STRING "libxml2 version")
+set (LIBPCAP_VERSION               ${LIBPCAP_VERSION_DEFAULT}               CACHE STRING "libpcap version")
+set (WINFLEXBISON_VERSION          ${WINFLEXBISON_VERSION_DEFAULT}          CACHE STRING "winflexbison version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -159,6 +163,8 @@ set_property (CACHE GDIPLUS_VERSION               PROPERTY STRINGS ${GDIPLUS_VER
 set_property (CACHE LIBXPM_VERSION                PROPERTY STRINGS ${LIBXPM_VERSION_DEFAULT})
 set_property (CACHE FREEGLUT_VERSION              PROPERTY STRINGS ${FREEGLUT_VERSION_DEFAULT})
 set_property (CACHE LIBXML2_VERSION               PROPERTY STRINGS ${LIBXML2_VERSION_DEFAULT})
+set_property (CACHE LIBPCAP_VERSION               PROPERTY STRINGS ${LIBPCAP_VERSION_DEFAULT})
+set_property (CACHE WINFLEXBISON_VERSION          PROPERTY STRINGS ${WINFLEXBISON_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -203,6 +209,8 @@ message (STATUS "Version of gdiplus                : ${GDIPLUS_VERSION}")
 message (STATUS "Version of libXpm                 : ${LIBXPM_VERSION}")
 message (STATUS "Version of freeglut               : ${FREEGLUT_VERSION}")
 message (STATUS "Version of libxml2                : ${LIBXML2_VERSION}")
+message (STATUS "Version of libpcap                : ${LIBPCAP_VERSION}")
+message (STATUS "Version of winflexbison           : ${WINFLEXBISON_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -447,10 +455,11 @@ ExternalProject_Add(perl-core
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/perl-core-${PERL_VERSION}.tar.gz
 					SOURCE_SUBDIR          win32
 					PATCH_COMMAND          ${CMAKE_COMMAND} -E env ${PERLPATCH_BAT_DOS} ${REPLACE_VBS_DOS} ${PERL_CCTYPE} ${PERL_WIN64} ${PERL_INSTSUBDIR} ${PERL_INST_DRV}
-					COMMAND                ${Patch_EXECUTABLE} inline.h         ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-inline.h.patch
-					COMMAND                ${Patch_EXECUTABLE} win32/win32.c    ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.c.patch
-					COMMAND                ${Patch_EXECUTABLE} win32/win32.h    ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.h.patch
-					COMMAND                ${Patch_EXECUTABLE} win32/win32sck.c ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32sck.c.patch
+					COMMAND                ${Patch_EXECUTABLE} inline.h                   ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-inline.h.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32.c              ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.c.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32.h              ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32.h.patch
+					COMMAND                ${Patch_EXECUTABLE} win32/win32sck.c           ${PROJECT_SOURCE_DIR}/patches/perl-rt12986-win32-win32sck.c.patch
+					COMMAND                ${Patch_EXECUTABLE} cpan/Win32API-File/File.pm ${PROJECT_SOURCE_DIR}/patches/Win32API-File-pr-15.patch
 					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using win32\\Makefile"
 					BUILD_COMMAND          ${CMAKE_MAKE_PROGRAM}
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
@@ -1144,8 +1153,6 @@ ExternalProject_Add(libxml2
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/libxml2
 					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
-					# No test target ?
-					#
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
@@ -1154,6 +1161,49 @@ add_custom_target(perl-xml-libxml
 				  DEPENDS                  perl-pkgconfig libxml2
 				  COMMAND                  ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl SHLOMIF/XML-LibXML-${PERL_XML_LIBXML_VERSION}.tar.gz
 				  )
+
+# ===========================================================
+# External project winflexbison - Take care original CMakeLists.txt of this project work only with the Release build type
+# ===========================================================
+ExternalProject_Add(winflexbison
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/winflexbison-${WINFLEXBISON_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					#
+					# libxml2 install an xml2-config and xml2Conf.sh that are a shell script! This will perturb very much Alien::Libxml2
+					#
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/winflexbison
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING              ${PERL_INST_DIR}/c/licenses/winflexbison
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libpcap (note openssl dependency is implicitly resolved with perl-pkgconfig, but well)
+# ===========================================================
+ExternalProject_Add(libpcap
+                    DEPENDS                perl-pkgconfig openssl winflexbison
+					#
+					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
+					#
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libpcap-${LIBPCAP_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DDISABLE_NETMAP=ON -DDISABLE_BLUETOOTH=ON -DDISABLE_DBUS=ON -DDISABLE_RDMA=ON -DDISABLE_DAG=ON -DDISABLE_SEPTEL=ON -DDISABLE_SNF=ON -DDISABLE_TC=ON -DDISABLE_PACKET=ON -DENABLE_REMOTE=OFF -DUSE_STATIC_RT=OFF .
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpcap-${LIBPCAP_VERSION}/add-disable-packet-option.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/libpcap-${LIBPCAP_VERSION}/install-pc-on-msvc.patch
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					#
+					# libxml2 install an xml2-config and xml2Conf.sh that are a shell script! This will perturb very much Alien::Libxml2
+					#
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            ${PERL_INST_DIR}/c/licenses/libpcap
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE              ${PERL_INST_DIR}/c/licenses/libpcap
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
@@ -1169,6 +1219,7 @@ add_custom_target(perl               DEPENDS perl-io-socket-ssl perl-win32-gui p
 # From now on, we just create rules for all the extra packages
 # ====================================================================================================================================
 SET (PACKAGES
+	Image::Size
 	Archive::Zip               # Few old distributions are packaged as ZIP, so get Archive::Zip asap
 	Log::Log4perl
     Win32::WQL
@@ -1274,6 +1325,19 @@ SET (PACKAGES
 	# Win32::UrlCache       # Umaintained very old package that do not install
 	Win32::VBScript
 	Win32::ADRecurse
+	# Win32::CaptureIE      # Obsolete - ImageMagick dependency
+	Win32::Clipboard
+	Win32::CryptData
+	Win32::DriveInfo
+	Win32::ErrorMode
+	Win32::Filenames
+	# Win32::NetPacket      # Catastrophic Makefile.PL - I just give up
+	# Win32::RemoteTOD      # It installs what ?
+	# Win32::Resources      # Test fail
+	# Win32::Shortkeys      # Does not compile (WinAble.h to be replaced by WinUser.h ?)
+	# Win32::SqlServer		# Note: need https://learn.microsoft.com/fr-fr/sql/connect/oledb/applications/installing-oledb-driver-for-sql-server
+	Win32::Wallpaper
+	Win32::FileNotify
 )
 
 foreach(package ${PACKAGES})
@@ -1283,3 +1347,8 @@ foreach(package ${PACKAGES})
   string(REPLACE "::" "-" rule ${rule})
   add_custom_target(${rule} ALL DEPENDS perl COMMAND ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/installer.pl ${package})
 endforeach()
+
+#
+# Specific Packages failures...
+#
+add_dependencies(perl-win32-wallpaper perl-image-size)
