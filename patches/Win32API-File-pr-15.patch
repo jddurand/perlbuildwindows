@@ -1,0 +1,12 @@
+diff -Naur perl-core.old/cpan/Win32API-File/File.pm perl-core.new/cpan/Win32API-File/File.pm
+--- perl-core.old/cpan/Win32API-File/File.pm	2022-03-28 14:51:11.000000000 +0200
++++ perl-core.new/cpan/Win32API-File/File.pm	2022-12-10 15:30:39.003126800 +0100
+@@ -332,7 +332,7 @@
+ 	}
+ 	no strict "refs";
+ 	# The eval "" is necessary in Perl 5.6, avoid it otherwise.
+-	my $tied = !defined($^]) || $^] < 5.008
++	my $tied = !defined($]) || $] < 5.008
+                        ? eval "tied *{$file}"
+                        : tied *{$file};
+ 
