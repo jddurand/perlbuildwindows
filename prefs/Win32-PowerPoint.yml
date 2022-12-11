@@ -1,0 +1,6 @@
+---
+match:
+  distribution: '/\QWin32-PowerPoint-0.10.tar.gz\E'
+patches:
+  - Win32-PowerPoint-Update-Constants-pm.patch
+  - Win32-PowerPoint-Update-PowerPoint-pm.patch
