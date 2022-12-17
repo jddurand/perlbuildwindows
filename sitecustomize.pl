@@ -5,22 +5,11 @@
 # Disable this script by setting the environment PERL_DISABLE_SIZECUSTOMIZE to any value.
 # Setting the environment variable PERL_SIZECUSTOMIZE_DEBUG will print debug statements.
 #
-_sitecustomize();
-
 #
-# Cleanup the main namespace
+# We try to put all our stuff in a single package
 #
-map { undef $main::{$_} } qw/_sitecustomize
-                             _sitecustomize_change_config
-                             _sitecustomize_setup_env
-                             _sitecustomize_GetExecutableFullPathW
-                             _sitecustomize_WideStringToPerlString
-                             _sitecustomize_GetModuleFileNameW
-                             _sitecustomize_GetFullPathNameW
-                             _sitecustomize_GetLongPathNameW
-                            /;
-
-sub _sitecustomize {
+package __SiteCustomize__;
+sub customize {
 	#
 	# Set the environment variable to PERL_DISABLE_SIZECUSTOMIZE to stop this script
 	#
@@ -45,18 +34,18 @@ sub _sitecustomize {
 		#
 		# This can fail if e.g. we fail to get current executable name
 		#
-		_sitecustomize_change_config();
+		change_config();
 	};
 	print "[sitecustomize] $@\n" if $@ && $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 
-	_sitecustomize_setup_env();
+	setup_env();
 }
 
-sub _sitecustomize_change_config {
+sub change_config {
 	#
 	# Get current perl full path
 	#
-	my $executable = _sitecustomize_WideStringToPerlString(_sitecustomize_GetExecutableFullPathW());
+	my $executable = WideStringToPerlString(GetExecutableFullPathW());
 	print "[sitecustomize] \$executable : " . ($executable // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 
 	#
@@ -105,7 +94,7 @@ sub _sitecustomize_change_config {
 	}
 }
 
-sub _sitecustomize_setup_env {
+sub setup_env {
 	#
 	# Always set PKG_CONFIG_PATH to $Config{installprefix}/c/lib/pkgconfig
 	# Note that this is a bit vicious but the test suite of PkgConfig requires
@@ -155,20 +144,20 @@ sub _sitecustomize_setup_env {
 	}
 }
 
-sub _sitecustomize_GetExecutableFullPathW {
+sub GetExecutableFullPathW {
 	my $executableFullPathW;
 
-	my $moduleFileNameW = _sitecustomize_GetModuleFileNameW();
-	print "[sitecustomize] \$moduleFileNameW : " . (_sitecustomize_WideStringToPerlString($moduleFileNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	my $moduleFileNameW = GetModuleFileNameW();
+	print "[sitecustomize] \$moduleFileNameW : " . (WideStringToPerlString($moduleFileNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 	return unless defined($moduleFileNameW);
 
-	my $fullPathNameW = _sitecustomize_GetFullPathNameW($moduleFileNameW);
-	print "[sitecustomize] \$fullPathNameW : " . (_sitecustomize_WideStringToPerlString($fullPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	my $fullPathNameW = GetFullPathNameW($moduleFileNameW);
+	print "[sitecustomize] \$fullPathNameW : " . (WideStringToPerlString($fullPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 	return unless defined($fullPathNameW);
 
-	my ($supported, $longPathNameW) = _sitecustomize_GetLongPathNameW($fullPathNameW);
+	my ($supported, $longPathNameW) = GetLongPathNameW($fullPathNameW);
 	if ($supported) {
-		print "[sitecustomize] \$longPathNameW : " . (_sitecustomize_WideStringToPerlString($longPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+		print "[sitecustomize] \$longPathNameW : " . (WideStringToPerlString($longPathNameW) // '<undef>') . "\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
 		return unless defined($longPathNameW);
 		$executableFullPathW = $longPathNameW;
 	} else {
@@ -178,7 +167,7 @@ sub _sitecustomize_GetExecutableFullPathW {
 	return $executableFullPathW;
 }
 
-sub _sitecustomize_WideStringToPerlString {
+sub WideStringToPerlString {
 	my ($source) = @_;
 	
 	return undef unless defined($source);
@@ -186,7 +175,7 @@ sub _sitecustomize_WideStringToPerlString {
 	return Win32::API::SafeReadWideCString(unpack('J',pack('p', $source)));
 }
 
-sub _sitecustomize_GetModuleFileNameW {
+sub GetModuleFileNameW {
 	my $function = Win32::API::More->new(
 		'kernel32', 'DWORD GetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)'
 	);
@@ -214,7 +203,7 @@ sub _sitecustomize_GetModuleFileNameW {
 	return $lpFilename;
 }
 
-sub _sitecustomize_GetFullPathNameW {
+sub GetFullPathNameW {
 	my ($lpFileName) = @_;
 
 	my $function = Win32::API::More->new(
@@ -244,7 +233,7 @@ sub _sitecustomize_GetFullPathNameW {
 	return $lpBuffer;
 }
 
-sub _sitecustomize_GetLongPathNameW {
+sub GetLongPathNameW {
 	my ($lpszShortPath) = @_;
 
 	# LPCWSTR is const LPWSTR
@@ -276,4 +265,46 @@ sub _sitecustomize_GetLongPathNameW {
 	}
 	
 	return (1, $lpszLongPath);
+}
+
+package main;
+__SiteCustomize__::customize();
+
+#
+# We explicitly unload modules whose behaviour is not 100% fixed (e.g. File::Spec depend on $^O that can be changed)
+# did NOT explicitly loaded them
+#
+map { _ClassUnload($_) } qw/File::Basename File::Spec __SiteCustomize__/;
+
+#
+# The _ClassUnload method itself
+#
+map {
+		print "[sitecustomize] Cleaning \${main}::${_}\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+		undef *{"${main}::${_}"};
+		delete ${"${main}::"}{$_};
+	} qw/_ClassUnload/;
+
+#
+# Nothing else but a copy of Class::Unload without the Class::Inspector or MOP thingies (not relevant in our case)
+#
+sub _ClassUnload {
+	my ($class) = @_;
+
+	print "[sitecustomize] Unloading $class\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+
+	# Flush inheritance caches
+	@{$class . '::ISA'} = ();
+
+	my $symtab = $class.'::';
+	# Delete all symbols except other namespaces
+	for my $symbol (keys %$symtab) {
+		next if $symbol =~ /\A[^:]+::\z/;
+		print "[sitecustomize]   Symbol $symtab" . "$symbol\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+		delete $symtab->{$symbol};
+	}
+
+	my $inc_file = join( '/', split /(?:'|::)/, $class ) . '.pm';
+	print "[sitecustomize]   INC $inc_file\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+	delete $INC{ $inc_file };
 }
