@@ -279,9 +279,9 @@ map { _ClassUnload($_) } qw/File::Basename File::Spec __SiteCustomize__/;
 # The _ClassUnload method itself
 #
 map {
-		print "[sitecustomize] Cleaning \${main}::${_}\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
-		undef *{"${main}::${_}"};
-		delete ${"${main}::"}{$_};
+		print "[sitecustomize] Removing \${main}::$_\n" if $ENV{PERL_SIZECUSTOMIZE_DEBUG};
+		my $symtab = 'main::';
+		delete $symtab->{$_};
 	} qw/_ClassUnload/;
 
 #
