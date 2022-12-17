@@ -272,7 +272,6 @@ __SiteCustomize__::customize();
 
 #
 # We explicitly unload modules whose behaviour is not 100% fixed (e.g. File::Spec depend on $^O that can be changed)
-# did NOT explicitly loaded them
 #
 map { _ClassUnload($_) } qw/File::Basename File::Spec __SiteCustomize__/;
 
