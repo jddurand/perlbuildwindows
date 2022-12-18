@@ -92,6 +92,10 @@ set (FREEGLUT_VERSION_DEFAULT              3.4.0)
 set (LIBXML2_VERSION_DEFAULT               2.9.12)
 set (LIBPCAP_VERSION_DEFAULT               1.10.1)
 set (WINFLEXBISON_VERSION_DEFAULT          2.5.25)
+set (BZIP2_VERSION_DEFAULT                 2d8393924b9f3e014000c7420c7da7c3ddb74e2c)
+set (BROTLI_VERSION_DEFAULT                1.0.9)
+set (FREETYPE_VERSION_DEFAULT              2.12.1)
+set (GRAPHICSMAGICK_VERSION_DEFAULT        1.3.38)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -129,6 +133,10 @@ set (FREEGLUT_VERSION              ${FREEGLUT_VERSION_DEFAULT}              CACH
 set (LIBXML2_VERSION               ${LIBXML2_VERSION_DEFAULT}               CACHE STRING "libxml2 version")
 set (LIBPCAP_VERSION               ${LIBPCAP_VERSION_DEFAULT}               CACHE STRING "libpcap version")
 set (WINFLEXBISON_VERSION          ${WINFLEXBISON_VERSION_DEFAULT}          CACHE STRING "winflexbison version")
+set (BZIP2_VERSION                 ${BZIP2_VERSION_DEFAULT}                 CACHE STRING "bzip2 version")
+set (BROTLI_VERSION                ${BROTLI_VERSION_DEFAULT}                CACHE STRING "brotli version")
+set (FREETYPE_VERSION              ${FREETYPE_VERSION_DEFAULT}              CACHE STRING "freetype version")
+set (GRAPHICSMAGICK_VERSION        ${GRAPHICSMAGICK_VERSION_DEFAULT}        CACHE STRING "GraphicsMagick version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -165,6 +173,10 @@ set_property (CACHE FREEGLUT_VERSION              PROPERTY STRINGS ${FREEGLUT_VE
 set_property (CACHE LIBXML2_VERSION               PROPERTY STRINGS ${LIBXML2_VERSION_DEFAULT})
 set_property (CACHE LIBPCAP_VERSION               PROPERTY STRINGS ${LIBPCAP_VERSION_DEFAULT})
 set_property (CACHE WINFLEXBISON_VERSION          PROPERTY STRINGS ${WINFLEXBISON_VERSION_DEFAULT})
+set_property (CACHE BZIP2_VERSION                 PROPERTY STRINGS ${BZIP2_VERSION_DEFAULT})
+set_property (CACHE BROTLI_VERSION                PROPERTY STRINGS ${BROTLI_VERSION_DEFAULT})
+set_property (CACHE FREETYPE_VERSION              PROPERTY STRINGS ${FREETYPE_VERSION_DEFAULT})
+set_property (CACHE GRAPHICSMAGICK_VERSION        PROPERTY STRINGS ${GRAPHICSMAGICK_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -211,6 +223,10 @@ message (STATUS "Version of freeglut               : ${FREEGLUT_VERSION}")
 message (STATUS "Version of libxml2                : ${LIBXML2_VERSION}")
 message (STATUS "Version of libpcap                : ${LIBPCAP_VERSION}")
 message (STATUS "Version of winflexbison           : ${WINFLEXBISON_VERSION}")
+message (STATUS "Version of bzip2                  : ${BZIP2_VERSION}")
+message (STATUS "Version of brotli                 : ${BROTLI_VERSION}")
+message (STATUS "Version of freetype               : ${FREETYPE_VERSION}")
+message (STATUS "Version of GraphicsMagick         : ${GRAPHICSMAGICK_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1206,6 +1222,82 @@ ExternalProject_Add(libpcap
 					TEST_BEFORE_INSTALL    FALSE
 					BUILD_IN_SOURCE        TRUE)
 
+# ===========================================================
+# External project bzip2
+# ===========================================================
+ExternalProject_Add(bzip2
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/bzip2-${BZIP2_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/bzip2-master/bz2-install.patch
+					#
+					# Painful but bzip2 requires... python to run tests or install docs
+					#
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/bzip2
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/bzip2
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project brotli
+# ===========================================================
+ExternalProject_Add(brotli
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/brotli-${BROTLI_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/brotli
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE                   ${PERL_INST_DIR}/c/licenses/brotli
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# Tests requires Wine event on Windows -;
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project freetype
+# ===========================================================
+ExternalProject_Add(freetype
+                    DEPENDS                perl-pkgconfig zlib libpng bzip2 brotli
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/freetype-${FREETYPE_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON ../freetype
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/freetype
+					COMMAND                ${CMAKE_COMMAND} -E copy ../freetype/LICENSE.TXT   ${PERL_INST_DIR}/c/licenses/freetype
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# Not test ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# It explicitly check for build in source -;
+					#
+					BUILD_IN_SOURCE        FALSE)
+
+# ===========================================================
+# External project GraphicsMagick
+# ===========================================================
+ExternalProject_Add(GraphicsMagick
+                    DEPENDS                perl-pkgconfig zlib bzip2 libjpeg-turbo libpng tiff
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/GraphicsMagick-${GRAPHICSMAGICK_VERSION}.tar.gz
+				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/GraphicsMagick/CMakeLists.txt GraphicsMagick/CMakeLists.txt
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}"  .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/GraphicsMagick
+					COMMAND                ${CMAKE_COMMAND} -E copy Copyright.txt             ${PERL_INST_DIR}/c/licenses/GraphicsMagick
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
 # ====================================================================================================================================
 # We consider that perl is ready when modules that require special post-install rules or are dependant on external projets are done:
 # Net::SSleay
@@ -1339,6 +1431,10 @@ SET (PACKAGES
 	# Win32::SqlServer		# Note: need https://learn.microsoft.com/fr-fr/sql/connect/oledb/applications/installing-oledb-driver-for-sql-server
 	Win32::Wallpaper
 	Win32::FileNotify
+	Win32::FindWindow
+	Win32::ParseWords
+	Win32::PowerPoint
+	Win32::RunAsAdmin
 )
 
 foreach(package ${PACKAGES})
