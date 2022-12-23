@@ -1,0 +1,24 @@
+diff -Naur giflib.old/gif_font.c giflib.new/gif_font.c
+--- giflib.old/gif_font.c	2022-12-17 14:40:11.897107100 +0100
++++ giflib.new/gif_font.c	2022-12-23 11:16:22.386796900 +0100
+@@ -21,7 +21,7 @@
+  * the scan line.
+  */
+ /*@+charint@*/
+-const unsigned char GifAsciiTable8x8[][GIF_FONT_WIDTH] = {
++unsigned char GifAsciiTable8x8[][GIF_FONT_WIDTH] = {
+     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},    /* Ascii 0 */
+     {0x3c, 0x42, 0xa5, 0x81, 0xbd, 0x42, 0x3c, 0x00},    /* Ascii 1 */
+     {0x3c, 0x7e, 0xdb, 0xff, 0xc3, 0x7e, 0x3c, 0x00},    /* Ascii 2 */
+diff -Naur giflib.old/gif_lib.h giflib.new/gif_lib.h
+--- giflib.old/gif_lib.h	2022-12-17 14:40:11.922059600 +0100
++++ giflib.new/gif_lib.h	2022-12-23 11:16:37.238083000 +0100
+@@ -286,7 +286,7 @@
+ 
+ #define GIF_FONT_WIDTH  8
+ #define GIF_FONT_HEIGHT 8
+-giflib_EXPORT const unsigned char GifAsciiTable8x8[][GIF_FONT_WIDTH];
++giflib_EXPORT unsigned char GifAsciiTable8x8[][GIF_FONT_WIDTH];
+ 
+ giflib_EXPORT void GifDrawText8x8(SavedImage *Image,
+                      const int x, const int y,

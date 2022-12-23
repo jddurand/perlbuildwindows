@@ -95,6 +95,13 @@ set (WINFLEXBISON_VERSION_DEFAULT          2.5.25)
 set (BZIP2_VERSION_DEFAULT                 2d8393924b9f3e014000c7420c7da7c3ddb74e2c)
 set (BROTLI_VERSION_DEFAULT                1.0.9)
 set (FREETYPE_VERSION_DEFAULT              2.12.1)
+set (HARFBUZZ_VERSION_DEFAULT              6.0.0)
+set (HIGHWAY_VERSION_DEFAULT               1.0.2)
+set (LCMS2_VERSION_DEFAULT                 2.14)
+set (IMATH_VERSION_DEFAULT                 3.1.6)
+set (OPENEXR_VERSION_DEFAULT               3.1.5)
+set (LIBAVIF_VERSION_DEFAULT               0.11.1)
+set (LIBJXL_VERSION_DEFAULT                0.7.0)
 set (GRAPHICSMAGICK_VERSION_DEFAULT        1.3.38)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
@@ -136,6 +143,13 @@ set (WINFLEXBISON_VERSION          ${WINFLEXBISON_VERSION_DEFAULT}          CACH
 set (BZIP2_VERSION                 ${BZIP2_VERSION_DEFAULT}                 CACHE STRING "bzip2 version")
 set (BROTLI_VERSION                ${BROTLI_VERSION_DEFAULT}                CACHE STRING "brotli version")
 set (FREETYPE_VERSION              ${FREETYPE_VERSION_DEFAULT}              CACHE STRING "freetype version")
+set (HARFBUZZ_VERSION              ${HARFBUZZ_VERSION_DEFAULT}              CACHE STRING "harfbuzz version")
+set (HIGHWAY_VERSION               ${HIGHWAY_VERSION_DEFAULT}               CACHE STRING "highway version")
+set (LCMS2_VERSION                 ${LCMS2_VERSION_DEFAULT}                 CACHE STRING "lcms2 version")
+set (IMATH_VERSION                 ${IMATH_VERSION_DEFAULT}                 CACHE STRING "imath version")
+set (OPENEXR_VERSION               ${OPENEXR_VERSION_DEFAULT}               CACHE STRING "openexr version")
+set (LIBAVIF_VERSION               ${LIBAVIF_VERSION_DEFAULT}               CACHE STRING "libavif version")
+set (LIBJXL_VERSION                ${LIBJXL_VERSION_DEFAULT}                CACHE STRING "libjxl version")
 set (GRAPHICSMAGICK_VERSION        ${GRAPHICSMAGICK_VERSION_DEFAULT}        CACHE STRING "GraphicsMagick version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
@@ -176,6 +190,13 @@ set_property (CACHE WINFLEXBISON_VERSION          PROPERTY STRINGS ${WINFLEXBISO
 set_property (CACHE BZIP2_VERSION                 PROPERTY STRINGS ${BZIP2_VERSION_DEFAULT})
 set_property (CACHE BROTLI_VERSION                PROPERTY STRINGS ${BROTLI_VERSION_DEFAULT})
 set_property (CACHE FREETYPE_VERSION              PROPERTY STRINGS ${FREETYPE_VERSION_DEFAULT})
+set_property (CACHE HARFBUZZ_VERSION              PROPERTY STRINGS ${HARFBUZZ_VERSION_DEFAULT})
+set_property (CACHE HIGHWAY_VERSION               PROPERTY STRINGS ${HIGHWAY_VERSION_DEFAULT})
+set_property (CACHE LCMS2_VERSION                 PROPERTY STRINGS ${LCMS2_VERSION_DEFAULT})
+set_property (CACHE IMATH_VERSION                 PROPERTY STRINGS ${IMATH_VERSION_DEFAULT})
+set_property (CACHE OPENEXR_VERSION               PROPERTY STRINGS ${OPENEXR_VERSION_DEFAULT})
+set_property (CACHE LIBAVIF_VERSION               PROPERTY STRINGS ${LIBAVIF_VERSION_DEFAULT})
+set_property (CACHE LIBJXL_VERSION                PROPERTY STRINGS ${LIBJXL_VERSION_DEFAULT})
 set_property (CACHE GRAPHICSMAGICK_VERSION        PROPERTY STRINGS ${GRAPHICSMAGICK_VERSION_DEFAULT})
 
 message (STATUS "===================================")
@@ -226,6 +247,13 @@ message (STATUS "Version of winflexbison           : ${WINFLEXBISON_VERSION}")
 message (STATUS "Version of bzip2                  : ${BZIP2_VERSION}")
 message (STATUS "Version of brotli                 : ${BROTLI_VERSION}")
 message (STATUS "Version of freetype               : ${FREETYPE_VERSION}")
+message (STATUS "Version of harfbuzz               : ${HARFBUZZ_VERSION}")
+message (STATUS "Version of highway                : ${HIGHWAY_VERSION}")
+message (STATUS "Version of lcms2                  : ${LCMS2_VERSION}")
+message (STATUS "Version of imath                  : ${IMATH_VERSION}")
+message (STATUS "Version of openexr                : ${OPENEXR_VERSION}")
+message (STATUS "Version of libavif                : ${LIBAVIF_VERSION}")
+message (STATUS "Version of libjxl                 : ${LIBJXL_VERSION}")
 message (STATUS "Version of GraphicsMagick         : ${GRAPHICSMAGICK_VERSION}")
 message (STATUS "===================================")
 #
@@ -763,6 +791,7 @@ ExternalProject_Add(giflib
 					# The our diff on top of that
 					#
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/giflib-5.2.1.diff
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/giflib-${GIFLIB_VERSION}/giflib-5.2.1-remove-const.diff
 					#
 					# Continue...
 					#
@@ -1282,13 +1311,154 @@ ExternalProject_Add(freetype
 					BUILD_IN_SOURCE        FALSE)
 
 # ===========================================================
+# External project harfbuzz
+# ===========================================================
+ExternalProject_Add(harfbuzz
+                    DEPENDS                perl-pkgconfig freetype
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/harfbuzz-${HARFBUZZ_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DHB_HAVE_FREETYPE=ON -DBUILD_SHARED_LIBS=ON -G "${CMAKE_GENERATOR}" ../harfbuzz
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/harfbuzz
+					COMMAND                ${CMAKE_COMMAND} -E copy ../harfbuzz/COPYING       ${PERL_INST_DIR}/c/licenses/harfbuzz
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# It needs python for the tests
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# It explicitly check for build in source -;
+					#
+					BUILD_IN_SOURCE        FALSE)
+
+# ===========================================================
+# External project highway
+# ===========================================================
+ExternalProject_Add(highway
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/highway-${HIGHWAY_VERSION}.tar.gz
+					#
+					# It required googletest to run the tests
+					#
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=ON -DHWY_ENABLE_TESTS=OFF -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/highway
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE                   ${PERL_INST_DIR}/c/licenses/highway
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					#
+					# It explicitly check for build in source -;
+					#
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project lcms2
+# ===========================================================
+ExternalProject_Add(lcms2
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/lcms2-${LCMS2_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/lcms2/CMakeLists.txt CMakeLists.txt
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/lcms2
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/lcms2
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project imath
+# ===========================================================
+ExternalProject_Add(imath
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/imath-${IMATH_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DIMATH_INSTALL_PKG_CONFIG=ON .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/imath
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.md                ${PERL_INST_DIR}/c/licenses/imath
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# https://github.com/AcademySoftwareFoundation/Imath/issues/283
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project openexr
+# ===========================================================
+ExternalProject_Add(openexr
+                    DEPENDS                perl-pkgconfig imath
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/openexr-${OPENEXR_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DOPENEXR_INSTALL_PKG_CONFIG=ON -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/openexr
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.md                ${PERL_INST_DIR}/c/licenses/openexr
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# A lot of tests fail, github issues seems to say "do not worry". Executing some tests by hand work when they fail in CTest. I suspect a path issue for me specific case.
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libavif
+# ===========================================================
+ExternalProject_Add(libavif
+                    DEPENDS                perl-pkgconfig aom
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libavif-${LIBAVIF_VERSION}.tar.gz
+					#
+					# Again tests that depend on google test
+					#
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DAVIF_CODEC_AOM=ON -DAVIF_CODEC_AOM_DECODE=ON -DAVIF_CODEC_AOM_ENCODE=ON -DAVIF_ENABLE_GTEST=OFF -DAVIF_ENABLE_WERROR=OFF -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/libavif
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE                   ${PERL_INST_DIR}/c/licenses/libavif
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# A lot of tests fail, github issues seems to say "do not worry". Executing some tests by hand work when they fail in CTest. I suspect a path issue for me specific case.
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libjxl
+# ===========================================================
+ExternalProject_Add(libjxl
+                    DEPENDS                perl-pkgconfig brotli zlib libpng highway lcms2 openexr giflib libjpeg-turbo libwebp libavif
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libjxl-${LIBJXL_VERSION}.tar.gz
+					#
+					# It required GTest to run the tests
+					#
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DJPEGXL_ENABLE_SKCMS=OFF -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_JNI=OFF -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/libjxl
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE                   ${PERL_INST_DIR}/c/licenses/libjxl
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.apngdis           ${PERL_INST_DIR}/c/licenses/libjxl
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.jpeg-xl           ${PERL_INST_DIR}/c/licenses/libjxl
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					# Not test ?
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
 # External project GraphicsMagick
 # ===========================================================
 ExternalProject_Add(GraphicsMagick
-                    DEPENDS                perl-pkgconfig zlib bzip2 libjpeg-turbo libpng tiff
+                    DEPENDS                perl-pkgconfig zlib bzip2 jbigkit libjpeg-turbo libpng tiff libjxl lcms2 xz libxml2
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/GraphicsMagick-${GRAPHICSMAGICK_VERSION}.tar.gz
 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/GraphicsMagick/CMakeLists.txt GraphicsMagick/CMakeLists.txt
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}"  .
+					COMMAND                ${CMAKE_COMMAND} -E make_directory            GraphicsMagick/cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/GraphicsMagick/cmake/FindJBIG.cmake GraphicsMagick/cmake/FindJBIG.cmake
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/GraphicsMagick/cmake/FindJBIG85.cmake GraphicsMagick/cmake/FindJBIG85.cmake
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/GraphicsMagick
 					COMMAND                ${CMAKE_COMMAND} -E copy Copyright.txt             ${PERL_INST_DIR}/c/licenses/GraphicsMagick

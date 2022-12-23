@@ -1,12 +1,26 @@
 cmake_minimum_required (VERSION 3.6)
 project (graphicsmagick)
+include(FindPackageHandleStandardArgs)
+include(FindPkgConfig)
+include(FindThreads)
 
-find_package(ZLIB REQUIRED)
-find_package(BZip2 REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+pkg_check_modules(libheif REQUIRED IMPORTED_TARGET libheif)
+find_package(JBIG REQUIRED)
+find_package(JBIG85 REQUIRED)
 find_package(JPEG REQUIRED)
+pkg_check_modules(Jxl REQUIRED IMPORTED_TARGET libjxl)
+pkg_check_modules(JxlThreads REQUIRED IMPORTED_TARGET libjxl_threads)
+pkg_check_modules(Lcms2 REQUIRED IMPORTED_TARGET lcms2)
+find_package(LibLZMA REQUIRED)
 find_package(PNG REQUIRED)
 find_package(TIFF REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(WebP REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(zstd REQUIRED)
 
 add_definitions(-D_MAGICKLIB_ -D_WANDLIB_ -DMAGICK_IMPLEMENTATION)
 
@@ -28,19 +42,23 @@ include_directories("magick")
 include_directories("Magick++")
 include_directories("Magick++/lib")
 include_directories("wand")
-include_directories("jbig/libjbig")
 
 file(READ "magick/magick_config.h.in" CONFIG_H)
 string(REPLACE "#undef HasBZLIB" "#define HasBZLIB" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasHEIF" "#define HasHEIF" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasJBIG" "#define HasJBIG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasJPEG" "#define HasJPEG" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasJXL" "#define HasJXL" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasLCMS" "#define HasLCMS" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasLZMA" "#define HasLZMA" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasPNG" "#define HasPNG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasTIFF" "#define HasTIFF" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasTTF" "#define HasTTF" CONFIG_H "${CONFIG_H}")
-string(REPLACE "#undef HasTTF" "#define HasTTF" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HAVE_FT2BUILD_H" "#define HAVE_FT2BUILD_H" CONFIG_H "${CONFIG_H}")
-string(REPLACE "#undef HasZLIB" "#define HasZLIB" CONFIG_H "${CONFIG_H}")
-string(REPLACE "#undef HasJBIG" "#define HasJBIG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasWEBP" "#define HasWEBP" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasXML" "#define HasXML" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasZLIB" "#define HasZLIB" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HasZSTD" "#define HasZSTD" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef QuantumDepth" "#define QuantumDepth 16" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef restrict" "#define restrict" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef size_t" "/* #undef size_t */" CONFIG_H "${CONFIG_H}")
@@ -60,72 +78,31 @@ string(REPLACE "#undef QuantumDepth" "#define QuantumDepth 16" CONFIG_API_H "${C
 string(REPLACE "#undef size_t" "/* #undef size_t */" CONFIG_API_H "${CONFIG_API_H}")
 file(WRITE "magick/magick_config_api.h" "${CONFIG_API_H}")
 
-add_library(graphicsmagick coders/art.c coders/avs.c
-		coders/bmp.c coders/braille.c coders/cals.c coders/caption.c
-		coders/cineon.c coders/clipboard.c coders/cmyk.c
-		coders/cut.c coders/dcm.c coders/dcraw.c coders/dib.c
-		coders/dps.c coders/dpx.c coders/emf.c coders/ept.c
-		coders/fax.c coders/fits.c coders/fpx.c coders/gif.c
-		coders/gradient.c coders/gray.c coders/histogram.c
-		coders/hrz.c coders/html.c coders/icon.c coders/identity.c
-		coders/info.c coders/jbig.c coders/jnx.c coders/jp2.c
-		coders/jpeg.c coders/label.c coders/locale.c coders/logo.c
-		coders/mac.c coders/map.c coders/mat.c coders/matte.c
-		coders/meta.c coders/miff.c coders/mono.c coders/mpc.c
-		coders/mpeg.c coders/mpr.c coders/msl.c coders/mtv.c
-		coders/mvg.c coders/null.c coders/otb.c coders/palm.c
-		coders/pcd.c coders/pcl.c coders/pcx.c coders/pdb.c
-		coders/pdf.c coders/pict.c coders/pix.c coders/plasma.c
-		coders/png.c coders/pnm.c coders/preview.c coders/ps.c
-		coders/ps2.c coders/ps3.c coders/psd.c coders/pwp.c coders/rgb.c
-		coders/rla.c coders/rle.c coders/sct.c coders/sfw.c coders/sgi.c
-		coders/stegano.c coders/sun.c coders/svg.c coders/tga.c
-		coders/tiff.c coders/tile.c coders/tim.c coders/topol.c
-		coders/ttf.c coders/txt.c coders/uil.c coders/url.c
-		coders/uyvy.c coders/vicar.c coders/vid.c coders/viff.c
-		coders/wbmp.c coders/webp.c coders/wmf.c coders/wpg.c
-		coders/x.c coders/xbm.c coders/xc.c coders/xcf.c
-		coders/xpm.c coders/xtrn.c coders/xwd.c coders/yuv.c
-		filters/analyze.c
-		magick/analyze.c magick/animate.c magick/annotate.c magick/attribute.c
-		magick/average.c magick/bit_stream.c magick/blob.c magick/cdl.c
-		magick/channel.c magick/color.c magick/color_lookup.c magick/colormap.c
-		magick/colorspace.c magick/command.c magick/compare.c magick/composite.c
-		magick/compress.c magick/confirm_access.c magick/constitute.c magick/decorate.c
-		magick/delegate.c magick/deprecate.c magick/describe.c magick/display.c magick/draw.c
-		magick/effect.c magick/enhance.c magick/enum_strings.c magick/error.c magick/export.c
-		magick/floats.c magick/fx.c magick/gem.c magick/gradient.c magick/hclut.c
-		magick/image.c magick/import.c magick/list.c magick/locale.c magick/log.c
-		magick/magic.c magick/magick.c magick/magick_endian.c magick/map.c
-		magick/memory.c magick/module.c magick/monitor.c magick/montage.c magick/nt_base.c
-		magick/nt_feature.c magick/omp_data_view.c magick/operator.c magick/paint.c
-		magick/pixel_cache.c magick/pixel_iterator.c magick/plasma.c magick/PreRvIcccm.c
-		magick/profile.c magick/quantize.c magick/random.c magick/registry.c magick/render.c
-		magick/resize.c magick/resource.c magick/segment.c magick/semaphore.c
-		magick/shear.c magick/signature.c magick/static.c magick/statistics.c
-		magick/tempfile.c magick/texture.c magick/timer.c magick/transform.c
-		magick/tsd.c magick/type.c magick/unix_port.c magick/utility.c
-		magick/version.c magick/widget.c magick/xwindow.c
-		Magick++/lib/Blob.cpp Magick++/lib/BlobRef.cpp Magick++/lib/CoderInfo.cpp
-		Magick++/lib/Color.cpp Magick++/lib/Drawable.cpp Magick++/lib/Exception.cpp
-		Magick++/lib/Functions.cpp Magick++/lib/Geometry.cpp Magick++/lib/Image.cpp
-		Magick++/lib/ImageRef.cpp Magick++/lib/Montage.cpp Magick++/lib/Options.cpp
-		Magick++/lib/Pixels.cpp Magick++/lib/STL.cpp Magick++/lib/Thread.cpp
-		Magick++/lib/TypeMetric.cpp
-		wand/drawing_wand.c wand/magick_compat.c wand/magick_wand.c wand/pixel_wand.c
-		jbig/libjbig/jbig.c jbig/libjbig/jbig_ar.c jbig/libjbig/jbig85.c)
+file(GLOB CODERS_FILES coders/*.c)
+file(GLOB FILTERS_FILES filters/*.c)
+file(GLOB MAGICK_FILES magick/*.c)
+file(GLOB MAGICKXX_FILES Magick++/lib/*.cpp)
+file(GLOB WAND_FILES wand/*.c)
+add_library(graphicsmagick ${CODERS_FILES} ${FILTERS_FILES} ${MAGICK_FILES} ${MAGICKXX_FILES} ${WAND_FILES})
 
 TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
-    ZLIB::ZLIB
     BZip2::BZip2
-    #${JPEG_LIBRARIES}
+	PkgConfig::libheif
+	JBIG::JBIG
+	JBIG85::JBIG85
     JPEG::JPEG
+	PkgConfig::Jxl PkgConfig::JxlThreads
+	PkgConfig::Lcms2
+	LibLZMA::LibLZMA
     PNG::PNG
     TIFF::TIFF
     Freetype::Freetype
 	WebP::webp WebP::webpdemux WebP::libwebpmux WebP::webpdecoder
+	LibXml2::LibXml2
+    ZLIB::ZLIB
+    zstd::libzstd_shared
 )
-target_include_directories(graphicsmagick INTERFACE $<INSTALL_INTERFACE:include>)
+target_include_directories(graphicsmagick PRIVATE INTERFACE $<INSTALL_INTERFACE:include>)
 
 install(TARGETS graphicsmagick
     EXPORT graphicsmagick-targets
@@ -139,22 +116,22 @@ install(
     NAMESPACE unofficial::graphicsmagick::
     DESTINATION share/unofficial-graphicsmagick
 )
-find_package(ZLIB REQUIRED)
-find_package(BZip2 REQUIRED)
-find_package(JPEG REQUIRED)
-find_package(PNG REQUIRED)
-find_package(TIFF REQUIRED)
-find_package(Freetype REQUIRED)
-find_package(WebP CONFIG REQUIRED)
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unofficial-graphicsmagick-config.cmake "
 include(CMakeFindDependencyMacro)
-find_dependency(ZLIB)
 find_dependency(BZip2)
+find_dependency(libheif)
+find_dependency(JBIG)
+find_dependency(JBIG85)
 find_dependency(JPEG)
+find_dependency(Jxl)
+find_dependency(JxlThreads)
+find_dependency(Lcms2)
+find_dependency(LibLZMA)
 find_dependency(PNG)
 find_dependency(TIFF)
 find_dependency(Freetype)
+find_dependency(ZLIB)
 find_dependency(WebP)
 
 include(\${CMAKE_CURRENT_LIST_DIR}/unofficial-graphicsmagick-targets.cmake)
