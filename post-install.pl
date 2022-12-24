@@ -94,11 +94,13 @@ sub process_pkgconfig_type {
 	# In any case, revisit the variable by:
 	# - Replace all \ by /
 	# - Auto-detect installprefix
+	# - Remove eventual -lstdc++
 	#
 	$newvalue =~ s/\\+/\//g;
 	$newvalue =~ s/$quotemeta_c_bin/\${bindir}/g;
 	$newvalue =~ s/$quotemeta_c_lib/\${libdir}/g;
 	$newvalue =~ s/$quotemeta_c_include/\${includedir}/g;
+	$newvalue =~ s/\-lstdc\+\+//g;
 
 	if ($newvalue ne $oldvalue) {
 		${$status_ref} = 0;

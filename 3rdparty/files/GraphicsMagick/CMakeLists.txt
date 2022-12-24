@@ -1,17 +1,7 @@
 cmake_minimum_required (VERSION 3.6)
 project (graphicsmagick)
-include(FindPackageHandleStandardArgs)
-include(FindPkgConfig)
-include(FindThreads)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-pkg_check_modules(libheif REQUIRED IMPORTED_TARGET libheif)
-find_package(JBIG REQUIRED)
-find_package(JBIG85 REQUIRED)
 find_package(JPEG REQUIRED)
-pkg_check_modules(Jxl REQUIRED IMPORTED_TARGET libjxl)
-pkg_check_modules(JxlThreads REQUIRED IMPORTED_TARGET libjxl_threads)
-pkg_check_modules(Lcms2 REQUIRED IMPORTED_TARGET lcms2)
 find_package(LibLZMA REQUIRED)
 find_package(PNG REQUIRED)
 find_package(TIFF REQUIRED)
@@ -21,6 +11,18 @@ find_package(WebP REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(zstd REQUIRED)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(JBIG REQUIRED)
+find_package(JBIG85 REQUIRED)
+
+include(FindPkgConfig)
+pkg_check_modules(libheif REQUIRED IMPORTED_TARGET libheif)
+pkg_check_modules(Jxl REQUIRED IMPORTED_TARGET libjxl)
+pkg_check_modules(JxlThreads REQUIRED IMPORTED_TARGET libjxl_threads)
+pkg_check_modules(Lcms2 REQUIRED IMPORTED_TARGET lcms2)
+
+include(FindThreads)
 
 add_definitions(-D_MAGICKLIB_ -D_WANDLIB_ -DMAGICK_IMPLEMENTATION)
 
@@ -103,6 +105,7 @@ TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
     zstd::libzstd_shared
 )
 target_include_directories(graphicsmagick PRIVATE INTERFACE $<INSTALL_INTERFACE:include>)
+target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H)
 
 install(TARGETS graphicsmagick
     EXPORT graphicsmagick-targets
