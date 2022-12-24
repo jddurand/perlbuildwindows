@@ -1,0 +1,16 @@
+diff -Naur libde265.old/CMakeLists.txt libde265.new/CMakeLists.txt
+--- libde265.old/CMakeLists.txt	2022-10-18 11:37:14.000000000 +0200
++++ libde265.new/CMakeLists.txt	2022-12-24 04:49:21.630289100 +0100
+@@ -71,3 +71,12 @@
+ add_subdirectory (libde265)
+ add_subdirectory (dec265)
+ add_subdirectory (enc265)
++
++set(prefix [[${pcfiledir}/../..]])
++set(exec_prefix [[${prefix}]])
++set(libdir [[${exec_prefix}/lib]])
++set(includedir [[${prefix}/include]])
++set(VERSION ${PACKAGE_VERSION})
++set(LIBS "")
++configure_file(${PROJECT_SOURCE_DIR}/libde265.pc.in libde265.pc @ONLY)
++install(FILES libde265.pc DESTINATION lib/pkgconfig)

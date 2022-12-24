@@ -1,0 +1,15 @@
+diff -Naur GraphicsMagick.old/coders/jxl.c GraphicsMagick.new/coders/jxl.c
+--- GraphicsMagick.old/coders/jxl.c	2022-03-26 19:52:55.000000000 +0100
++++ GraphicsMagick.new/coders/jxl.c	2022-12-24 05:57:49.861280400 +0100
+@@ -834,9 +834,10 @@
+     pixel_format;
+ 
+   JxlColorEncoding
+-    color_encoding = {};
++    color_encoding;
+ 
+   memset(&pixel_format,0,sizeof(pixel_format));
++  memset(&color_encoding,0,sizeof(color_encoding));
+ 
+   assert(image_info != (const ImageInfo *) NULL);
+   assert(image_info->signature == MagickSignature);
