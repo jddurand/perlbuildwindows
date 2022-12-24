@@ -1462,6 +1462,7 @@ ExternalProject_Add(GraphicsMagick
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-jxl.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-msl.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-svg.patch
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/GraphicsMagick
 					COMMAND                ${CMAKE_COMMAND} -E copy Copyright.txt             ${PERL_INST_DIR}/c/licenses/GraphicsMagick

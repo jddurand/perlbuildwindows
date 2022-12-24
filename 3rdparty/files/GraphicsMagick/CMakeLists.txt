@@ -52,6 +52,7 @@ string(REPLACE "#undef HasJBIG" "#define HasJBIG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasJPEG" "#define HasJPEG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasJXL" "#define HasJXL" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasLCMS" "#define HasLCMS" CONFIG_H "${CONFIG_H}")
+string(REPLACE "#undef HAVE_LCMS2_H" "#define HAVE_LCMS2_H" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasLZMA" "#define HasLZMA" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasPNG" "#define HasPNG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasTIFF" "#define HasTIFF" CONFIG_H "${CONFIG_H}")
@@ -106,7 +107,7 @@ TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
     zstd::libzstd_shared
 )
 target_include_directories(graphicsmagick PRIVATE INTERFACE $<INSTALL_INTERFACE:include>)
-target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H -DHAVE_LCMS2_H)
+target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H)
 
 install(TARGETS graphicsmagick
     EXPORT graphicsmagick-targets

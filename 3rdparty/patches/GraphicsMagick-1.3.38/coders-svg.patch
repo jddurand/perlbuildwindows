@@ -1,0 +1,12 @@
+diff -Naur GraphicsMagick.old/coders/svg.c GraphicsMagick.new/coders/svg.c
+--- GraphicsMagick.old/coders/svg.c	2022-03-26 18:45:35.000000000 +0100
++++ GraphicsMagick.new/coders/svg.c	2022-12-24 06:38:07.292948300 +0100
+@@ -50,8 +50,6 @@
+ #  if defined(MSWINDOWS)
+ #    if defined(__MINGW32__)
+ #      define _MSC_VER
+-#    else
+-#      include <win32config.h>
+ #    endif
+ #  endif
+ #  include <libxml/parser.h>
