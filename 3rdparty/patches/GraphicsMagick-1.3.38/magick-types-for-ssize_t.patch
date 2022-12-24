@@ -1,0 +1,24 @@
+diff -Naur GraphicsMagick.old/magick/magick_types.h GraphicsMagick.new/magick/magick_types.h
+--- GraphicsMagick.old/magick/magick_types.h	2022-03-26 19:54:42.000000000 +0100
++++ GraphicsMagick.new/magick/magick_types.h	2022-12-24 06:59:01.725614700 +0100
+@@ -104,10 +104,18 @@
+   typedef unsigned long magick_uintptr_t;
+ #  define MAGICK_SIZE_T_F "l"
+ #  define MAGICK_SIZE_T unsigned long
+-#  define MAGICK_SSIZE_T_F "l"
+-#  define MAGICK_SSIZE_T long
++#  define MAGICK_SSIZE_T_F ""
++#  define MAGICK_SSIZE_T int
+ #  endif // defined(WIN64)
+ 
++#if !defined(ssize_t) && !defined(__MINGW32__) && !defined(__MINGW64__)
++#  if defined(WIN64)
++  typedef __int64 ssize_t;
++#  else
++  typedef int ssize_t;
++#  endif
++#endif /* !defined(ssize_t) && !defined(__MINGW32__) && !defined(__MINGW64__)*/
++
+ #endif /* if defined(MAGICK_IMPLEMENTATION) */
+ 
+ #else

@@ -1,0 +1,12 @@
+diff -Naur GraphicsMagick.old/coders/url.c GraphicsMagick.new/coders/url.c
+--- GraphicsMagick.old/coders/url.c	2022-03-26 19:52:55.000000000 +0100
++++ GraphicsMagick.new/coders/url.c	2022-12-24 06:41:34.980382500 +0100
+@@ -46,8 +46,6 @@
+ #if defined(MSWINDOWS)
+ #  if defined(__MINGW32__)
+ #    define _MSC_VER
+-#  else
+-#    include <win32config.h>
+ #  endif
+ #endif
+ #include <libxml/parser.h>

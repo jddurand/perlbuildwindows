@@ -1463,6 +1463,8 @@ ExternalProject_Add(GraphicsMagick
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-jxl.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-msl.patch
 					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-svg.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/coders-url.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/GraphicsMagick-${GRAPHICSMAGICK_VERSION}/magick-types-for-ssize_t.patch
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/GraphicsMagick
 					COMMAND                ${CMAKE_COMMAND} -E copy Copyright.txt             ${PERL_INST_DIR}/c/licenses/GraphicsMagick
