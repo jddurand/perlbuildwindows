@@ -1259,6 +1259,7 @@ ExternalProject_Add(bzip2
                     DEPENDS                perl-pkgconfig
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/bzip2-${BZIP2_VERSION}.tar.gz
 					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/bzip2-master/bz2-install.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/bzip2-master/bz2-library-name-in-def.patch
 					#
 					# Painful but bzip2 requires... python to run tests or install docs
 					#

@@ -1,0 +1,52 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2b29470..b9e3057 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -238,9 +238,14 @@ endif()
+ if(ENABLE_SHARED_LIB)
+     # The libbz2 shared library.
+     add_library(bz2 SHARED ${BZ2_RES})
++    if (USE_OLD_SONAME)
++        set(BZ2_DEF ${CMAKE_CURRENT_SOURCE_DIR}/libbz2.def)
++    else()
++        set(BZ2_DEF ${CMAKE_CURRENT_SOURCE_DIR}/bz2.def)
++    endif()
+     target_sources(bz2
+         PRIVATE   ${BZ2_SOURCES}
+-                  ${CMAKE_CURRENT_SOURCE_DIR}/libbz2.def
++                  ${BZ2_DEF}
+         PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/bzlib_private.h
+         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/bzlib.h)
+     # Always use '-fPIC'/'-fPIE' option for shared libraries.
+diff --git a/bz2.def b/bz2.def
+new file mode 100644
+index 0000000..ea3ef8b
+--- /dev/null
++++ b/bz2.def
+@@ -0,0 +1,26 @@
++LIBRARY			bz2
++EXPORTS
++	BZ2_bzCompressInit
++	BZ2_bzCompress
++	BZ2_bzCompressEnd
++	BZ2_bzDecompressInit
++	BZ2_bzDecompress
++	BZ2_bzDecompressEnd
++	BZ2_bzReadOpen
++	BZ2_bzReadClose
++	BZ2_bzReadGetUnused
++	BZ2_bzRead
++	BZ2_bzWriteOpen
++	BZ2_bzWrite
++	BZ2_bzWriteClose
++	BZ2_bzWriteClose64
++	BZ2_bzBuffToBuffCompress
++	BZ2_bzBuffToBuffDecompress
++	BZ2_bzlibVersion
++	BZ2_bzopen
++	BZ2_bzdopen
++	BZ2_bzread
++	BZ2_bzwrite
++	BZ2_bzflush
++	BZ2_bzclose
++	BZ2_bzerror
