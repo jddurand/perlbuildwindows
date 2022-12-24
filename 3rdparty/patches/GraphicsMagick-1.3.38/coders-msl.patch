@@ -1,0 +1,12 @@
+diff -Naur GraphicsMagick.old/coders/msl.c GraphicsMagick.new/coders/msl.c
+--- GraphicsMagick.old/coders/msl.c	2022-03-26 18:45:35.000000000 +0100
++++ GraphicsMagick.new/coders/msl.c	2022-12-24 06:19:27.239170000 +0100
+@@ -63,8 +63,6 @@
+ #if defined(MSWINDOWS)
+ #  if defined(__MINGW32__)
+ #    define _MSC_VER
+-#  else
+-#    include <win32config.h>
+ #  endif
+ #endif
+ #include <libxml/parser.h>

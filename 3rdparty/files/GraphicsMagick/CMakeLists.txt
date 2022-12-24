@@ -56,7 +56,8 @@ string(REPLACE "#undef HasLZMA" "#define HasLZMA" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasPNG" "#define HasPNG" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasTIFF" "#define HasTIFF" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasTTF" "#define HasTTF" CONFIG_H "${CONFIG_H}")
-string(REPLACE "#undef HAVE_FT2BUILD_H" "#define HAVE_FT2BUILD_H" CONFIG_H "${CONFIG_H}")
+# GraphicsMagick is setting it automatically
+# string(REPLACE "#undef HAVE_FT2BUILD_H" "#define HAVE_FT2BUILD_H" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasWEBP" "#define HasWEBP" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasXML" "#define HasXML" CONFIG_H "${CONFIG_H}")
 string(REPLACE "#undef HasZLIB" "#define HasZLIB" CONFIG_H "${CONFIG_H}")
@@ -105,7 +106,7 @@ TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
     zstd::libzstd_shared
 )
 target_include_directories(graphicsmagick PRIVATE INTERFACE $<INSTALL_INTERFACE:include>)
-target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H)
+target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H -DHAVE_LCMS2_H)
 
 install(TARGETS graphicsmagick
     EXPORT graphicsmagick-targets
