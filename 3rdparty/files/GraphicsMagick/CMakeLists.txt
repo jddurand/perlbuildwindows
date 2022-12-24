@@ -11,6 +11,7 @@ find_package(WebP REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(zstd REQUIRED)
+find_package(OpenMP)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(JBIG REQUIRED)
@@ -89,7 +90,7 @@ file(GLOB MAGICKXX_FILES Magick++/lib/*.cpp)
 file(GLOB WAND_FILES wand/*.c)
 add_library(graphicsmagick ${CODERS_FILES} ${FILTERS_FILES} ${MAGICK_FILES} ${MAGICKXX_FILES} ${WAND_FILES})
 
-TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
+target_link_libraries(graphicsmagick PRIVATE
     BZip2::BZip2
 	PkgConfig::libheif
 	JBIG::JBIG
@@ -106,6 +107,11 @@ TARGET_LINK_LIBRARIES(graphicsmagick PRIVATE
     ZLIB::ZLIB
     zstd::libzstd_shared
 )
+if(OpenMP_C_FOUND)
+	target_compile_definitions(graphicsmagick PRIVATE -DHAVE_OPENMP)
+    target_link_libraries(graphicsmagick PRIVATE OpenMP::OpenMP_C)
+endif()
+
 target_include_directories(graphicsmagick PRIVATE INTERFACE $<INSTALL_INTERFACE:include>)
 target_compile_definitions(graphicsmagick PRIVATE -DHAVE_CONFIG_H)
 
