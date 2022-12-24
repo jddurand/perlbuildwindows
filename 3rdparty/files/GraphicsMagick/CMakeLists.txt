@@ -125,7 +125,7 @@ install(
     EXPORT graphicsmagick-targets
     FILE unofficial-graphicsmagick-targets.cmake
     NAMESPACE unofficial::graphicsmagick::
-    DESTINATION share/unofficial-graphicsmagick
+    DESTINATION lib/cmake/unofficial-graphicsmagick
 )
 
 add_executable(gm utilities/gm.c)
@@ -151,7 +151,7 @@ find_dependency(WebP)
 
 include(\${CMAKE_CURRENT_LIST_DIR}/unofficial-graphicsmagick-targets.cmake)
 ")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unofficial-graphicsmagick-config.cmake DESTINATION share/unofficial-graphicsmagick)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unofficial-graphicsmagick-config.cmake DESTINATION lib/cmake/unofficial-graphicsmagick)
 
 option(INSTALL_HEADERS "Install development header files" ON)
 
