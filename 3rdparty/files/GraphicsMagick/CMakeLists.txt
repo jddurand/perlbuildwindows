@@ -122,6 +122,10 @@ install(
     DESTINATION share/unofficial-graphicsmagick
 )
 
+add_executable(gm utilities/gm.c)
+target_link_libraries(gm graphicsmagick)
+install(TARGETS gm DESTINATION bin)
+
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unofficial-graphicsmagick-config.cmake "
 include(CMakeFindDependencyMacro)
 find_dependency(BZip2)
