@@ -1502,12 +1502,12 @@ ExternalProject_Add(dlfcn-win32
 # External project libass
 # ===========================================================
 ExternalProject_Add(libass
-                    DEPENDS                perl-pkgconfig
+                    DEPENDS                perl-pkgconfig harfbuzz fribidi freetype
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libass-${LIBASS_VERSION}.tar.gz
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
-					PATCH_COMMAND          ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/CMakeLists.txt CMakeLists.txt
-					COMMAND                ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/config.h.in config.h.in
-					COMMAND                ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/libass.def libass.def
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_LIBDIR:PATH=${PERL_C_LIB_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON .
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/config.h.in config.h.in
+					COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/libass.def libass.def
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/libass
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/libass
