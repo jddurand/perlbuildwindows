@@ -103,6 +103,8 @@ set (OPENEXR_VERSION_DEFAULT               3.1.5)
 set (LIBAVIF_VERSION_DEFAULT               0.11.1)
 set (LIBJXL_VERSION_DEFAULT                0.7.0)
 set (GRAPHICSMAGICK_VERSION_DEFAULT        1.3.38)
+set (LIBASS_VERSION_DEFAULT                0.17.0)
+set (DLFCN_WIN32_VERSION_DEFAULT           1.3.1)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -151,6 +153,8 @@ set (OPENEXR_VERSION               ${OPENEXR_VERSION_DEFAULT}               CACH
 set (LIBAVIF_VERSION               ${LIBAVIF_VERSION_DEFAULT}               CACHE STRING "libavif version")
 set (LIBJXL_VERSION                ${LIBJXL_VERSION_DEFAULT}                CACHE STRING "libjxl version")
 set (GRAPHICSMAGICK_VERSION        ${GRAPHICSMAGICK_VERSION_DEFAULT}        CACHE STRING "GraphicsMagick version")
+set (LIBASS_VERSION                ${LIBASS_VERSION_DEFAULT}                CACHE STRING "libass version")
+set (DLFCN_WIN32_VERSION           ${DLFCN_WIN32_VERSION_DEFAULT}           CACHE STRING "dlfcn-win32 version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -198,6 +202,8 @@ set_property (CACHE OPENEXR_VERSION               PROPERTY STRINGS ${OPENEXR_VER
 set_property (CACHE LIBAVIF_VERSION               PROPERTY STRINGS ${LIBAVIF_VERSION_DEFAULT})
 set_property (CACHE LIBJXL_VERSION                PROPERTY STRINGS ${LIBJXL_VERSION_DEFAULT})
 set_property (CACHE GRAPHICSMAGICK_VERSION        PROPERTY STRINGS ${GRAPHICSMAGICK_VERSION_DEFAULT})
+set_property (CACHE LIBASS_VERSION                PROPERTY STRINGS ${LIBASS_VERSION_DEFAULT})
+set_property (CACHE DLFCN_WIN32_VERSION           PROPERTY STRINGS ${DLFCN_WIN32_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -255,6 +261,8 @@ message (STATUS "Version of openexr                : ${OPENEXR_VERSION}")
 message (STATUS "Version of libavif                : ${LIBAVIF_VERSION}")
 message (STATUS "Version of libjxl                 : ${LIBJXL_VERSION}")
 message (STATUS "Version of GraphicsMagick         : ${GRAPHICSMAGICK_VERSION}")
+message (STATUS "Version of libass                 : ${LIBASS_VERSION}")
+message (STATUS "Version of dlfcn-win32            : ${DLFCN_WIN32_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1178,7 +1186,7 @@ add_custom_target(perl-prima
 # External project libxml2
 # ===========================================================
 ExternalProject_Add(libxml2
-                    DEPENDS                perl-pkgconfig
+                    DEPENDS                perl-pkgconfig libiconv xz zlib
 					#
 					# Take care: libwebp export nothing by default, so producing a DLL will generated no LIB
 					#
@@ -1473,6 +1481,40 @@ ExternalProject_Add(GraphicsMagick
 					#
 					TEST_EXCLUDE_FROM_MAIN TRUE
 					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project dlfcn-win32
+# ===========================================================
+ExternalProject_Add(dlfcn-win32
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/dlfcn-win32-${DLFCN_WIN32_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_TESTS=ON .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/dlfcn-win32
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/dlfcn-win32
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project libass
+# ===========================================================
+ExternalProject_Add(libass
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/libass-${LIBASS_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					PATCH_COMMAND          ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/CMakeLists.txt CMakeLists.txt
+					COMMAND                ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/config.h.in config.h.in
+					COMMAND                ${CMAKE_COMMAND} -E ${PROJECT_SOURCE_DIR}/3rdparty/files/libass/libass.def libass.def
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/libass
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/libass
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
