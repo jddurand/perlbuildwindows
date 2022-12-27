@@ -1462,7 +1462,7 @@ ExternalProject_Add(libjxl
 # External project GraphicsMagick
 # ===========================================================
 ExternalProject_Add(GraphicsMagick
-                    DEPENDS                perl-pkgconfig zlib bzip2 jbigkit libjpeg-turbo libpng tiff libjxl lcms2 xz libxml2 freetype libheif
+                    DEPENDS                perl-pkgconfig zlib bzip2 jbigkit libjpeg-turbo libpng tiff libjxl lcms2 xz libxml2 freetype libheif zstd webp
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/GraphicsMagick-${GRAPHICSMAGICK_VERSION}.tar.gz
 				    COMMAND                ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/3rdparty/files/GraphicsMagick/CMakeLists.txt GraphicsMagick/CMakeLists.txt
 					COMMAND                ${CMAKE_COMMAND} -E make_directory            GraphicsMagick/cmake
