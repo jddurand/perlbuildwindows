@@ -23,14 +23,15 @@ option(INSTALL_NINJA "Install ninja" OFF)
 # - SOURCE_SUBDIR working with BUILD_IN_SOURCE
 # - CMP0077
 #
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 #
 # Look for patch command - this is required
 #
-find_package(Patch)
-if (NOT Patch_FOUND)
-  message(FATAL_ERROR "Patch not found")
-endif()
+find_package(Patch REQUIRED)
+#
+# Look for msbuild - required for ImageMagick
+#
+find_program(MSBUILD msbuild REQUIRED)
 #
 # We want to make sure that our local .cpan setup find patch executable
 #
@@ -110,12 +111,13 @@ set (GRAPHICSMAGICK_VERSION_DEFAULT        1.3.38)
 set (LIBASS_VERSION_DEFAULT                0.17.0)
 set (DLFCN_WIN32_VERSION_DEFAULT           1.3.1)
 set (GLSLANG_VERSION_DEFAULT               d1fc064e79e9aa9cda749c1d879bff26fba17760)
-set (FREI0R_VERSION_DEFAULT                3eb442ff9df97b6af9590b2ec6d5c8707f0de973)
 if(INSTALL_NINJA)
 	set (NINJA_VERSION_DEFAULT                 1.11.1)
 endif()
 set (PIXMAN_VERSION_DEFAULT                0.42.3)
 set (CAIRO_VERSION_DEFAULT                 1.17.6)
+set (FREI0R_VERSION_DEFAULT                3eb442ff9df97b6af9590b2ec6d5c8707f0de973)
+set (GHOSTSCRIPT_VERSION_DEFAULT           10.0.0)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -167,12 +169,13 @@ set (GRAPHICSMAGICK_VERSION        ${GRAPHICSMAGICK_VERSION_DEFAULT}        CACH
 set (LIBASS_VERSION                ${LIBASS_VERSION_DEFAULT}                CACHE STRING "libass version")
 set (DLFCN_WIN32_VERSION           ${DLFCN_WIN32_VERSION_DEFAULT}           CACHE STRING "dlfcn-win32 version")
 set (GLSLANG_VERSION               ${GLSLANG_VERSION_DEFAULT}               CACHE STRING "glslang version")
-set (FREI0R_VERSION                ${FREI0R_VERSION_DEFAULT}                CACHE STRING "frei0r version")
 if(INSTALL_NINJA)
 	set (NINJA_VERSION                 ${NINJA_VERSION_DEFAULT}                 CACHE STRING "ninja version")
 endif()
 set (PIXMAN_VERSION                ${PIXMAN_VERSION_DEFAULT}                CACHE STRING "pixman version")
 set (CAIRO_VERSION                 ${CAIRO_VERSION_DEFAULT}                 CACHE STRING "cairo version")
+set (FREI0R_VERSION                ${FREI0R_VERSION_DEFAULT}                CACHE STRING "frei0r version")
+set (GHOSTSCRIPT_VERSION           ${GHOSTSCRIPT_VERSION_DEFAULT}           CACHE STRING "ghostscript version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -223,12 +226,13 @@ set_property (CACHE GRAPHICSMAGICK_VERSION        PROPERTY STRINGS ${GRAPHICSMAG
 set_property (CACHE LIBASS_VERSION                PROPERTY STRINGS ${LIBASS_VERSION_DEFAULT})
 set_property (CACHE DLFCN_WIN32_VERSION           PROPERTY STRINGS ${DLFCN_WIN32_VERSION_DEFAULT})
 set_property (CACHE GLSLANG_VERSION               PROPERTY STRINGS ${GLSLANG_VERSION_DEFAULT})
-set_property (CACHE FREI0R_VERSION                PROPERTY STRINGS ${FREI0R_VERSION_DEFAULT})
 if(INSTALL_NINJA)
 	set_property (CACHE NINJA_VERSION                 PROPERTY STRINGS ${NINJA_VERSION_DEFAULT})
 endif()
 set_property (CACHE PIXMAN_VERSION                PROPERTY STRINGS ${PIXMAN_VERSION_DEFAULT})
 set_property (CACHE CAIRO_VERSION                 PROPERTY STRINGS ${CAIRO_VERSION_DEFAULT})
+set_property (CACHE FREI0R_VERSION                PROPERTY STRINGS ${FREI0R_VERSION_DEFAULT})
+set_property (CACHE GHOSTSCRIPT_VERSION           PROPERTY STRINGS ${GHOSTSCRIPT_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -289,12 +293,13 @@ message (STATUS "Version of GraphicsMagick         : ${GRAPHICSMAGICK_VERSION}")
 message (STATUS "Version of libass                 : ${LIBASS_VERSION}")
 message (STATUS "Version of dlfcn-win32            : ${DLFCN_WIN32_VERSION}")
 message (STATUS "Version of glslang                : ${GLSLANG_VERSION}")
-message (STATUS "Version of frei0r                 : ${FREI0R_VERSION}")
 if(INSTALL_NINJA)
 	message (STATUS "Version of ninja                  : ${NINJA_VERSION}")
 endif()
 message (STATUS "Version of pixman                 : ${PIXMAN_VERSION} (using https://github.com/jddurand/pixman)")
 message (STATUS "Version of cairo                  : ${CAIRO_VERSION}")
+message (STATUS "Version of frei0r                 : ${FREI0R_VERSION}")
+message (STATUS "Version of ghostscript            : ${GHOSTSCRIPT_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -341,6 +346,7 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   set (PERL_WIN64 "#WIN64")
   set (OPENSSL_VC "VC-WIN64A")
   set (OPENSSL_LDFLAGS "/debug")
+  set (GHOSTSCRIPT_PLATFORM "x64")
 else ()
   set (PERL_INSTSUBDIR "cl-perl-${PERL_VERSION}-32bit")
   if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
@@ -354,8 +360,36 @@ else ()
     set (OPENSSL_LDFLAGS "/debug")
   endif ()
   set (OPENSSL_VC "VC-WIN32")
+  set (GHOSTSCRIPT_PLATFORM "Win32")
 endif ()
 message (STATUS "WIN64 in perl's Makefile : ${PERL_WIN64}")
+
+#
+# Try to bypass MSCV_VERSION automatic detection of ghostscript's msvc.mak
+#
+if (MSVC_VERSION LESS 1300)
+  set(GHOSTSCRIPT_MSVC_VERSION 6)
+elseif (MSVC_VERSION LESS 1400)
+  set(GHOSTSCRIPT_MSVC_VERSION 7)
+elseif (MSVC_VERSION LESS 1500)
+  set(GHOSTSCRIPT_MSVC_VERSION 8)
+elseif (MSVC_VERSION LESS 1600)
+  set(GHOSTSCRIPT_MSVC_VERSION 9)
+elseif (MSVC_VERSION LESS 1700)
+  set(GHOSTSCRIPT_MSVC_VERSION 10)
+elseif (MSVC_VERSION LESS 1800)
+  set(GHOSTSCRIPT_MSVC_VERSION 11)
+elseif (MSVC_VERSION LESS 1900)
+  set(GHOSTSCRIPT_MSVC_VERSION 12)
+elseif (MSVC_VERSION LESS 1910)
+  set(GHOSTSCRIPT_MSVC_VERSION 14)
+elseif (MSVC_VERSION LESS 1920)
+  set(GHOSTSCRIPT_MSVC_VERSION 15)
+elseif (MSVC_VERSION LESS 1930)
+  set(GHOSTSCRIPT_MSVC_VERSION 16)
+else()
+  set(GHOSTSCRIPT_MSVC_VERSION 17)
+endif()
 
 include(ExternalProject)
 
@@ -1570,25 +1604,6 @@ ExternalProject_Add(glslang
 					TEST_BEFORE_INSTALL    TRUE
 					BUILD_IN_SOURCE        TRUE)
 
-# ===========================================================
-# External project frei0r
-# ===========================================================
-ExternalProject_Add(frei0r
-                    DEPENDS                perl-pkgconfig
-					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/frei0r-${FREI0R_VERSION}.tar.gz
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
-					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/curves_VLA_and_C_STANDARD_99.patch
-					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/d90stairsteppingfix_VLA.patch
-					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/dither_VLA.patch
-					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
-					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/frei0r
-					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt               ${PERL_INST_DIR}/c/licenses/frei0r
-					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
-					#
-					TEST_EXCLUDE_FROM_MAIN FALSE
-					TEST_BEFORE_INSTALL    TRUE
-					BUILD_IN_SOURCE        TRUE)
-
 if(INSTALL_NINJA)
 	# ===========================================================
 	# External project ninja
@@ -1644,6 +1659,52 @@ ExternalProject_Add(cairo
 					#
 					TEST_EXCLUDE_FROM_MAIN FALSE
 					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project frei0r
+# ===========================================================
+ExternalProject_Add(frei0r
+                    DEPENDS                perl-pkgconfig cairo
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/frei0r-${FREI0R_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/curves_VLA_and_C_STANDARD_99.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/d90stairsteppingfix_VLA.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/dither_VLA.patch
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/frei0r
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/frei0r
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project ghostscript
+# ===========================================================
+ExternalProject_Add(ghostscript
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/ghostscript-${GHOSTSCRIPT_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_COMMAND} -E echo "Configuration step skipped: using windows\\All.vcxproj"
+					BUILD_COMMAND          ${CMAKE_COMMAND} -E env MSVC_VERSION=${GHOSTSCRIPT_MSVC_VERSION} ${MSBUILD} windows/All.vcxproj /p:Configuration=Release /p:Platform=${GHOSTSCRIPT_PLATFORM}
+					INSTALL_COMMAND        ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/bin
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gsdll32.dll    ${PERL_INST_DIR}/c/bin
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32.exe    ${PERL_INST_DIR}/c/bin
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32c.exe   ${PERL_INST_DIR}/c/bin
+					COMMAND                ${CMAKE_COMMAND} -E make_directory          ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gsdll32.lib    ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32.lib    ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32c.lib   ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gsdll32.exp    ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32.exp    ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E copy bin/gswin32c.exp   ${PERL_INST_DIR}/c/lib
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/ghostscript
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE                   ${PERL_INST_DIR}/c/licenses/ghostscript
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN TRUE
+					TEST_BEFORE_INSTALL    FALSE
 					BUILD_IN_SOURCE        TRUE)
 
 # ====================================================================================================================================
