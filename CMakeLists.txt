@@ -15,6 +15,10 @@
 #
 project(perlbuildwindows LANGUAGES C CXX)
 #
+# Formally, we do not need ninja
+#
+option(INSTALL_NINJA "Install ninja" OFF)
+#
 # We require version 3.14 to have:
 # - SOURCE_SUBDIR working with BUILD_IN_SOURCE
 # - CMP0077
@@ -105,6 +109,13 @@ set (LIBJXL_VERSION_DEFAULT                0.7.0)
 set (GRAPHICSMAGICK_VERSION_DEFAULT        1.3.38)
 set (LIBASS_VERSION_DEFAULT                0.17.0)
 set (DLFCN_WIN32_VERSION_DEFAULT           1.3.1)
+set (GLSLANG_VERSION_DEFAULT               d1fc064e79e9aa9cda749c1d879bff26fba17760)
+set (FREI0R_VERSION_DEFAULT                3eb442ff9df97b6af9590b2ec6d5c8707f0de973)
+if(INSTALL_NINJA)
+	set (NINJA_VERSION_DEFAULT                 1.11.1)
+endif()
+set (PIXMAN_VERSION_DEFAULT                0.42.3)
+set (CAIRO_VERSION_DEFAULT                 1.17.6)
 
 set (PERL_INST_DRV                 ${PERL_INST_DRV_DEFAULT}                 CACHE STRING "perl installation drive")
 set (PERL_VERSION                  ${PERL_VERSION_DEFAULT}                  CACHE STRING "perl version")
@@ -155,6 +166,13 @@ set (LIBJXL_VERSION                ${LIBJXL_VERSION_DEFAULT}                CACH
 set (GRAPHICSMAGICK_VERSION        ${GRAPHICSMAGICK_VERSION_DEFAULT}        CACHE STRING "GraphicsMagick version")
 set (LIBASS_VERSION                ${LIBASS_VERSION_DEFAULT}                CACHE STRING "libass version")
 set (DLFCN_WIN32_VERSION           ${DLFCN_WIN32_VERSION_DEFAULT}           CACHE STRING "dlfcn-win32 version")
+set (GLSLANG_VERSION               ${GLSLANG_VERSION_DEFAULT}               CACHE STRING "glslang version")
+set (FREI0R_VERSION                ${FREI0R_VERSION_DEFAULT}                CACHE STRING "frei0r version")
+if(INSTALL_NINJA)
+	set (NINJA_VERSION                 ${NINJA_VERSION_DEFAULT}                 CACHE STRING "ninja version")
+endif()
+set (PIXMAN_VERSION                ${PIXMAN_VERSION_DEFAULT}                CACHE STRING "pixman version")
+set (CAIRO_VERSION                 ${CAIRO_VERSION_DEFAULT}                 CACHE STRING "cairo version")
 
 set_property (CACHE PERL_INST_DRV                 PROPERTY STRINGS ${drives} )
 set_property (CACHE PERL_VERSION                  PROPERTY STRINGS ${PERL_VERSIONS})
@@ -204,6 +222,13 @@ set_property (CACHE LIBJXL_VERSION                PROPERTY STRINGS ${LIBJXL_VERS
 set_property (CACHE GRAPHICSMAGICK_VERSION        PROPERTY STRINGS ${GRAPHICSMAGICK_VERSION_DEFAULT})
 set_property (CACHE LIBASS_VERSION                PROPERTY STRINGS ${LIBASS_VERSION_DEFAULT})
 set_property (CACHE DLFCN_WIN32_VERSION           PROPERTY STRINGS ${DLFCN_WIN32_VERSION_DEFAULT})
+set_property (CACHE GLSLANG_VERSION               PROPERTY STRINGS ${GLSLANG_VERSION_DEFAULT})
+set_property (CACHE FREI0R_VERSION                PROPERTY STRINGS ${FREI0R_VERSION_DEFAULT})
+if(INSTALL_NINJA)
+	set_property (CACHE NINJA_VERSION                 PROPERTY STRINGS ${NINJA_VERSION_DEFAULT})
+endif()
+set_property (CACHE PIXMAN_VERSION                PROPERTY STRINGS ${PIXMAN_VERSION_DEFAULT})
+set_property (CACHE CAIRO_VERSION                 PROPERTY STRINGS ${CAIRO_VERSION_DEFAULT})
 
 message (STATUS "===================================")
 message (STATUS "Version of Perl                   : ${PERL_VERSION}")
@@ -263,6 +288,13 @@ message (STATUS "Version of libjxl                 : ${LIBJXL_VERSION}")
 message (STATUS "Version of GraphicsMagick         : ${GRAPHICSMAGICK_VERSION}")
 message (STATUS "Version of libass                 : ${LIBASS_VERSION}")
 message (STATUS "Version of dlfcn-win32            : ${DLFCN_WIN32_VERSION}")
+message (STATUS "Version of glslang                : ${GLSLANG_VERSION}")
+message (STATUS "Version of frei0r                 : ${FREI0R_VERSION}")
+if(INSTALL_NINJA)
+	message (STATUS "Version of ninja                  : ${NINJA_VERSION}")
+endif()
+message (STATUS "Version of pixman                 : ${PIXMAN_VERSION} (using https://github.com/jddurand/pixman)")
+message (STATUS "Version of cairo                  : ${CAIRO_VERSION}")
 message (STATUS "===================================")
 #
 # Set some nervous policies
@@ -1305,7 +1337,7 @@ ExternalProject_Add(brotli
 ExternalProject_Add(freetype
                     DEPENDS                perl-pkgconfig zlib libpng bzip2 brotli
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/freetype-${FREETYPE_VERSION}.tar.gz
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON ../freetype
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=ON -DFT_DISABLE_ZLIB=OFF -DFT_DISABLE_BZIP2=OFF -DFT_DISABLE_PNG=OFF -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=OFF ../freetype
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/freetype
 					COMMAND                ${CMAKE_COMMAND} -E copy ../freetype/LICENSE.TXT   ${PERL_INST_DIR}/c/licenses/freetype
@@ -1326,7 +1358,7 @@ ExternalProject_Add(freetype
 ExternalProject_Add(harfbuzz
                     DEPENDS                perl-pkgconfig freetype
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/harfbuzz-${HARFBUZZ_VERSION}.tar.gz
-					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DHB_HAVE_FREETYPE=ON -DBUILD_SHARED_LIBS=ON -G "${CMAKE_GENERATOR}" ../harfbuzz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -DBUILD_SHARED_LIBS=ON -G "${CMAKE_GENERATOR}" -DHB_HAVE_FREETYPE=ON -DHB_HAVE_GRAPHITE2=OFF -DHB_HAVE_GLIB=OFF -DHB_HAVE_ICU=OFF -DHB_HAVE_GDI=ON -DHB_HAVE_DIRECTWRITE=ON -DHB_BUILD_UTILS=OFF -DHB_BUILD_SUBSET=ON -DHB_HAVE_GOBJECT=OFF -DHB_HAVE_INTROSPECTION=OFF ../harfbuzz
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/harfbuzz
 					COMMAND                ${CMAKE_COMMAND} -E copy ../harfbuzz/COPYING       ${PERL_INST_DIR}/c/licenses/harfbuzz
@@ -1487,6 +1519,7 @@ ExternalProject_Add(GraphicsMagick
 # External project dlfcn-win32
 # ===========================================================
 ExternalProject_Add(dlfcn-win32
+                    DEPENDS                perl-pkgconfig
 					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/dlfcn-win32-${DLFCN_WIN32_VERSION}.tar.gz
 					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_TESTS=ON .
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
@@ -1511,6 +1544,102 @@ ExternalProject_Add(libass
 					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
 					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/libass
 					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/libass
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project glslang
+# Frankly, their CMakeLists.txt is nothing else but a 
+# catrastrophy concerning DLL/export symbols stuff.
+# I stick with disabling the build of shared libs.
+# ===========================================================
+ExternalProject_Add(glslang
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/glslang-${GLSLANG_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DBUILD_SHARED_LIBS=OFF -DSKIP_GLSLANG_INSTALL=OFF -DBUILD_EXTERNAL=OFF -DENABLE_GLSLANG_BINARIES=ON -DENABLE_SPVREMAPPER=ON .
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/glslang-master/cmake_standalone_generator.patch
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/glslang
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt               ${PERL_INST_DIR}/c/licenses/glslang
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project frei0r
+# ===========================================================
+ExternalProject_Add(frei0r
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/frei0r-${FREI0R_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/curves_VLA_and_C_STANDARD_99.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/d90stairsteppingfix_VLA.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/frei0r-${FREI0R_VERSION}/dither_VLA.patch
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/frei0r
+					COMMAND                ${CMAKE_COMMAND} -E copy LICENSE.txt               ${PERL_INST_DIR}/c/licenses/frei0r
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+if(INSTALL_NINJA)
+	# ===========================================================
+	# External project ninja
+	# ===========================================================
+	ExternalProject_Add(ninja
+						DEPENDS                perl-pkgconfig
+						DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/ninja-${NINJA_VERSION}.tar.gz
+						CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+						INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+						COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/ninja
+						COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/ninja
+						COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+						#
+						TEST_EXCLUDE_FROM_MAIN FALSE
+						TEST_BEFORE_INSTALL    TRUE
+						BUILD_IN_SOURCE        TRUE)
+endif()
+
+# ===========================================================
+# External project pixman
+# ===========================================================
+ExternalProject_Add(pixman
+                    DEPENDS                perl-pkgconfig
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/pixman-${PIXMAN_VERSION}.tar.gz
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/pixman
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/pixman
+					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
+					#
+					TEST_EXCLUDE_FROM_MAIN FALSE
+					TEST_BEFORE_INSTALL    TRUE
+					BUILD_IN_SOURCE        TRUE)
+
+# ===========================================================
+# External project cairo
+# ===========================================================
+ExternalProject_Add(cairo
+                    DEPENDS                perl-pkgconfig freetype libpng zlib pixman
+					DOWNLOAD_COMMAND       ${CMAKE_COMMAND} -E tar xf ${PROJECT_SOURCE_DIR}/3rdparty/cairo-${CAIRO_VERSION}.tar.gz
+					PATCH_COMMAND          ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/cairo-${CAIRO_VERSION}/0001-Add-CMake-build.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/cairo-${CAIRO_VERSION}/0002-Rename-stat-to-stats.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/cairo-${CAIRO_VERSION}/0003-win32-font-Ignore-GetGlyphOutlineW-failure.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/cairo-${CAIRO_VERSION}/0004-Don-t-leave-a-font-face-an-error-state-after-a-scale.patch
+					COMMAND                ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/3rdparty/patches/cairo-${CAIRO_VERSION}/0005-Fix-scaled_glyph-hash-lookup-on-Win64.patch
+					CONFIGURE_COMMAND      ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH:PATH=${PERL_C_INST_DIR_DOS} -DCMAKE_INSTALL_PREFIX:PATH=${PERL_C_INST_DIR_DOS} -G "${CMAKE_GENERATOR}" -DCAIRO_ENABLE_FONTCONFIG=OFF -DCAIRO_ENABLE_FREETYPE=ON -DCAIRO_ENABLE_PNG=ON -DCAIRO_ENABLE_ZLIB=ON -DBUILD_SHARED_LIBS=ON .
+					INSTALL_COMMAND        ${CMAKE_MAKE_PROGRAM} install
+					COMMAND                ${CMAKE_COMMAND} -E make_directory                 ${PERL_INST_DIR}/c/licenses/cairo
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING                   ${PERL_INST_DIR}/c/licenses/cairo
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING-LGPL-2.1          ${PERL_INST_DIR}/c/licenses/cairo
+					COMMAND                ${CMAKE_COMMAND} -E copy COPYING-MPL-1.1           ${PERL_INST_DIR}/c/licenses/cairo
 					COMMAND                ${CMAKE_CURRENT_BINARY_DIR}/command-with-this-perl.bat perl ${PROJECT_SOURCE_DIR}/post-install.pl
 					#
 					TEST_EXCLUDE_FROM_MAIN FALSE

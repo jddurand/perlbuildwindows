@@ -1,0 +1,34 @@
+diff --git a/src/filter/dither/CMakeLists.txt b/src/filter/dither/CMakeLists.txt
+index 85d347d..7ed7435 100644
+--- a/src/filter/dither/CMakeLists.txt
++++ b/src/filter/dither/CMakeLists.txt
+@@ -1,7 +1,3 @@
+-if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
+-  return() # MSVC cl doesn't support Variable Length Arrays (VLA), but clang-cl does
+-endif()
+-
+ set (SOURCES dither.c)
+ set (TARGET dither)
+ 
+diff --git a/src/filter/dither/dither.c b/src/filter/dither/dither.c
+index 13fac58..8d4aa18 100644
+--- a/src/filter/dither/dither.c
++++ b/src/filter/dither/dither.c
+@@ -253,7 +253,7 @@ void f0r_update(f0r_instance_t instance, double time,
+   // init look-ups
+ 	int rows, cols;
+   rows = cols = (int)sqrt(matrixLength);
+-  int map[levels];
++  int *map = (int *) malloc(levels * sizeof(int));
+   int i,v;
+ 	for (i = 0; i < levels; i++)
+   {
+@@ -297,6 +297,8 @@ void f0r_update(f0r_instance_t instance, double time,
+         *dst++ = *src++;//copy alpha
+       }
+   }
++
++  free(map);
+ }
+ 
+ 

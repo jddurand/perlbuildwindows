@@ -1,0 +1,107 @@
+diff --git a/StandAlone/CMakeLists.txt b/StandAlone/CMakeLists.txt
+index b9bac802..f83ccff6 100644
+--- a/StandAlone/CMakeLists.txt
++++ b/StandAlone/CMakeLists.txt
+@@ -31,19 +31,27 @@
+ # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ # POSSIBILITY OF SUCH DAMAGE.
+ 
+-find_host_package(PythonInterp 3 REQUIRED)
+-
+ set(GLSLANG_INTRINSIC_H          "${GLSLANG_GENERATED_INCLUDEDIR}/glslang/glsl_intrinsic_header.h")
+-set(GLSLANG_INTRINSIC_PY         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.py")
+ set(GLSLANG_INTRINSIC_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../glslang/ExtensionHeaders")
+ 
+-add_custom_command(
++if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
++  set(GLSLANG_INTRINSIC_CMAKE         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.cmake")
++  add_custom_command(
++    OUTPUT  ${GLSLANG_INTRINSIC_H}
++    COMMAND ${CMAKE_COMMAND} -DGLSLANG_INTRINSIC_HEADER_DIR=${GLSLANG_INTRINSIC_HEADER_DIR} -DGLSLANG_INTRINSIC_H=${GLSLANG_INTRINSIC_H} -P ${GLSLANG_INTRINSIC_CMAKE}
++    DEPENDS ${GLSLANG_INTRINSIC_CMAKE}
++    COMMENT "Generating ${GLSLANG_INTRINSIC_H}")
++else()
++  find_host_package(PythonInterp 3 REQUIRED)
++  set(GLSLANG_INTRINSIC_PY         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.py")
++  add_custom_command(
+     OUTPUT  ${GLSLANG_INTRINSIC_H}
+     COMMAND ${PYTHON_EXECUTABLE} "${GLSLANG_INTRINSIC_PY}"
+             "-i" ${GLSLANG_INTRINSIC_HEADER_DIR}
+             "-o" ${GLSLANG_INTRINSIC_H}
+     DEPENDS ${GLSLANG_INTRINSIC_PY}
+     COMMENT "Generating ${GLSLANG_INTRINSIC_H}")
++endif()
+ 
+ #add_custom_target(glslangValidator DEPENDS ${GLSLANG_INTRINSIC_H})
+ 
+diff --git a/gen_extension_headers.cmake b/gen_extension_headers.cmake
+new file mode 100644
+index 00000000..49c365ef
+--- /dev/null
++++ b/gen_extension_headers.cmake
+@@ -0,0 +1,65 @@
++option(GLSLANG_INTRINSIC_HEADER_DIR "input dir")
++option(GLSLANG_INTRINSIC_H "output file")
++
++if (NOT GLSLANG_INTRINSIC_HEADER_DIR)
++	message(FATAL_ERROR "-DGLSLANG_INTRINSIC_HEADER_DIR option is required")
++endif()
++if (NOT GLSLANG_INTRINSIC_H)
++	message(FATAL_ERROR "-DGLSLANG_INTRINSIC_H option is required")
++endif()
++
++#
++# CMake version of gen_extension_headers.py
++#
++file(GLOB glsl_files ${GLSLANG_INTRINSIC_HEADER_DIR}/*.glsl)
++# Write commit ID to output header file
++file(WRITE ${GLSLANG_INTRINSIC_H} [[
++/***************************************************************************
++ *
++ * Copyright (c) 2015-2021 The Khronos Group Inc.
++ * Copyright (c) 2015-2021 Valve Corporation
++ * Copyright (c) 2015-2021 LunarG, Inc.
++ * Copyright (c) 2015-2021 Google Inc.
++ * Copyright (c) 2021 Advanced Micro Devices, Inc.All rights reserved.
++ *
++ ****************************************************************************/
++#pragma once
++
++#ifndef _INTRINSIC_EXTENSION_HEADER_H_
++#define _INTRINSIC_EXTENSION_HEADER_H_
++
++]])
++
++set(symbol_name_list)
++
++foreach(i ${glsl_files})
++	message(STATUS "Processing ${i}")
++	file(READ ${i} glsl_contents)
++	cmake_path(GET i FILENAME filename)
++	string(REGEX MATCH "^[^.]+" symbol_name ${filename})
++	list(APPEND symbol_name_list ${symbol_name})
++	file(APPEND ${GLSLANG_INTRINSIC_H} "std::string ${symbol_name}_GLSL = R\"(\n${glsl_contents}\n)\"")
++	file(APPEND ${GLSLANG_INTRINSIC_H} [[;
++
++]])
++endforeach()
++
++file(APPEND ${GLSLANG_INTRINSIC_H} [[
++std::string getIntrinsic(const char* const* shaders, int n) {
++	std::string shaderString = "";
++	for (int i = 0; i < n; i++) {
++]])
++		foreach(symbol_name ${symbol_name_list})
++			file(APPEND ${GLSLANG_INTRINSIC_H} "\t\tif (strstr(shaders[i], \"${symbol_name}\") != nullptr) {\n")
++			file(APPEND ${GLSLANG_INTRINSIC_H} "\t\t    shaderString.append(${symbol_name}_GLSL);\n")
++			file(APPEND ${GLSLANG_INTRINSIC_H} "\t\t}")
++		endforeach()
++
++file(APPEND ${GLSLANG_INTRINSIC_H} [[	
++	}
++	return shaderString;
++}
++
++#endif
++]]
++)
