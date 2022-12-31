@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QFile-Find-Rule-0.34.tar.gz\E'
+patches:
+  - File-Find-Rule-0.34-unix-style.patch

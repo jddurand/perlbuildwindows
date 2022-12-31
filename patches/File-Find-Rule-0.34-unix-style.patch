@@ -1,0 +1,54 @@
+diff -Naur File-Find-Rule-0.34.old/lib/File/Find/Rule.pm File-Find-Rule-0.34.new/lib/File/Find/Rule.pm
+--- File-Find-Rule-0.34.old/lib/File/Find/Rule.pm	2015-12-03 15:27:56.000000000 +0100
++++ File-Find-Rule-0.34.new/lib/File/Find/Rule.pm	2022-12-31 13:10:54.760768400 +0100
+@@ -10,6 +10,15 @@
+ 
+ our $VERSION = '0.34';
+ 
++my $Is_VMS = $^O eq 'VMS';
++my $Is_Win32 = $^O eq 'MSWin32';
++
++BEGIN {
++    # This is a core module since ages, should never fail
++    # and is anyway used only if we are on VMS indeed.
++    eval { require VMS::Filespec } if $Is_VMS;
++}
++
+ # we'd just inherit from Exporter, but I want the colon
+ sub import {
+     my $pkg = shift;
+@@ -564,7 +573,7 @@
+         my $canonpath = $self->{canonpath};
+ 
+         # figure out the relative path and depth
+-        my $relpath = $File::Find::name;
++        my $relpath = $self->_unixify($File::Find::name);
+         $relpath =~ s{^\Q$topdir\E/?}{};
+         my $depth = scalar File::Spec->splitdir($relpath);
+         #print "name: \'$File::Find::name\' ";
+@@ -598,7 +607,7 @@
+     my $sub = eval "$code" or die "compile error '$code' $@";
+     for my $path (@_) {
+         # $topdir is used for relative and maxdepth
+-        $topdir = $path;
++        $topdir = $self->_unixify($path);
+         # slice off the trailing slash if there is one (the
+         # maxdepth/mindepth code is fussy)
+         $topdir =~ s{/?$}{}
+@@ -609,6 +618,16 @@
+     return @found;
+ }
+ 
++sub _unixify {
++    my ($self, $path) = @_;
++    if ($Is_VMS) {
++        $path = VMS::Filespec::unixify($path);
++    } else {
++      $path =~ s|[/\\]|/|g if $Is_Win32;
++    }
++    return $path;
++}
++
+ sub _call_find {
+     my $self = shift;
+     File::Find::find( @_ );
