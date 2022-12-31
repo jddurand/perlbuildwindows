@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QFile-Find-Object-0.3.6.tar.gz\E'
+patches:
+  - File-Find-Object-0.3.6-symlinks.patch

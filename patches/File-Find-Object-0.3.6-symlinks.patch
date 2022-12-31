@@ -1,0 +1,45 @@
+diff -Naur File-Find-Object-0.3.6.old/Makefile.PL File-Find-Object-0.3.6.new/Makefile.PL
+--- File-Find-Object-0.3.6.old/Makefile.PL	2021-08-26 15:40:47.000000000 +0200
++++ File-Find-Object-0.3.6.new/Makefile.PL	2022-12-31 13:39:54.555445300 +0100
+@@ -39,7 +39,8 @@
+     "IPC::Open3" => 0,
+     "Test::More" => "0.88",
+     "lib" => 0,
+-    "vars" => 0
++    "vars" => 0,
++    "Test::File" => "1.992_01"
+   },
+   "VERSION" => "0.3.6",
+   "test" => {
+diff -Naur File-Find-Object-0.3.6.old/t/01ffo.t File-Find-Object-0.3.6.new/t/01ffo.t
+--- File-Find-Object-0.3.6.old/t/01ffo.t	2021-08-26 15:40:47.000000000 +0200
++++ File-Find-Object-0.3.6.new/t/01ffo.t	2022-12-31 13:41:31.011402700 +0100
+@@ -8,6 +8,7 @@
+ use Test::More tests => 4;
+ 
+ use File::Path qw(rmtree);
++use Test::File '1.992_01';
+ 
+ # TEST
+ use_ok( 'File::Find::Object', "Can use main File::Find::Object" );
+@@ -19,11 +20,6 @@
+ open( my $h, ">", 't/dir/file' );
+ close($h);
+ 
+-# symlink does not exists everywhere (windows)
+-# if it failed, this does not matter
+-eval { symlink( '.', 't/dir/link' ); };
+-my $symlink_created = ( $@ eq "" );
+-
+ my ( @res1, @res2 );
+ my $tree = File::Find::Object->new(
+     {
+@@ -51,7 +47,7 @@
+ ok( scalar(@res1) == scalar(@res2), "Get same result from callback and next" );
+ 
+ # TEST
+-if ($symlink_created)
++if (Test::File->has_symlinks())
+ {
+     like(
+         $warnings[0],
