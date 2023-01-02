@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QTest-Vars-0.015.tar.gz\E'
+patches:
+  - Test-Vars-0.015.patch
