@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QModule-CPANTS-Analyse-1.01.tar.gz\E'
+patches:
+  - Module-CPANTS-Analyse-1.01.patch
