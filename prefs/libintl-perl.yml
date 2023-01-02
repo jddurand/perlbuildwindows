@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\Qlibintl-perl-1.33.tar.gz\E'
+patches:
+  - libintl-perl-1.33.patch
