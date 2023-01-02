@@ -1,0 +1,5 @@
+---
+match:
+  distribution: '/\QTest-Synopsis-0.17.tar.gz\E'
+patches:
+  - Test-Synopsis-0.17.patch
